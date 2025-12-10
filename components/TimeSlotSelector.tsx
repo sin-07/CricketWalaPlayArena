@@ -62,10 +62,18 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   const timeSlots = useMemo(() => generateTimeSlots(), [selectedDate, bookedSlots, isAdmin]);
 
   const getSlotStyle = (slot: TimeSlot) => {
-    if (slot.isBooked && !isAdmin) {
-      return 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed';
+    if (slot.isBooked) {
+      if (isAdmin) {
+        // Admin can still select booked slots, but they're visually marked
+        if (selectedSlots.includes(slot.id)) {
+          return 'bg-primary-600 border-primary-600 text-white shadow-lg scale-105';
+        }
+        return 'bg-orange-100 border-orange-400 text-orange-800 hover:border-orange-500 hover:bg-orange-200';
+      }
+      // Regular users cannot select booked slots
+      return 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed opacity-75';
     }
-    if (slot.isPast && isAdmin) {
+    if (slot.isPast && isAdmin && !slot.isBooked) {
       return 'bg-gray-100 border-gray-300 text-gray-500';
     }
     if (selectedSlots.includes(slot.id)) {
@@ -168,10 +176,17 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           <div className="w-4 h-4 bg-primary-600 border-2 border-primary-600 rounded mr-2"></div>
           <span className="text-gray-600">Selected</span>
         </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-red-100 border-2 border-red-300 rounded mr-2"></div>
-          <span className="text-gray-600">Booked</span>
-        </div>
+        {isAdmin ? (
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-orange-100 border-2 border-orange-400 rounded mr-2"></div>
+            <span className="text-gray-600">Booked (can override)</span>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <div className="w-4 h-4 bg-red-100 border-2 border-red-300 rounded mr-2"></div>
+            <span className="text-gray-600">Booked</span>
+          </div>
+        )}
       </motion.div>
 
       {selectedSlots.length > 0 && (

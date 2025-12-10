@@ -78,8 +78,8 @@ const BookingSchema = new Schema<IBooking>(
 );
 
 // Index for efficient queries
+// Note: bookingRef index is automatically created by unique: true
 BookingSchema.index({ boxId: 1, date: 1, timeSlotId: 1 });
-BookingSchema.index({ bookingRef: 1 });
 BookingSchema.index({ email: 1 });
 BookingSchema.index({ date: 1 });
 

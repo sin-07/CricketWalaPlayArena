@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { UserPlus, Save } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,12 +18,10 @@ import {
 } from "@/utils/helpers";
 
 interface AdminBookingFormProps {
-  bookedSlots: number[];
   onBookingComplete: () => void;
 }
 
 const AdminBookingForm: React.FC<AdminBookingFormProps> = ({
-  bookedSlots,
   onBookingComplete,
 }) => {
   const [formData, setFormData] = useState({
@@ -34,9 +32,31 @@ const AdminBookingForm: React.FC<AdminBookingFormProps> = ({
     date: getMinDate(),
   });
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
+  const [bookedSlots, setBookedSlots] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Fetch booked slots when date or box changes
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      try {
+        const response = await fetch(
+          `/api/bookings?boxId=${formData.boxId}&date=${formData.date}`
+        );
+        const result = await response.json();
+        if (result.success) {
+          // Extract all timeSlotIds from bookings for this date and box
+          const bookedSlotIds = result.data.map((booking: any) => booking.timeSlotId);
+          setBookedSlots(bookedSlotIds);
+        }
+      } catch (error) {
+        console.error('Failed to fetch booked slots:', error);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [formData.date, formData.boxId]);
 
   const handleSlotToggle = (slotId: number) => {
     setSelectedSlots((prev) =>

@@ -36,7 +36,6 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<'bookings' | 'create'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [bookedSlots, setBookedSlots] = useState<number[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -246,7 +245,6 @@ export default function AdminDashboard() {
           ) : (
             <div className="max-w-3xl mx-auto">
               <AdminBookingForm
-                bookedSlots={bookedSlots}
                 onBookingComplete={handleBookingComplete}
               />
             </div>
