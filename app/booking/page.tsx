@@ -145,9 +145,9 @@ export default function EnhancedBookingPage() {
           className="text-center mb-12"
         >
           <h1 className="text-5xl font-bold text-green-700 mb-4">
-            Book Your Cricket Box
+            Book Your Cricket Wala Play Arena Slot
           </h1>
-          <p className="text-xl text-gray-600">Select your preferred date, box, and time slots</p>
+          <p className="text-xl text-gray-600">Select your preferred date, arena slot, and time slots</p>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -169,7 +169,7 @@ export default function EnhancedBookingPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Box Selection */}
                   <div>
-                    <Label>Select Cricket Box</Label>
+                    <Label>Select Arena Slot</Label>
                     <select
                       value={selectedBox.id}
                       onChange={(e) => {

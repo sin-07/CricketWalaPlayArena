@@ -163,7 +163,7 @@ export default function AdminGallery() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Gallery Management</h1>
-              <p className="text-gray-600 mt-1">Manage cricket box gallery images</p>
+              <p className="text-gray-600 mt-1">Manage Cricket Wala Play Arena gallery images</p>
             </div>
             <div className="flex gap-3">
               <button
@@ -208,7 +208,7 @@ export default function AdminGallery() {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Cricket Box A"
+                    placeholder="Arena A"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />

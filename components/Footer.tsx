@@ -9,10 +9,10 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold mb-4 flex items-center">
               <span className="text-2xl mr-2">🏏</span>
-              CricketBox
+              Cricket Wala Play Arena
             </h3>
             <p className="text-gray-400">
-              Premium cricket box booking platform. Book your slot and play your game!
+              Premium Cricket Wala Play Arena booking platform. Book your slot and play your game!
             </p>
           </div>
 

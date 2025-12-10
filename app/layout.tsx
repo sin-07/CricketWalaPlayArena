@@ -7,8 +7,8 @@ import Footer from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'CricketBox - Book Your Perfect Cricket Practice Session',
-  description: 'State-of-the-art cricket boxes with professional equipment. Available 24/7 for your convenience.',
+  title: 'Cricket Wala Play Arena - Book Your Perfect Cricket Practice Session',
+  description: 'State-of-the-art Cricket Wala Play Arena slots with professional equipment. Available 24/7 for your convenience.',
 }
 
 export default function RootLayout({

@@ -67,9 +67,9 @@ async function sendSMSConfirmation(phone: string, booking: any): Promise<boolean
     SMS CONFIRMATION SENT TO: ${phone}
     ========================================
     Message:
-    Cricket Box Booking Confirmed!
+    Cricket Wala Play Arena Booking Confirmed!
     Ref: ${booking.bookingRef}
-    Box: ${booking.boxName}
+    Arena Slot: ${booking.boxName}
     Date: ${booking.date}
     Amount: ₹${booking.totalAmount}
     Thank you for booking with us!

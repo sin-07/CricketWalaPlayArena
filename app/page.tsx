@@ -150,7 +150,7 @@ export default function Home() {
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-                State-of-the-art cricket boxes with professional equipment.
+                State-of-the-art Cricket Wala Play Arena slots with professional equipment.
                 Available 24/7 for your convenience.
               </p>
 
@@ -289,7 +289,7 @@ export default function Home() {
                   Professional Setup
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  State-of-the-art cricket boxes with bowling machines and premium
+                  State-of-the-art Cricket Wala Play Arena slots with bowling machines and premium
                   equipment.
                 </p>
               </div>
@@ -316,7 +316,7 @@ export default function Home() {
                 Our Cricket Facilities
               </h2>
               <p className="text-gray-600">
-                Explore our state-of-the-art cricket boxes and facilities
+                Explore our state-of-the-art Cricket Wala Play Arena slots and facilities
               </p>
             </div>
 
@@ -343,7 +343,7 @@ export default function Home() {
                     </div>
                     <h3 className="text-xl font-bold mb-3">Select Date & Box</h3>
                     <p className="text-primary-100">
-                      Choose your preferred date, time slots, and cricket box from
+                      Choose your preferred date, time slots, and Cricket Wala Play Arena slot from
                       available options
                     </p>
                   </div>

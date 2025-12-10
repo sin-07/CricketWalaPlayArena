@@ -34,7 +34,7 @@ const Header: React.FC = () => {
               <span className="text-white text-lg md:text-xl font-bold">🏏</span>
             </div>
             <span className="text-xl md:text-2xl font-bold text-gray-800">
-              Cricket<span className="text-primary-600">Box</span>
+              Cricket Wala <span className="text-primary-600">Play Arena</span>
             </span>
           </Link>
 

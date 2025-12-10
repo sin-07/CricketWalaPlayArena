@@ -1,11 +1,11 @@
 import { CricketBox, Booking } from '@/types';
 
-// Dummy data for cricket box slots
+// Dummy data for Cricket Wala Play Arena slots
 export const CRICKET_BOXES: CricketBox[] = [
-  { id: 1, name: 'Box A', capacity: 6, pricePerHour: 1500, description: 'Standard cricket box' },
-  { id: 2, name: 'Box B', capacity: 8, pricePerHour: 2000, description: 'Medium cricket box' },
-  { id: 3, name: 'Box C', capacity: 10, pricePerHour: 2500, description: 'Large cricket box' },
-  { id: 4, name: 'Box D (Premium)', capacity: 12, pricePerHour: 3000, description: 'Premium cricket box' },
+  { id: 1, name: 'Arena A', capacity: 6, pricePerHour: 1500, description: 'Standard Cricket Wala Play Arena slot' },
+  { id: 2, name: 'Arena B', capacity: 8, pricePerHour: 2000, description: 'Medium Cricket Wala Play Arena slot' },
+  { id: 3, name: 'Arena C', capacity: 10, pricePerHour: 2500, description: 'Large Cricket Wala Play Arena slot' },
+  { id: 4, name: 'Arena D (Premium)', capacity: 12, pricePerHour: 3000, description: 'Premium Cricket Wala Play Arena slot' },
 ];
 
 // Generate time slots from 6 AM to 11 PM

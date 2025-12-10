@@ -71,7 +71,7 @@ export default function MyBookings() {
               No Bookings Yet
             </h2>
             <p className="text-gray-600 mb-6">
-              You haven&apos;t made any bookings yet. Start by booking a cricket box!
+              You haven&apos;t made any bookings yet. Start by booking a Cricket Wala Play Arena slot!
             </p>
             <Link
               href="/booking"
@@ -91,7 +91,7 @@ export default function MyBookings() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">My Bookings</h1>
           <p className="text-gray-600">
-            View and manage all your cricket box bookings
+            View and manage all your Cricket Wala Play Arena bookings
           </p>
         </div>
 

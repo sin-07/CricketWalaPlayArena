@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
             <span className="text-3xl">🏏</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-800">Admin Login</h1>
-          <p className="text-gray-600 mt-2">Cricket Box Booking System</p>
+          <p className="text-gray-600 mt-2">Cricket Wala Play Arena Booking System</p>
         </div>
 
         {/* Login Form */}
