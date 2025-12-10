@@ -201,11 +201,6 @@ const BookingHistoryComponent: React.FC<BookingHistoryProps> = ({ phone, email }
             )}
           </AnimatePresence>
 
-          {/* Live indicator */}
-          <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-gray-500">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span>Live sync active</span>
-          </div>
         </CardContent>
       </Card>
     </motion.div>
