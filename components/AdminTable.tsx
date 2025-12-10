@@ -61,36 +61,18 @@ const getDetailedTimeSlots = (timeSlotIds: number[] | undefined, fallbackSlotId?
   return ['N/A'];
 };
 
-const AdminTable: React.FC = () => {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+interface AdminTableProps {
+  bookings?: Booking[];
+  loading?: boolean;
+}
+
+const AdminTable: React.FC<AdminTableProps> = ({ 
+  bookings = [],
+  loading = false 
+}) => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [userHistory, setUserHistory] = useState<Booking[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  useEffect(() => {
-    fetchBookings();
-    const interval = setInterval(fetchBookings, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchBookings = async () => {
-    try {
-      const response = await fetch('/api/bookings');
-      const result = await response.json();
-      console.log('AdminTable - Fetched bookings:', result);
-      if (result.success) {
-        console.log('AdminTable - First booking:', result.data[0]);
-        console.log('AdminTable - First booking timeSlotId:', result.data[0]?.timeSlotId);
-        console.log('AdminTable - First booking timeSlotIds:', result.data[0]?.timeSlotIds);
-        setBookings(result.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch bookings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchUserHistory = async (booking: Booking) => {
     try {

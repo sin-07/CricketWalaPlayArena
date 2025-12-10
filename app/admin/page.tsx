@@ -38,6 +38,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookedSlots, setBookedSlots] = useState<number[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalBookings: 0,
     activeBookings: 0,
@@ -61,16 +62,16 @@ export default function AdminDashboard() {
 
   const fetchBookings = async () => {
     try {
+      setLoading(true);
       const response = await axios.get('/api/bookings');
-      console.log('Admin Dashboard - API Response:', response.data);
       if (response.data.success) {
-        console.log('Admin Dashboard - Bookings data:', response.data.data);
-        console.log('Admin Dashboard - First booking:', response.data.data[0]);
         setBookings(response.data.data);
         calculateStats(response.data.data);
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -241,7 +242,7 @@ export default function AdminDashboard() {
           transition={{ duration: 0.3 }}
         >
           {activeTab === 'bookings' ? (
-            <AdminTable />
+            <AdminTable bookings={bookings} loading={loading} />
           ) : (
             <div className="max-w-3xl mx-auto">
               <AdminBookingForm
