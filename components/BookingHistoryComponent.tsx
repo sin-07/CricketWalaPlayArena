@@ -109,6 +109,7 @@ const BookingHistoryComponent: React.FC<BookingHistoryProps> = ({ phone, email }
               Your Booking History
             </CardTitle>
             <button
+              type="button"
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-primary-600 hover:text-primary-700 transition-colors"
             >
