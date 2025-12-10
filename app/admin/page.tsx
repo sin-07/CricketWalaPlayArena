@@ -62,7 +62,10 @@ export default function AdminDashboard() {
   const fetchBookings = async () => {
     try {
       const response = await axios.get('/api/bookings');
+      console.log('Admin Dashboard - API Response:', response.data);
       if (response.data.success) {
+        console.log('Admin Dashboard - Bookings data:', response.data.data);
+        console.log('Admin Dashboard - First booking:', response.data.data[0]);
         setBookings(response.data.data);
         calculateStats(response.data.data);
       }

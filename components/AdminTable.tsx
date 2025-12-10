@@ -22,6 +22,45 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Booking } from '@/types';
 
+// Helper function to convert slot ID to time range
+const getTimeRange = (slotId: number): string => {
+  const startHour = slotId;
+  const endHour = slotId + 1;
+  const startTime = `${startHour.toString().padStart(2, '0')}:00`;
+  const endTime = `${endHour.toString().padStart(2, '0')}:00`;
+  return `${startTime} - ${endTime}`;
+};
+
+// Helper function to get all time ranges from slot IDs
+const getTimeRanges = (timeSlotIds: number[] | undefined, fallbackSlotId?: number): string => {
+  if (timeSlotIds && timeSlotIds.length > 0) {
+    // Sort slot IDs to display in chronological order
+    const sortedSlots = [...timeSlotIds].sort((a, b) => a - b);
+    if (sortedSlots.length === 1) {
+      return getTimeRange(sortedSlots[0]);
+    }
+    // For multiple slots, show first and last
+    return `${getTimeRange(sortedSlots[0])}, ${getTimeRange(sortedSlots[sortedSlots.length - 1])}, etc.`;
+  }
+  // Fallback to single timeSlotId
+  if (fallbackSlotId !== undefined) {
+    return getTimeRange(fallbackSlotId);
+  }
+  return 'N/A';
+};
+
+// Helper function to get detailed time slot list
+const getDetailedTimeSlots = (timeSlotIds: number[] | undefined, fallbackSlotId?: number): string[] => {
+  if (timeSlotIds && timeSlotIds.length > 0) {
+    const sortedSlots = [...timeSlotIds].sort((a, b) => a - b);
+    return sortedSlots.map(id => getTimeRange(id));
+  }
+  if (fallbackSlotId !== undefined) {
+    return [getTimeRange(fallbackSlotId)];
+  }
+  return ['N/A'];
+};
+
 const AdminTable: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +78,11 @@ const AdminTable: React.FC = () => {
     try {
       const response = await fetch('/api/bookings');
       const result = await response.json();
+      console.log('AdminTable - Fetched bookings:', result);
       if (result.success) {
+        console.log('AdminTable - First booking:', result.data[0]);
+        console.log('AdminTable - First booking timeSlotId:', result.data[0]?.timeSlotId);
+        console.log('AdminTable - First booking timeSlotIds:', result.data[0]?.timeSlotIds);
         setBookings(result.data);
       }
     } catch (error) {
@@ -111,7 +154,7 @@ const AdminTable: React.FC = () => {
                 <TableHead className="font-semibold">Phone</TableHead>
                 <TableHead className="font-semibold">Box</TableHead>
                 <TableHead className="font-semibold">Date</TableHead>
-                <TableHead className="font-semibold">Slots</TableHead>
+                <TableHead className="font-semibold">Time Slots</TableHead>
                 <TableHead className="font-semibold">Amount</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold text-center">Action</TableHead>
@@ -140,9 +183,13 @@ const AdminTable: React.FC = () => {
                     <TableCell>
                       {new Date(booking.date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      {booking.timeSlotIds?.length || 1} slot
-                      {(booking.timeSlotIds?.length || 1) > 1 ? 's' : ''}
+                    <TableCell className="text-xs">
+                      <div className="max-w-[150px] truncate" title={getTimeRanges(booking.timeSlotIds, booking.timeSlotId)}>
+                        {getTimeRanges(booking.timeSlotIds, booking.timeSlotId)}
+                      </div>
+                      <span className="text-gray-500 text-[10px]">
+                        ({booking.timeSlotIds?.length || 1} slot{(booking.timeSlotIds?.length || 1) > 1 ? 's' : ''})
+                      </span>
                     </TableCell>
                     <TableCell className="font-semibold text-primary-600">
                       ₹{booking.totalAmount}
@@ -244,13 +291,18 @@ const AdminTable: React.FC = () => {
                       })}
                     </span>
                   </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-2 text-gray-600" />
-                    <span className="font-medium">Slots:</span>
-                    <span className="ml-2">
-                      {selectedBooking.timeSlotIds?.length || 1} time slot
-                      {(selectedBooking.timeSlotIds?.length || 1) > 1 ? 's' : ''}
-                    </span>
+                  <div className="flex flex-col col-span-2">
+                    <div className="flex items-center mb-2">
+                      <Clock className="w-4 h-4 mr-2 text-gray-600" />
+                      <span className="font-medium">Time Slots ({selectedBooking.timeSlotIds?.length || 1}):</span>
+                    </div>
+                    <div className="ml-6 space-y-1">
+                      {getDetailedTimeSlots(selectedBooking.timeSlotIds, selectedBooking.timeSlotId).map((timeRange, idx) => (
+                        <div key={idx} className="bg-primary-50 px-3 py-1 rounded text-primary-700 font-medium inline-block mr-2 mb-1">
+                          {timeRange}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex items-center col-span-2">
                     <span className="font-medium">Status:</span>
@@ -288,13 +340,18 @@ const AdminTable: React.FC = () => {
                           {getStatusBadge(hist.status)}
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
-                          <div>{hist.boxName}</div>
+                          <div className="font-medium">{hist.boxName}</div>
                           <div>{new Date(hist.date).toLocaleDateString()}</div>
-                          <div>
-                            {hist.timeSlotIds?.length || 1} slot
-                            {(hist.timeSlotIds?.length || 1) > 1 ? 's' : ''}
+                          <div className="col-span-2">
+                            <span className="text-gray-600">Time: </span>
+                            <span className="font-medium text-primary-700">
+                              {getTimeRanges(hist.timeSlotIds, hist.timeSlotId)}
+                            </span>
                           </div>
-                          <div className="font-semibold text-primary-600">
+                          <div>
+                            {hist.timeSlotIds?.length || 1} slot{(hist.timeSlotIds?.length || 1) > 1 ? 's' : ''}
+                          </div>
+                          <div className="font-semibold text-primary-600 text-right">
                             ₹{hist.totalAmount}
                           </div>
                         </div>

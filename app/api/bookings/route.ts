@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
 
     const bookings = await Booking.find(query).sort({ date: 1, timeSlotId: 1 });
 
+    console.log('GET /api/bookings - Found bookings:', bookings.length);
+    console.log('Sample booking data:', bookings[0] || 'No bookings');
+    console.log('First booking timeSlotId:', bookings[0]?.timeSlotId);
+    console.log('First booking timeSlotIds:', bookings[0]?.timeSlotIds);
+
     return NextResponse.json({
       success: true,
       count: bookings.length,
@@ -81,6 +86,8 @@ export async function POST(request: NextRequest) {
     const bookings = [];
     const baseBookingRef = body.bookingRef; // Get the base reference from frontend
     
+    console.log('Creating bookings for timeSlotIds:', timeSlotIds);
+    
     for (let i = 0; i < timeSlotIds.length; i++) {
       const timeSlotId = timeSlotIds[i];
       // Generate unique booking ref for each slot while keeping them linked
@@ -93,6 +100,11 @@ export async function POST(request: NextRequest) {
         timeSlotId,
         bookingRef: uniqueBookingRef,
         status: 'active',
+      });
+      console.log('Created booking:', {
+        ref: booking.bookingRef,
+        timeSlotId: booking.timeSlotId,
+        timeSlotIds: booking.timeSlotIds,
       });
       bookings.push(booking);
     }
