@@ -93,7 +93,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           <p className="text-sm mt-1">Please select a future date.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           <AnimatePresence>
             {timeSlots.map((slot, index) => (
               <motion.button
@@ -112,20 +112,20 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
                 }}
                 disabled={slot.isBooked && !isAdmin}
                 className={cn(
-                  'relative px-3 py-3 border-2 rounded-lg text-sm font-medium',
+                  'relative px-3 py-4 border-2 rounded-lg text-sm font-medium min-h-[70px]',
                   'transition-all duration-200',
                   getSlotStyle(slot)
                 )}
               >
-                <div className="flex flex-col items-center">
-                  <span className="font-semibold">{slot.time}</span>
+                <div className="flex flex-col items-center justify-center h-full">
+                  <span className="font-medium text-center leading-tight">{slot.label}</span>
                   {slot.isBooked && (
-                    <span className="text-xs mt-1">
+                    <span className="text-xs mt-1 opacity-75">
                       {isAdmin ? '(Booked)' : 'Booked'}
                     </span>
                   )}
-                  {slot.isPast && isAdmin && (
-                    <span className="text-xs mt-1">Past</span>
+                  {slot.isPast && isAdmin && !slot.isBooked && (
+                    <span className="text-xs mt-1 opacity-75">Past</span>
                   )}
                 </div>
                 {selectedSlots.includes(slot.id) && (
