@@ -240,7 +240,7 @@ const AllBookingsPage: React.FC = () => {
                           </span>
                         </div>
 
-                        <div className="grid md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
                             <p className="text-xs text-gray-500 mb-1">Customer Details</p>
                             <p className="text-sm font-semibold text-gray-800">{booking.customerName}</p>

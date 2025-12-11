@@ -112,7 +112,7 @@ const UserHistory: React.FC<UserHistoryProps> = ({ phone, email, onHistoryLoad }
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
           <div className="bg-white rounded-lg p-2 shadow-sm text-center">
             <div className="text-xs text-gray-600">Total</div>
             <div className="text-lg font-bold text-purple-600">{historyData.totalBookings}</div>

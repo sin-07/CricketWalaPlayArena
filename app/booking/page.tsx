@@ -136,29 +136,29 @@ export default function EnhancedBookingPage() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="container mx-auto px-4 py-8"
+        className="container mx-auto px-0 sm:px-4 py-4 sm:py-8"
       >
         {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="text-center mb-12"
+          className="text-center mb-6 sm:mb-12 px-4 sm:px-0"
         >
-          <h1 className="text-5xl font-bold text-green-700 mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-green-700 mb-4">
             Book Your Cricket Wala Play Arena Slot
           </h1>
-          <p className="text-xl text-gray-600">Select your preferred date, arena slot, and time slots</p>
+          <p className="text-lg sm:text-xl text-gray-600">Select your preferred date, arena slot, and time slots</p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
           {/* Left Column - Booking Form */}
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-1"
+            className="w-full lg:col-span-1"
           >
-            <Card className="sticky top-4 shadow-xl">
+            <Card className="rounded-none sm:rounded-lg lg:sticky lg:top-4 shadow-none sm:shadow-xl w-full border-x-0 sm:border-x">
               <CardHeader className="bg-green-500">
                 <CardTitle className="text-white flex items-center">
                   <Calendar className="w-5 h-5 mr-2" />
@@ -308,9 +308,9 @@ export default function EnhancedBookingPage() {
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-2"
+            className="lg:col-span-2 mt-0 lg:mt-0"
           >
-            <Card className="shadow-xl">
+            <Card className="rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-x-0 sm:border-x border-t-0 sm:border-t">
               <CardHeader className="bg-green-500">
                 <CardTitle className="text-white flex items-center">
                   <Clock className="w-5 h-5 mr-2" />

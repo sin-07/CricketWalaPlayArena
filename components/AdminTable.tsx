@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Calendar, Clock, User, Mail, Phone, MapPin, Hash } from 'lucide-react';
 import {
@@ -74,7 +74,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const [userHistory, setUserHistory] = useState<Booking[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchUserHistory = async (booking: Booking) => {
+  const fetchUserHistory = useCallback(async (booking: Booking) => {
     try {
       const response = await fetch(
         `/api/bookings/history?phone=${booking.phone}&email=${booking.email}`
@@ -86,15 +86,15 @@ const AdminTable: React.FC<AdminTableProps> = ({
     } catch (error) {
       console.error('Failed to fetch user history:', error);
     }
-  };
+  }, []);
 
-  const handleRowClick = async (booking: Booking) => {
+  const handleRowClick = useCallback(async (booking: Booking) => {
     setSelectedBooking(booking);
     setIsModalOpen(true);
     await fetchUserHistory(booking);
-  };
+  }, [fetchUserHistory]);
 
-  const getStatusBadge = (status?: string) => {
+  const getStatusBadge = useCallback((status?: string) => {
     const statusClass =
       status === 'active'
         ? 'bg-green-100 text-green-700 border-green-300'
@@ -109,7 +109,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
         {status?.toUpperCase() || 'ACTIVE'}
       </span>
     );
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -125,47 +125,47 @@ const AdminTable: React.FC<AdminTableProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="bg-white rounded-lg shadow-lg overflow-hidden"
+        className="bg-white rounded-none sm:rounded-lg shadow-none sm:shadow-lg overflow-hidden"
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold">Booking ID</TableHead>
-                <TableHead className="font-semibold">Customer</TableHead>
-                <TableHead className="font-semibold">Phone</TableHead>
-                <TableHead className="font-semibold">Box</TableHead>
-                <TableHead className="font-semibold">Date</TableHead>
-                <TableHead className="font-semibold">Time Slots</TableHead>
-                <TableHead className="font-semibold">Amount</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold text-center">Action</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm">Booking ID</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm">Customer</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Phone</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm">Box</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Date</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Time Slots</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm">Amount</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm hidden sm:table-cell">Status</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm text-center">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <AnimatePresence>
-                {bookings.map((booking, index) => (
+              <AnimatePresence mode="popLayout">
+                {bookings.map((booking) => (
                   <motion.tr
-                    key={booking._id || index}
+                    key={booking._id || booking.bookingRef}
+                    layout
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    transition={{ delay: index * 0.05 }}
                     onClick={() => handleRowClick(booking)}
                     className="cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <TableCell className="font-mono text-xs">
                       {booking.bookingRef}
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-xs sm:text-sm">
                       {booking.customerName}
                     </TableCell>
-                    <TableCell>{booking.phone}</TableCell>
-                    <TableCell>{booking.boxName}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden md:table-cell">{booking.phone}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">{booking.boxName}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
                       {new Date(booking.date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="text-xs hidden xl:table-cell">
                       <div className="max-w-[150px] truncate" title={getTimeRanges(booking.timeSlotIds, booking.timeSlotId)}>
                         {getTimeRanges(booking.timeSlotIds, booking.timeSlotId)}
                       </div>
@@ -173,10 +173,10 @@ const AdminTable: React.FC<AdminTableProps> = ({
                         ({booking.timeSlotIds?.length || 1} slot{(booking.timeSlotIds?.length || 1) > 1 ? 's' : ''})
                       </span>
                     </TableCell>
-                    <TableCell className="font-semibold text-primary-600">
+                    <TableCell className="font-semibold text-primary-600 text-xs sm:text-sm">
                       ₹{booking.totalAmount}
                     </TableCell>
-                    <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{getStatusBadge(booking.status)}</TableCell>
                     <TableCell className="text-center">
                       <Button
                         variant="ghost"

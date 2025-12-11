@@ -159,7 +159,7 @@ export default function AdminGallery() {
 
       {/* Header */}
       <div className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-800">Gallery Management</h1>
@@ -177,7 +177,7 @@ export default function AdminGallery() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-0 sm:px-4 py-4 sm:py-8">
         {/* Add/Edit Form */}
         {showForm && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">

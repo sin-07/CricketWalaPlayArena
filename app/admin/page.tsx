@@ -52,16 +52,24 @@ export default function AdminDashboard() {
       return;
     }
     setIsAuthenticated(true);
-    fetchBookings();
-
-    // Real-time updates
-    const interval = setInterval(fetchBookings, 8000);
-    return () => clearInterval(interval);
   }, [router]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    fetchBookings();
+    
+    // Real-time updates every 30 seconds instead of 8
+    const interval = setInterval(() => {
+      fetchBookings();
+    }, 30000);
+    
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const fetchBookings = async () => {
     try {
-      setLoading(true);
       const response = await axios.get('/api/bookings');
       if (response.data.success) {
         setBookings(response.data.data);
@@ -120,26 +128,26 @@ export default function AdminDashboard() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="container mx-auto px-4 py-8"
+        className="container mx-auto px-0 sm:px-4 py-4 sm:py-8"
       >
         {/* Header */}
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="mb-8"
+          className="mb-6 sm:mb-8 px-4 sm:px-0"
         >
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
           <p className="text-gray-600">Manage bookings and customer data</p>
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -157,7 +165,7 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
                   <TrendingUp className="w-4 h-4 mr-2" />
@@ -175,7 +183,7 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
                   <Users className="w-4 h-4 mr-2" />
@@ -193,7 +201,7 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white">
+            <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center">
                   <DollarSign className="w-4 h-4 mr-2" />
@@ -212,7 +220,7 @@ export default function AdminDashboard() {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="flex space-x-4 mb-6"
+          className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-4 sm:mb-6 px-4 sm:px-0"
         >
           <Button
             variant={activeTab === 'bookings' ? 'default' : 'outline'}

@@ -62,10 +62,10 @@ export default function MyBookings() {
 
   if (Object.keys(groupedBookings).length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-gray-800 mb-8">My Bookings</h1>
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+        <div className="container mx-auto px-0 sm:px-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 sm:mb-8 px-4 sm:px-0">My Bookings</h1>
+          <div className="bg-white rounded-none sm:rounded-lg shadow-md p-8 sm:p-12 text-center mx-0 sm:mx-auto">
             <div className="text-6xl mb-4">📋</div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               No Bookings Yet
@@ -86,16 +86,16 @@ export default function MyBookings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">My Bookings</h1>
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="container mx-auto px-0 sm:px-4">
+        <div className="mb-6 sm:mb-8 px-4 sm:px-0">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">My Bookings</h1>
           <p className="text-gray-600">
             View and manage all your Cricket Wala Play Arena bookings
           </p>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-0 sm:gap-4 md:gap-6">
           {Object.values(groupedBookings).map((booking, index) => {
             const totalAmount = getBoxPrice(booking.boxId) * booking.slots.length;
             const isPast = new Date(booking.date) < new Date(new Date().toDateString());
@@ -103,9 +103,9 @@ export default function MyBookings() {
             return (
               <div
                 key={index}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden"
+                className="bg-white rounded-none sm:rounded-lg shadow-none sm:shadow-md hover:shadow-lg transition-shadow overflow-hidden border-b sm:border"
               >
-                <div className={`${isPast ? 'bg-gray-100' : 'bg-primary-50'} px-6 py-4 border-b`}>
+                <div className={`${isPast ? 'bg-gray-100' : 'bg-primary-50'} px-4 sm:px-6 py-3 sm:py-4 border-b`}>
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-semibold text-gray-800">
@@ -127,7 +127,7 @@ export default function MyBookings() {
                   </div>
                 </div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 mb-3">

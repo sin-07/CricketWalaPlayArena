@@ -85,7 +85,7 @@ const SlotStatus: React.FC<SlotStatusProps> = ({ boxId, date, onSlotsUpdate }) =
           Slot Availability Overview
         </h4>
         
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
           <div className="bg-white rounded-lg p-3 shadow-sm">
             <div className="text-xs text-gray-600 mb-1">Available Slots</div>
             <div className="text-2xl font-bold text-green-600">{slotData.totalAvailable}</div>

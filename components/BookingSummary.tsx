@@ -19,9 +19,9 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ booking, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="bg-primary-600 text-white p-6 rounded-t-xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-white rounded-none sm:rounded-xl shadow-2xl max-w-2xl w-full max-h-[100vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="bg-primary-600 text-white p-4 sm:p-6 rounded-t-none sm:rounded-t-xl">\n
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold">Booking Confirmed! 🎉</h2>

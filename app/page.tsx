@@ -135,7 +135,7 @@ export default function Home() {
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-700"></div>
           </div>
 
-          <div className="relative container mx-auto px-4 py-12 md:py-16">
+          <div className="relative container mx-auto px-0 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
                 <span className="text-2xl">🏏</span>
@@ -155,29 +155,29 @@ export default function Home() {
               </p>
 
               {/* Key Features */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-0 sm:gap-3 md:gap-4 max-w-3xl mx-auto px-0 sm:px-2">
+                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
                   <div className="text-3xl mb-2">⚡</div>
                   <div className="text-2xl font-bold mb-1">18</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
                     Time Slots
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
                   <div className="text-3xl mb-2">🏆</div>
                   <div className="text-2xl font-bold mb-1">4</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
                     Premium Boxes
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
                   <div className="text-3xl mb-2">💰</div>
                   <div className="text-2xl font-bold mb-1">₹1.5K</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
                     Starting From
                   </div>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
                   <div className="text-3xl mb-2">🕐</div>
                   <div className="text-2xl font-bold mb-1">24/7</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
@@ -190,10 +190,10 @@ export default function Home() {
         </div>
 
         {/* Main Booking Section */}
-        <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="container mx-auto px-0 sm:px-4 py-6 sm:py-8 md:py-12">
           <div className="max-w-7xl mx-auto">
             {/* Section Header */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6 sm:mb-8 px-4 sm:px-0">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                 Reserve Your Slot Now
               </h2>
@@ -203,16 +203,16 @@ export default function Home() {
             </div>
 
             {/* Booking Grid */}
-            <div className="grid lg:grid-cols-12 gap-6 md:gap-8">
+            <div className="grid lg:grid-cols-12 gap-0 sm:gap-6 md:gap-8">
               {/* Booking Form - Left Sidebar */}
               <div className="lg:col-span-4">
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden sticky top-4">
-                  <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <div className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-xl border-0 sm:border border-gray-200 overflow-hidden sm:sticky sm:top-4">
+                  <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 sm:px-6 py-3 sm:py-4">
+                    <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                       <span>📝</span> Booking Details
                     </h3>
                   </div>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     {loading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
@@ -235,13 +235,13 @@ export default function Home() {
               {/* Right Content Area */}
               <div className="lg:col-span-8">
                 {/* Time Slots */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <div className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-xl border-0 sm:border border-gray-200 overflow-hidden">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 sm:px-6 py-3 sm:py-4">
+                    <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                       <span>⏰</span> Choose Time Slots
                     </h3>
                   </div>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <SlotPicker
                       selectedDate={selectedDate}
                       selectedBox={selectedBox}
@@ -259,8 +259,8 @@ export default function Home() {
         </div>
 
         {/* Features Section */}
-        <section className="py-12 md:py-20 bg-white">
-          <div className="container mx-auto px-4">
+        <section className="py-8 sm:py-12 md:py-20 bg-white">
+          <div className="container mx-auto px-0 sm:px-4">
             <div className="text-center mb-12">
               <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
                 Why Choose Us?
@@ -271,8 +271,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
-              <div className="bg-gradient-to-br from-primary-50 to-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 sm:gap-4 md:gap-6 lg:gap-8 max-w-6xl mx-auto">
+              <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-b sm:border-0">
                 <div className="text-5xl mb-4">⚡</div>
                 <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
                   Instant Booking
@@ -283,7 +283,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-primary-50 to-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+              <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-b sm:border-0">
                 <div className="text-5xl mb-4">🏏</div>
                 <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
                   Professional Setup
@@ -294,7 +294,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-br from-primary-50 to-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 sm:col-span-2 lg:col-span-1">
+              <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 sm:col-span-2 lg:col-span-1 border-b sm:border-0">
                 <div className="text-5xl mb-4">💰</div>
                 <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
                   Affordable Rates
@@ -309,8 +309,8 @@ export default function Home() {
         </section>
 
         {/* Gallery Section */}
-        <section className="py-12 md:py-20 bg-gradient-to-b from-gray-50 to-white">
-          <div className="container mx-auto px-4">
+        <section className="py-8 sm:py-12 md:py-20 bg-gradient-to-b from-gray-50 to-white">
+          <div className="container mx-auto px-0 sm:px-4">
             <div className="text-center mb-12">
               <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
                 Our Cricket Facilities
@@ -325,8 +325,8 @@ export default function Home() {
         </section>
 
         {/* How It Works Section */}
-        <section className="py-12 md:py-20 bg-white">
-          <div className="container mx-auto px-4">
+        <section className="py-8 sm:py-12 md:py-20 bg-white">
+          <div className="container mx-auto px-0 sm:px-4">
             <div className="text-center mb-12">
               <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
                 How It Works
