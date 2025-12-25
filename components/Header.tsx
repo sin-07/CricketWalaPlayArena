@@ -206,7 +206,7 @@ const Header: React.FC = () => {
               {/* Navigation Links */}
               <nav className="p-6 space-y-2">
                 {navItems.map((item, index) => {
-                  const Icon = item.icon;
+                  const IconComponent = item.icon;
                   return (
                     <motion.div
                       key={item.path}
@@ -223,7 +223,7 @@ const Header: React.FC = () => {
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <Icon className="w-5 h-5" />
+                        <IconComponent className="w-5 h-5" />
                         <span className="font-medium">{item.label}</span>
                       </Link>
                     </motion.div>
@@ -238,7 +238,7 @@ const Header: React.FC = () => {
                       </p>
                     </div>
                     {adminNavItems.map((item, index) => {
-                      const Icon = item.icon;
+                      const IconComponent = item.icon;
                       return (
                         <motion.div
                           key={item.path}
@@ -255,7 +255,7 @@ const Header: React.FC = () => {
                             }`}
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            <Icon className="w-5 h-5" />
+                            <IconComponent className="w-5 h-5" />
                             <span className="font-medium">{item.label}</span>
                           </Link>
                         </motion.div>
