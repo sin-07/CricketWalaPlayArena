@@ -1,9 +1,18 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { GiCricketBat } from 'react-icons/gi';
+import { FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
+  const handleMapClick = () => {
+    // Google Maps URL with exact coordinates for the address
+    const address = "Mahatma Gandhi Nagar, Kanti Factory Road, Near- Atithi Banquet Hall, Opposite of Laxmi Girls Hostel, Pin- 800026";
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    window.open(mapsUrl, '_blank');
+  };
+
   return (
     <footer className="bg-gray-800 text-white mt-auto">
       <div className="container mx-auto px-4 py-8">
@@ -48,16 +57,30 @@ const Footer: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>📞 +91 98765 43210</li>
-              <li>📧 info@cricketbox.com</li>
-              <li>📍 Mumbai, Maharashtra, India</li>
+            <ul className="space-y-3 text-gray-400">
+              <li className="flex items-start gap-2">
+                <FaPhone className="w-4 h-4 mt-1 text-primary-400 flex-shrink-0" />
+                <span>+91 98765 43210</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <FaEnvelope className="w-4 h-4 mt-1 text-primary-400 flex-shrink-0" />
+                <span>info@cricketbox.com</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <FaMapMarkerAlt className="w-4 h-4 mt-1 text-primary-400 flex-shrink-0" />
+                <button 
+                  onClick={handleMapClick}
+                  className="text-left hover:text-primary-400 transition-colors"
+                >
+                  Mahatma Gandhi Nagar, Kanti Factory Road, Near- Atithi Banquet Hall, Opposite of Laxmi Girls Hostel, Pin- 800026
+                </button>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
-          <p>&copy; 2025 CricketBox. All rights reserved.</p>
+          <p>&copy; 2025 Cricket Wala Play Arena. All rights reserved.</p>
         </div>
       </div>
     </footer>

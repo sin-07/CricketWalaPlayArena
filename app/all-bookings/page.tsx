@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Booking } from '@/types';
-import { FaPhone } from 'react-icons/fa';
+import { FaPhone, FaClipboardList, FaCalendarAlt, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
 import { GiCricketBat } from 'react-icons/gi';
 
 const AllBookingsPage: React.FC = () => {
@@ -104,13 +104,13 @@ const AllBookingsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSearchType('bookingRef')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                     searchType === 'bookingRef'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  📋 Booking ID
+                  <FaClipboardList /> Booking ID
                 </button>
                 <button
                   type="button"
@@ -126,13 +126,13 @@ const AllBookingsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSearchType('date')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                     searchType === 'date'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  📅 Date
+                  <FaCalendarAlt /> Date
                 </button>
               </div>
             </div>
@@ -175,9 +175,9 @@ const AllBookingsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? '🔍 Searching...' : '🔍 Search Bookings'}
+                <FaSearch /> {loading ? 'Searching...' : 'Search Bookings'}
               </button>
               {hasSearched && (
                 <button
@@ -196,7 +196,7 @@ const AllBookingsPage: React.FC = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
             <p className="text-red-700 flex items-center">
-              <span className="mr-2">⚠️</span>
+              <FaExclamationTriangle className="mr-2" />
               {error}
             </p>
           </div>
@@ -213,7 +213,7 @@ const AllBookingsPage: React.FC = () => {
 
             {bookings.length === 0 ? (
               <div className="p-12 text-center">
-                <div className="text-6xl mb-4">🔍</div>
+                <FaSearch className="text-6xl mb-4 text-gray-400 mx-auto" />
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">No Bookings Found</h3>
                 <p className="text-gray-600">
                   No bookings match your search criteria. Please try a different search.

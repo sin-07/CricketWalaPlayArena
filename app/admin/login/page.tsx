@@ -27,8 +27,9 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store admin token
+        // Store admin token and login time
         localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminLoginTime', Date.now().toString());
         router.push('/admin');
       } else {
         setError(data.error || 'Invalid credentials');

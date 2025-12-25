@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Calendar, Clock, User, Mail, Phone, MapPin, Hash } from 'lucide-react';
+import { Eye, Calendar, Clock, User, Mail, Phone, MapPin, Hash, Search, X } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -73,6 +73,22 @@ const AdminTable: React.FC<AdminTableProps> = ({
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [userHistory, setUserHistory] = useState<Booking[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Filter bookings based on search term
+  const filteredBookings = useMemo(() => {
+    if (!searchTerm.trim()) return bookings;
+    
+    const search = searchTerm.toLowerCase();
+    return bookings.filter(booking => 
+      booking.customerName?.toLowerCase().includes(search) ||
+      booking.phone?.toLowerCase().includes(search) ||
+      booking.email?.toLowerCase().includes(search) ||
+      booking.bookingRef?.toLowerCase().includes(search) ||
+      booking.boxName?.toLowerCase().includes(search) ||
+      booking.status?.toLowerCase().includes(search)
+    );
+  }, [bookings, searchTerm]);
 
   const fetchUserHistory = useCallback(async (booking: Booking) => {
     try {
@@ -127,9 +143,37 @@ const AdminTable: React.FC<AdminTableProps> = ({
         transition={{ duration: 0.4 }}
         className="bg-white rounded-none sm:rounded-lg shadow-none sm:shadow-lg overflow-hidden"
       >
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
+        {/* Search Bar */}
+        <div className="p-3 sm:p-4 md:p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+          <div className="relative w-full">
+            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+            <input
+              type="text"
+              placeholder="Search by name, phone, email, booking ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 sm:pl-12 pr-10 sm:pr-12 py-2.5 sm:py-3 md:py-3.5 border-2 border-green-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white text-sm sm:text-base"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            )}
+          </div>
+          {searchTerm && (
+            <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-green-700 font-medium">
+              Found {filteredBookings.length} result{filteredBookings.length !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
+
+        {/* Scrollable Table Container */}
+        <div className="overflow-x-auto overflow-y-auto max-h-[600px] -mx-4 sm:mx-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-gray-50 z-10">
               <TableRow className="bg-gray-50">
                 <TableHead className="font-semibold text-xs sm:text-sm">Booking ID</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm">Customer</TableHead>
@@ -144,7 +188,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
             </TableHeader>
             <TableBody>
               <AnimatePresence mode="popLayout">
-                {bookings.map((booking) => (
+                {filteredBookings.map((booking) => (
                   <motion.tr
                     key={booking._id || booking.bookingRef}
                     layout
@@ -196,9 +240,19 @@ const AdminTable: React.FC<AdminTableProps> = ({
           </Table>
         </div>
 
-        {bookings.length === 0 && (
+        {filteredBookings.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No bookings found</p>
+            <p className="text-gray-500">
+              {searchTerm ? `No bookings found matching "${searchTerm}"` : 'No bookings found'}
+            </p>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="mt-3 text-green-600 hover:text-green-700 font-medium"
+              >
+                Clear search
+              </button>
+            )}
           </div>
         )}
       </motion.div>

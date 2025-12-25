@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut } from 'lucide-react';
 import AdminBookingForm from '@/components/AdminBookingForm';
 import AdminTable from '@/components/AdminTable';
 import NotificationSystem, {
@@ -13,6 +13,9 @@ import NotificationSystem, {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import axios from 'axios';
+
+// Session timeout: 2 hours in milliseconds
+const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
 
 interface Booking {
   _id: string;
@@ -38,6 +41,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSessionExpired, setShowSessionExpired] = useState(false);
   const [stats, setStats] = useState({
     totalBookings: 0,
     activeBookings: 0,
@@ -45,14 +49,57 @@ export default function AdminDashboard() {
     totalRevenue: 0,
   });
 
+  // Check session and set up auto-logout
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
+    const loginTime = localStorage.getItem('adminLoginTime');
+    
     if (!token) {
       router.push('/admin/login');
       return;
     }
-    setIsAuthenticated(true);
+
+    // Check if session has expired
+    if (loginTime) {
+      const elapsed = Date.now() - parseInt(loginTime);
+      if (elapsed >= SESSION_TIMEOUT) {
+        handleSessionExpired();
+        return;
+      }
+
+      // Set timeout for remaining time
+      const remainingTime = SESSION_TIMEOUT - elapsed;
+      const timeoutId = setTimeout(() => {
+        handleSessionExpired();
+      }, remainingTime);
+
+      setIsAuthenticated(true);
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Set login time if not already set
+      localStorage.setItem('adminLoginTime', Date.now().toString());
+      setIsAuthenticated(true);
+
+      // Set timeout for full session
+      const timeoutId = setTimeout(() => {
+        handleSessionExpired();
+      }, SESSION_TIMEOUT);
+
+      return () => clearTimeout(timeoutId);
+    }
   }, [router]);
+
+  const handleSessionExpired = () => {
+    setShowSessionExpired(true);
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminLoginTime');
+    setIsAuthenticated(false);
+  };
+
+  const handleLoginAgain = () => {
+    setShowSessionExpired(false);
+    router.push('/admin/login');
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -114,12 +161,46 @@ export default function AdminDashboard() {
     setActiveTab('bookings');
   };
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !showSessionExpired) {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Session Expired Modal */}
+      <AnimatePresence>
+        {showSessionExpired && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Clock className="w-10 h-10 text-orange-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Session Expired</h2>
+              <p className="text-gray-600 mb-6">
+                Your admin session has expired after 2 hours of inactivity. Please login again to continue.
+              </p>
+              <button
+                onClick={handleLoginAgain}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-5 h-5" />
+                Login Again
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <NotificationSystem
         notifications={notifications}
         onRemove={removeNotification}
@@ -147,15 +228,15 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
+                <CardTitle className="text-sm font-semibold flex items-center text-green-700">
                   <Calendar className="w-4 h-4 mr-2" />
                   Total Bookings
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{stats.totalBookings}</div>
+                <div className="text-3xl font-bold text-green-800">{stats.totalBookings}</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -165,15 +246,15 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
+                <CardTitle className="text-sm font-semibold flex items-center text-green-700">
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Active Bookings
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{stats.activeBookings}</div>
+                <div className="text-3xl font-bold text-green-800">{stats.activeBookings}</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -183,15 +264,15 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
+                <CardTitle className="text-sm font-semibold flex items-center text-green-700">
                   <Users className="w-4 h-4 mr-2" />
                   Completed
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{stats.completedBookings}</div>
+                <div className="text-3xl font-bold text-green-800">{stats.completedBookings}</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -201,15 +282,15 @@ export default function AdminDashboard() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white rounded-none sm:rounded-lg border-x-0 sm:border-x border-t-0 sm:border-t">
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium flex items-center">
+                <CardTitle className="text-sm font-semibold flex items-center text-green-700">
                   <DollarSign className="w-4 h-4 mr-2" />
                   Total Revenue
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">₹{stats.totalRevenue.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-green-800">₹{stats.totalRevenue.toLocaleString()}</div>
               </CardContent>
             </Card>
           </motion.div>

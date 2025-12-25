@@ -5,8 +5,14 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Home, Calendar, List, LayoutDashboard, Image as ImageIcon, LogOut, Lock } from 'lucide-react';
+import { Menu, X, Home, Calendar, List, LayoutDashboard, Images, LogOut, Lock, LucideIcon } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+}
 
 const Header: React.FC = () => {
   const pathname = usePathname();
@@ -36,15 +42,15 @@ const Header: React.FC = () => {
     return pathname === path;
   };
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/booking', label: 'Book Now', icon: Calendar },
     { path: '/all-bookings', label: 'All Bookings', icon: List },
   ];
 
-  const adminNavItems = [
+  const adminNavItems: NavItem[] = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/admin/gallery', label: 'Gallery', icon: Image },
+    { path: '/admin/gallery', label: 'Gallery', icon: Images },
   ];
 
   return (

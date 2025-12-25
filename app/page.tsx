@@ -235,38 +235,6 @@ export default function Home() {
                 State-of-the-art Cricket Wala Play Arena slots with professional equipment.
                 Available 24/7 for your convenience.
               </p>
-
-              {/* Key Features */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-0 sm:gap-3 md:gap-4 max-w-3xl mx-auto px-0 sm:px-2">
-                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2"><FaBolt className="text-yellow-500" /></div>
-                  <div className="text-2xl font-bold mb-1">18</div>
-                  <div className="text-xs text-primary-100 uppercase tracking-wide">
-                    Time Slots
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2">🏆</div>
-                  <div className="text-2xl font-bold mb-1">4</div>
-                  <div className="text-xs text-primary-100 uppercase tracking-wide">
-                    Premium Boxes
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2"><FaMoneyBillWave className="text-green-600" /></div>
-                  <div className="text-2xl font-bold mb-1">₹1.5K</div>
-                  <div className="text-xs text-primary-100 uppercase tracking-wide">
-                    Starting From
-                  </div>
-                </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2"><FaClock className="text-blue-600" /></div>
-                  <div className="text-2xl font-bold mb-1">24/7</div>
-                  <div className="text-xs text-primary-100 uppercase tracking-wide">
-                    Available
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
