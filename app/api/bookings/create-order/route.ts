@@ -44,6 +44,13 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Missing required fields');
     }
 
+    // Validate date is not in the past
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    if (date < todayStr) {
+      throw new ValidationError('Cannot book slots for past dates');
+    }
+
     // Validate input data
     if (!isValidPhoneNumber(phone)) {
       throw new ValidationError('Invalid phone number. Please provide a 10-digit phone number.');

@@ -9,12 +9,15 @@ export const formatDate = (date: string | Date): string => {
   });
 };
 
-// Format date for input field (YYYY-MM-DD)
-export const formatDateForInput = (date: string | Date): string => {
-  return new Date(date).toISOString().split('T')[0];
+// Format date for input field (YYYY-MM-DD) - uses local timezone
+export const formatDateForInput = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
-// Get minimum date (today)
+// Get minimum date (today) - uses local timezone
 export const getMinDate = (): string => {
   return formatDateForInput(new Date());
 };
@@ -24,6 +27,12 @@ export const getMaxDate = (): string => {
   const maxDate = new Date();
   maxDate.setDate(maxDate.getDate() + 14);
   return formatDateForInput(maxDate);
+};
+
+// Check if a date is in the past
+export const isDateInPast = (dateStr: string): boolean => {
+  const today = getMinDate();
+  return dateStr < today;
 };
 
 // Get array of next 14 days

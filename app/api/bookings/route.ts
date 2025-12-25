@@ -58,6 +58,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate date is not in the past
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    if (date < todayStr) {
+      return NextResponse.json(
+        { success: false, error: 'Cannot create bookings for past dates' },
+        { status: 400 }
+      );
+    }
+
     // Check if slots are already booked
     const existingBookings = await Booking.find({
       boxId,
