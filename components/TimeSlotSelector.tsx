@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,22 +28,29 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   onSlotToggle,
   isAdmin = false,
 }) => {
+  // Use state for current time to avoid hydration mismatch
+  const [currentHour, setCurrentHour] = useState<number | null>(null);
+  const [today, setToday] = useState<string>('');
+
+  useEffect(() => {
+    setCurrentHour(new Date().getHours());
+    setToday(new Date().toISOString().split('T')[0]);
+  }, []);
+
   // Generate time slots from 6 AM to 11 PM
-  const generateTimeSlots = (): TimeSlot[] => {
+  const timeSlots = useMemo(() => {
     const slots: TimeSlot[] = [];
-    const today = new Date().toISOString().split('T')[0];
-    const isToday = selectedDate === today;
-    const currentHour = new Date().getHours();
+    const isToday = today && selectedDate === today;
 
     for (let hour = 6; hour <= 23; hour++) {
       const startTime = `${hour.toString().padStart(2, '0')}:00`;
       const endTime = `${(hour + 1).toString().padStart(2, '0')}:00`;
       
-      // Check if this slot is in the past (only for today)
-      const isPast = isToday && hour <= currentHour;
+      // Check if this slot is in the past (only for today, and only after client hydration)
+      const isPast = !!(isToday && currentHour !== null && hour <= currentHour);
       
-      // Hide past slots for regular users on current day
-      if (!isAdmin && isPast) {
+      // Hide past slots for regular users on current day (only after client hydration)
+      if (!isAdmin && currentHour !== null && isPast) {
         continue;
       }
 
@@ -57,9 +64,7 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
     }
 
     return slots;
-  };
-
-  const timeSlots = useMemo(() => generateTimeSlots(), [selectedDate, bookedSlots, isAdmin]);
+  }, [selectedDate, bookedSlots, isAdmin, currentHour, today]);
 
   const getSlotStyle = (slot: TimeSlot) => {
     if (slot.isBooked) {

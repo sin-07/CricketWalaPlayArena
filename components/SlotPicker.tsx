@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { CricketBox } from '@/types';
 import { TIME_SLOTS } from '@/utils/dummyData';
 import { Clock } from 'lucide-react';
@@ -32,11 +32,23 @@ const SlotPicker: React.FC<SlotPickerProps> = ({
   bookedSlotsDetails = [],
   currentUserEmail
 }) => {
+  // Use state for current time to avoid hydration mismatch
+  const [currentHour, setCurrentHour] = useState<number | null>(null);
+  const [today, setToday] = useState<string>('');
+
+  useEffect(() => {
+    setCurrentHour(new Date().getHours());
+    setToday(new Date().toISOString().split('T')[0]);
+  }, []);
+
   // Filter out past time slots for today
   const availableTimeSlots = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
+    // Return all slots during SSR/initial render
+    if (currentHour === null || !today) {
+      return TIME_SLOTS;
+    }
+
     const isToday = selectedDate === today;
-    const currentHour = new Date().getHours();
 
     if (!isToday) {
       return TIME_SLOTS;
@@ -47,7 +59,7 @@ const SlotPicker: React.FC<SlotPickerProps> = ({
       const slotHour = parseInt(slot.id.replace('slot-', ''));
       return slotHour > currentHour;
     });
-  }, [selectedDate]);
+  }, [selectedDate, currentHour, today]);
 
   const isSlotUnavailable = (slotId: string): boolean => {
     return unavailableSlots.includes(slotId);
