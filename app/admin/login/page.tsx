@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { GiCricketBat } from 'react-icons/gi';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
@@ -43,8 +45,16 @@ export default function AdminLoginPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8 px-4 sm:px-0">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4 shadow-lg">
-            <span className="text-3xl">🏏</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl mb-4 shadow-lg p-2">
+            <div className="relative w-full h-full">
+              <Image
+                src="/cwpa.jpg"
+                alt="Cricket Wala Play Arena"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Admin Login</h1>
           <p className="text-gray-600 mt-2">Cricket Wala Play Arena Booking System</p>

@@ -25,7 +25,11 @@ export interface Booking {
   pricePerHour: number;
   totalAmount: number;
   bookingRef: string;
-  status?: 'active' | 'completed' | 'cancelled';
+  status?: 'active' | 'completed' | 'cancelled' | 'confirmed';
+  paymentStatus?: 'pending' | 'success' | 'failed';
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
   createdAt: string;
 }
 

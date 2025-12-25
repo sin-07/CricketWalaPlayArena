@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import axios from 'axios';
+import { FaUpload, FaEdit, FaTrash, FaEye, FaEyeSlash, FaImages, FaPlus, FaTimes, FaCheck } from 'react-icons/fa';
 
 interface GalleryImage {
   _id: string;
@@ -17,21 +19,22 @@ export default function AdminGallery() {
   const router = useRouter();
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   
   // Form state
-  const [url, setUrl] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [order, setOrder] = useState(0);
-  const [isActive, setIsActive] = useState(true);
+  const [uploadedUrl, setUploadedUrl] = useState('');
 
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
-    // Check if admin is authenticated
     const token = localStorage.getItem('adminToken');
     if (!token) {
       router.push('/admin/login');
@@ -40,11 +43,6 @@ export default function AdminGallery() {
     setIsAuthenticated(true);
     fetchImages();
   }, [router]);
-
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
-    router.push('/admin/login');
-  };
 
   const fetchImages = async () => {
     try {
@@ -64,55 +62,99 @@ export default function AdminGallery() {
   };
 
   const resetForm = () => {
-    setUrl('');
+    setSelectedFiles([]);
+    setPreviewUrls([]);
+    setUploadedUrl('');
     setTitle('');
     setDescription('');
     setOrder(0);
-    setIsActive(true);
     setEditingImage(null);
     setShowForm(false);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setSelectedFiles(files);
+      
+      // Create preview URLs
+      const previews = files.map(file => URL.createObjectURL(file));
+      setPreviewUrls(previews);
+    }
+  };
+
+  const uploadFiles = async (): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+
+    for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await axios.post('/api/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        uploadedUrls.push(response.data.url);
+      } catch (error) {
+        console.error('Failed to upload file:', file.name);
+        throw error;
+      }
+    }
+
+    return uploadedUrls;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      setUploading(true);
+
       if (editingImage) {
-        // Update existing image
         await axios.put('/api/gallery', {
           id: editingImage._id,
-          url,
+          url: uploadedUrl || editingImage.url,
           title,
           description,
           order,
-          isActive,
+          isActive: editingImage.isActive,
         });
         showNotification('Image updated successfully', 'success');
       } else {
-        // Create new image
-        await axios.post('/api/gallery', {
-          url,
-          title,
-          description,
-          order,
-        });
-        showNotification('Image added successfully', 'success');
+        if (selectedFiles.length === 0) {
+          showNotification('Please select at least one image', 'error');
+          return;
+        }
+
+        const uploadedUrls = await uploadFiles();
+
+        for (let i = 0; i < uploadedUrls.length; i++) {
+          await axios.post('/api/gallery', {
+            url: uploadedUrls[i],
+            title: selectedFiles.length > 1 ? `${title} ${i + 1}` : title,
+            description,
+            order: order + i,
+          });
+        }
+
+        showNotification(`${selectedFiles.length} image(s) uploaded successfully`, 'success');
       }
 
       fetchImages();
       resetForm();
     } catch (error) {
       showNotification('Failed to save image', 'error');
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleEdit = (image: GalleryImage) => {
     setEditingImage(image);
-    setUrl(image.url);
+    setUploadedUrl(image.url);
     setTitle(image.title);
     setDescription(image.description || '');
     setOrder(image.order);
-    setIsActive(image.isActive);
     setShowForm(true);
   };
 
@@ -143,134 +185,175 @@ export default function AdminGallery() {
   };
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
-          notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${
+          notification.type === 'success' 
+            ? 'bg-gradient-to-r from-green-500 to-emerald-600' 
+            : 'bg-gradient-to-r from-red-500 to-rose-600'
         } text-white`}>
+          {notification.type === 'success' ? <FaCheck /> : <FaTimes />}
           {notification.message}
         </div>
       )}
 
       {/* Header */}
-      <div className="bg-white shadow-md">
-        <div className="container mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Gallery Management</h1>
-              <p className="text-gray-600 mt-1">Manage Cricket Wala Play Arena gallery images</p>
+      <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 shadow-xl">
+        <div className="container mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="text-white">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                  <FaImages className="text-2xl" />
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-bold">Gallery Management</h1>
+              </div>
+              <p className="text-green-100 text-sm sm:text-base">Upload and manage your cricket facility images</p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md"
-              >
-                {showForm ? '✕ Cancel' : '+ Add New Image'}
-              </button>
-            </div>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-lg ${
+                showForm 
+                  ? 'bg-white/20 text-white hover:bg-white/30 border-2 border-white/40' 
+                  : 'bg-white text-green-700 hover:bg-green-50 hover:scale-105'
+              }`}
+            >
+              {showForm ? <FaTimes /> : <FaPlus />}
+              {showForm ? 'Cancel' : 'Add Images'}
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-0 sm:px-4 py-4 sm:py-8">
-        {/* Add/Edit Form */}
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Upload Form */}
         {showForm && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-              {editingImage ? 'Edit Image' : 'Add New Image'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-green-100 overflow-hidden mb-8">
+            <div className="bg-gradient-to-r from-green-100 to-emerald-100 px-6 py-4 border-b border-green-200">
+              <h2 className="text-xl font-bold text-green-800 flex items-center gap-2">
+                <FaUpload className="text-green-600" />
+                {editingImage ? 'Edit Image Details' : 'Upload New Images'}
+              </h2>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {!editingImage && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Image URL *
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Select Images
                   </label>
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
+                  <div className="border-2 border-dashed border-green-300 rounded-xl p-8 text-center bg-gradient-to-br from-green-50 to-emerald-50 hover:border-green-500 transition-colors cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <FaUpload className="text-4xl text-green-500 mx-auto mb-3" />
+                      <p className="text-green-700 font-semibold mb-1">Click to upload or drag and drop</p>
+                      <p className="text-green-600 text-sm">PNG, JPG, WEBP (Multiple files supported)</p>
+                    </label>
+                  </div>
+                  
+                  {/* Preview Grid */}
+                  {previewUrls.length > 0 && (
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {previewUrls.map((url, index) => (
+                        <div key={index} className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden border-2 border-green-200">
+                          <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                          <div className="absolute bottom-1 right-1 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                            {index + 1}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {selectedFiles.length > 0 && (
+                    <p className="text-green-700 font-medium mt-3 flex items-center gap-2">
+                      <FaCheck className="text-green-600" />
+                      {selectedFiles.length} file(s) selected
+                    </p>
+                  )}
                 </div>
+              )}
 
+              {editingImage && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title *
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Current Image</label>
+                  <div className="relative w-full max-w-lg aspect-video bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl overflow-hidden border-2 border-green-200">
+                    <img src={uploadedUrl} alt={title} className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Title *</label>
                   <input
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Arena A"
+                    placeholder="e.g., Cricket Arena View"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-green-50/50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Display Order</label>
+                  <input
+                    type="number"
+                    value={order}
+                    onChange={(e) => setOrder(parseInt(e.target.value))}
+                    placeholder="0"
+                    className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-green-50/50"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Professional cricket practice facility..."
+                  placeholder="Describe this image..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-green-50/50 resize-none"
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Display Order
-                  </label>
-                  <input
-                    type="number"
-                    value={order}
-                    onChange={(e) => setOrder(parseInt(e.target.value))}
-                    min="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
-                </div>
-
-                {editingImage && (
-                  <div className="flex items-center">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                        className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">
-                        Active (Visible to users)
-                      </span>
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   type="submit"
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+                  disabled={uploading}
+                  className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingImage ? 'Update Image' : 'Add Image'}
+                  {uploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <FaUpload />
+                      {editingImage ? 'Save Changes' : 'Upload Images'}
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
                 >
+                  <FaTimes />
                   Cancel
                 </button>
               </div>
@@ -278,74 +361,107 @@ export default function AdminGallery() {
           </div>
         )}
 
+        {/* Stats Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-md border border-green-100">
+            <div className="text-3xl font-bold text-green-600">{images.length}</div>
+            <div className="text-sm text-gray-600">Total Images</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-md border border-green-100">
+            <div className="text-3xl font-bold text-emerald-600">{images.filter(i => i.isActive).length}</div>
+            <div className="text-sm text-gray-600">Active</div>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-md border border-green-100">
+            <div className="text-3xl font-bold text-orange-500">{images.filter(i => !i.isActive).length}</div>
+            <div className="text-sm text-gray-600">Hidden</div>
+          </div>
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 shadow-md text-white">
+            <div className="text-3xl font-bold">Live</div>
+            <div className="text-sm text-green-100">Gallery Status</div>
+          </div>
+        </div>
+
         {/* Gallery Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-600 mx-auto"></div>
+          <div className="text-center py-16">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-200 border-t-green-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading gallery...</p>
           </div>
         ) : images.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4">📷</div>
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center border border-green-100">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FaImages className="text-4xl text-green-500" />
+            </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-2">No Images Yet</h3>
-            <p className="text-gray-600 mb-6">Start by adding your first gallery image</p>
+            <p className="text-gray-600 mb-6">Start by uploading your first gallery image</p>
             <button
               onClick={() => setShowForm(true)}
-              className="bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg"
             >
+              <FaPlus />
               Add First Image
             </button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {images.map((image) => (
               <div
                 key={image._id}
-                className={`bg-white rounded-xl shadow-lg overflow-hidden ${
-                  !image.isActive ? 'opacity-50' : ''
+                className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all hover:shadow-xl hover:-translate-y-1 ${
+                  image.isActive ? 'border-green-100' : 'border-orange-200 opacity-75'
                 }`}
               >
-                <div className="aspect-video relative bg-gray-200">
+                <div className="aspect-video relative bg-gradient-to-br from-green-50 to-emerald-50">
                   <img
                     src={image.url}
                     alt={image.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x300?text=Image+Error';
                     }}
                   />
-                  {!image.isActive && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">
-                      Hidden
-                    </div>
-                  )}
+                  <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold ${
+                    image.isActive 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-orange-500 text-white'
+                  }`}>
+                    {image.isActive ? 'Active' : 'Hidden'}
+                  </div>
+                  <div className="absolute bottom-3 left-3 bg-black/60 text-white px-2 py-1 rounded text-xs">
+                    Order: {image.order}
+                  </div>
                 </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-bold text-gray-800 mb-1">{image.title}</h3>
+                
+                <div className="p-4 bg-gradient-to-b from-white to-green-50/50">
+                  <h3 className="text-lg font-bold text-gray-800 mb-1 truncate">{image.title}</h3>
                   {image.description && (
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">{image.description}</p>
                   )}
-                  <div className="text-xs text-gray-500 mb-3">Order: {image.order}</div>
+                  
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(image)}
-                      className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all"
                     >
-                      ✏️ Edit
+                      <FaEdit className="text-xs" />
+                      Edit
                     </button>
                     <button
                       onClick={() => toggleActive(image)}
-                      className={`flex-1 ${
-                        image.isActive ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'
-                      } text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors`}
+                      className={`flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                        image.isActive 
+                          ? 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
+                      }`}
                     >
-                      {image.isActive ? '👁️ Hide' : '👁️ Show'}
+                      {image.isActive ? <FaEyeSlash className="text-xs" /> : <FaEye className="text-xs" />}
+                      {image.isActive ? 'Hide' : 'Show'}
                     </button>
                     <button
                       onClick={() => handleDelete(image._id)}
-                      className="bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
+                      className="flex items-center justify-center bg-gradient-to-r from-red-500 to-rose-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-red-600 hover:to-rose-600 transition-all"
                     >
-                      🗑️
+                      <FaTrash className="text-xs" />
                     </button>
                   </div>
                 </div>

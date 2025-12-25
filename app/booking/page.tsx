@@ -7,6 +7,7 @@ import { CRICKET_BOXES } from '@/utils/dummyData';
 import DatePickerComponent from '@/components/DatePickerComponent';
 import TimeSlotSelector from '@/components/TimeSlotSelector';
 import BookingHistoryComponent from '@/components/BookingHistoryComponent';
+import PaymentModal from '@/components/PaymentModal';
 import NotificationSystem, {
   Notification,
   NotificationType,
@@ -17,11 +18,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useBookings from '@/hooks/useBookings';
 import { getMinDate, getMaxDate, generateBookingRef, calculateTotalPrice } from '@/utils/helpers';
-import { Calendar, Clock, User, Mail, Phone, Check } from 'lucide-react';
+import { Calendar, Clock, User, Mail, Phone, Check, MapPin } from 'lucide-react';
+
+// Fixed Arena - Arena A
+const FIXED_ARENA = CRICKET_BOXES[0];
 
 export default function EnhancedBookingPage() {
   const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
-  const [selectedBox, setSelectedBox] = useState<CricketBox>(CRICKET_BOXES[0]);
+  const [selectedBox, setSelectedBox] = useState<CricketBox>(FIXED_ARENA);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [bookedSlots, setBookedSlots] = useState<number[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -31,6 +35,12 @@ export default function EnhancedBookingPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  
+  // Payment state
+  const [showPayment, setShowPayment] = useState(false);
+  const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
+  const [orderId, setOrderId] = useState<string>('');
+  const [paymentAmount, setPaymentAmount] = useState(0);
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
 
@@ -45,7 +55,7 @@ export default function EnhancedBookingPage() {
   // Update booked slots when bookings change
   useEffect(() => {
     const slots = bookings
-      .filter((b) => b.boxId === selectedBox.id && b.date === selectedDate && b.status === 'active')
+      .filter((b) => b.boxId === selectedBox.id && b.date === selectedDate && (b.status === 'active' || b.status === 'confirmed'))
       .map((b) => b.timeSlotId);
     setBookedSlots(slots);
   }, [bookings, selectedBox, selectedDate]);
@@ -92,6 +102,9 @@ export default function EnhancedBookingPage() {
     }
 
     try {
+      const totalAmount = calculateTotalPrice(selectedBox.pricePerHour, selectedSlots.length);
+      const bookingRef = generateBookingRef();
+
       const booking: Booking = {
         boxId: selectedBox.id,
         boxName: selectedBox.name,
@@ -99,39 +112,106 @@ export default function EnhancedBookingPage() {
         timeSlotId: selectedSlots[0],
         timeSlotIds: selectedSlots,
         customerName,
-        email: email || 'noemail@provided.com',
+        email: email || '',
         phone,
         pricePerHour: selectedBox.pricePerHour,
-        totalAmount: calculateTotalPrice(selectedBox.pricePerHour, selectedSlots.length),
-        bookingRef: generateBookingRef(),
+        totalAmount,
+        bookingRef,
         createdAt: new Date().toISOString(),
         status: 'active',
+        paymentStatus: 'pending',
       };
 
-      await addBooking(booking);
-      addNotification('Booking confirmed successfully! 🎉', 'success');
-      
-      // Send confirmation (API call would be here)
-      // await sendConfirmation(booking);
+      // Create Razorpay order
+      const response = await fetch('/api/bookings/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          boxId: booking.boxId,
+          boxName: booking.boxName,
+          date: booking.date,
+          timeSlotIds: booking.timeSlotIds,
+          customerName: booking.customerName,
+          email: booking.email,
+          phone: booking.phone,
+          pricePerHour: booking.pricePerHour,
+          totalAmount: booking.totalAmount,
+          bookingRef: booking.bookingRef,
+        }),
+      });
 
-      // Reset form
-      setSelectedSlots([]);
-      setCustomerName('');
-      setEmail('');
-      setPhone('');
-      
-      await refreshBookings();
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create payment order');
+      }
+
+      // Show payment modal
+      setCurrentBooking(booking);
+      setOrderId(data.data.orderId);
+      setPaymentAmount(data.data.amount);
+      setShowPayment(true);
     } catch (error: any) {
       addNotification(
-        error.response?.data?.error || 'Failed to create booking. Please try again.',
+        error.message || 'Failed to initiate payment. Please try again.',
         'error'
       );
     }
   };
 
+  const handlePaymentSuccess = async (paymentId: string, signature: string) => {
+    try {
+      setShowPayment(false);
+      addNotification('Payment successful! Finalizing your booking...', 'info');
+      
+      // Refresh bookings to show updated booking with confirmed status
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await refreshBookings();
+
+      addNotification('Booking confirmed successfully! Check your email and SMS for confirmation details.', 'success');
+      
+      // Reset form
+      setSelectedSlots([]);
+      setCustomerName('');
+      setEmail('');
+      setPhone('');
+      setCurrentBooking(null);
+      setOrderId('');
+    } catch (error: any) {
+      addNotification('Error finalizing booking. Please contact support.', 'error');
+    }
+  };
+
+  const handlePaymentFailure = (error: string) => {
+    setShowPayment(false);
+    addNotification(`Payment failed: ${error}. Please try again.`, 'error');
+    setCurrentBooking(null);
+    setOrderId('');
+  };
+
   return (
     <div className="min-h-screen bg-green-50">
       <NotificationSystem notifications={notifications} onRemove={removeNotification} />
+
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {showPayment && currentBooking && (
+          <PaymentModal
+            booking={currentBooking}
+            orderId={orderId}
+            amount={paymentAmount}
+            onSuccess={handlePaymentSuccess}
+            onFailure={handlePaymentFailure}
+            onClose={() => {
+              setShowPayment(false);
+              setCurrentBooking(null);
+              setOrderId('');
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -167,24 +247,15 @@ export default function EnhancedBookingPage() {
               </CardHeader>
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Box Selection */}
+                  {/* Fixed Arena Display */}
                   <div>
-                    <Label>Select Arena Slot</Label>
-                    <select
-                      value={selectedBox.id}
-                      onChange={(e) => {
-                        const box = CRICKET_BOXES.find((b) => b.id === parseInt(e.target.value));
-                        if (box) setSelectedBox(box);
-                        setSelectedSlots([]);
-                      }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 mt-2"
-                    >
-                      {CRICKET_BOXES.map((box) => (
-                        <option key={box.id} value={box.id}>
-                          {box.name} - ₹{box.pricePerHour}/hour
-                        </option>
-                      ))}
-                    </select>
+                    <Label className="flex items-center">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      Arena
+                    </Label>
+                    <div className="w-full px-4 py-3 bg-green-50 border border-green-300 rounded-lg text-green-800 font-semibold mt-2">
+                      {FIXED_ARENA.name} - ₹{FIXED_ARENA.pricePerHour}/hour
+                    </div>
                   </div>
 
                   {/* Date Selection */}
@@ -294,7 +365,7 @@ export default function EnhancedBookingPage() {
                     ) : (
                       <>
                         <Check className="w-4 h-4 mr-2" />
-                        Confirm Booking
+                        Proceed to Payment
                       </>
                     )}
                   </Button>

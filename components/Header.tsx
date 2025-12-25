@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Home, Calendar, List, LayoutDashboard, Image, LogOut, Lock } from 'lucide-react';
+import { Menu, X, Home, Calendar, List, LayoutDashboard, Image as ImageIcon, LogOut, Lock } from 'lucide-react';
+import { GiCricketBat } from 'react-icons/gi';
 
 const Header: React.FC = () => {
   const pathname = usePathname();
@@ -50,8 +52,14 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 py-3 md:py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg md:text-xl font-bold">🏏</span>
+            <div className="relative w-8 h-8 md:w-10 md:h-10">
+              <Image
+                src="/cwpa.jpg"
+                alt="Cricket Wala Play Arena"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="text-xl md:text-2xl font-bold text-gray-800">
               Cricket Wala <span className="text-primary-600">Play Arena</span>
@@ -166,8 +174,13 @@ const Header: React.FC = () => {
               <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                      <span className="text-2xl">🏏</span>
+                    <div className="relative w-10 h-10">
+                      <Image
+                        src="/cwpa.jpg"
+                        alt="Cricket Wala Play Arena"
+                        fill
+                        className="object-contain bg-white rounded-lg p-1"
+                      />
                     </div>
                     <div>
                       <h2 className="text-lg font-bold">Cricket Wala</h2>

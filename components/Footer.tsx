@@ -1,5 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { GiCricketBat } from 'react-icons/gi';
 
 const Footer: React.FC = () => {
   return (
@@ -8,7 +10,14 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-4 flex items-center">
-              <span className="text-2xl mr-2">🏏</span>
+              <div className="relative w-8 h-8 mr-2">
+                <Image
+                  src="/cwpa.jpg"
+                  alt="CWPA Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
               Cricket Wala Play Arena
             </h3>
             <p className="text-gray-400">

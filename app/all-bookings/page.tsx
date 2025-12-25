@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Booking } from '@/types';
+import { FaPhone } from 'react-icons/fa';
+import { GiCricketBat } from 'react-icons/gi';
 
 const AllBookingsPage: React.FC = () => {
   const [searchType, setSearchType] = useState<'bookingRef' | 'phone' | 'date'>('bookingRef');
@@ -119,7 +121,7 @@ const AllBookingsPage: React.FC = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  📱 Mobile Number
+                  <FaPhone className="inline mr-1" /> Mobile Number
                 </button>
                 <button
                   type="button"
@@ -245,7 +247,7 @@ const AllBookingsPage: React.FC = () => {
                             <p className="text-xs text-gray-500 mb-1">Customer Details</p>
                             <p className="text-sm font-semibold text-gray-800">{booking.customerName}</p>
                             <p className="text-xs text-gray-600">📧 {booking.email}</p>
-                            <p className="text-xs text-gray-600">📱 {booking.phone}</p>
+                            <p className="text-xs text-gray-600 flex items-center"><FaPhone className="mr-1" /> {booking.phone}</p>
                           </div>
 
                           <div>
@@ -288,7 +290,7 @@ const AllBookingsPage: React.FC = () => {
         {/* Initial State */}
         {!hasSearched && !loading && (
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4">🏏</div>
+            <div className="text-6xl mb-4"><GiCricketBat className="text-gray-400" /></div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">Ready to Search</h3>
             <p className="text-gray-600">
               Enter your booking details above to view your bookings

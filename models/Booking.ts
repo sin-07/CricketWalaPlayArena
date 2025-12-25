@@ -13,7 +13,11 @@ export interface IBooking {
   pricePerHour: number;
   totalAmount: number;
   bookingRef: string;
-  status: 'active' | 'completed' | 'cancelled';
+  status: 'active' | 'completed' | 'cancelled' | 'confirmed';
+  paymentStatus: 'pending' | 'success' | 'failed';
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -68,8 +72,25 @@ const BookingSchema = new Schema<IBooking>(
     },
     status: {
       type: String,
-      enum: ['active', 'completed', 'cancelled'],
+      enum: ['active', 'completed', 'cancelled', 'confirmed'],
       default: 'active',
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'success', 'failed'],
+      default: 'pending',
+    },
+    razorpayOrderId: {
+      type: String,
+      default: null,
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+    },
+    razorpaySignature: {
+      type: String,
+      default: null,
     },
   },
   {

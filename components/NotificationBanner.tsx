@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Notification } from '@/types';
+import { FaCheck, FaTimes, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 
 interface NotificationBannerProps {
   notifications: Notification[];
@@ -24,16 +25,16 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({ notifications, 
     }
   };
 
-  const getIcon = (type: string): string => {
+  const getIcon = (type: string): JSX.Element => {
     switch (type) {
       case 'success':
-        return '✓';
+        return <FaCheck />;
       case 'error':
-        return '✕';
+        return <FaTimes />;
       case 'warning':
-        return '⚠';
+        return <FaExclamationTriangle />;
       default:
-        return 'ℹ';
+        return <FaInfoCircle />;
     }
   };
 

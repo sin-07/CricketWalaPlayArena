@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { TimeSlot } from '@/types';
+import { FaCheckCircle, FaLock } from 'react-icons/fa';
 
 interface SlotStatusProps {
   boxId: number;
@@ -102,7 +103,7 @@ const SlotStatus: React.FC<SlotStatusProps> = ({ boxId, date, onSlotsUpdate }) =
       {slotData.nextAvailableSlot ? (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
-            <span className="mr-2">✅</span>
+            <FaCheckCircle className="mr-2 text-green-600" />
             Next Available Slot
           </h4>
           <div className="bg-white rounded-lg p-3 border border-green-300">
@@ -130,7 +131,7 @@ const SlotStatus: React.FC<SlotStatusProps> = ({ boxId, date, onSlotsUpdate }) =
       {slotData.bookedSlots.length > 0 && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
           <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
-            <span className="mr-2">🔒</span>
+            <FaLock className="mr-2 text-red-600" />
             Currently Booked Slots
           </h4>
           <div className="flex flex-wrap gap-2">

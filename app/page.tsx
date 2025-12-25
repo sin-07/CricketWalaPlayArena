@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { CricketBox, CustomerData, Booking } from '@/types';
 import { CRICKET_BOXES } from '@/utils/dummyData';
 import BookingForm from '@/components/BookingForm';
@@ -8,8 +9,13 @@ import SlotPicker from '@/components/SlotPicker';
 import BookingSummary from '@/components/BookingSummary';
 import NotificationBanner from '@/components/NotificationBanner';
 import Gallery from '@/components/Gallery';
+import PaymentModal from '@/components/PaymentModal';
 import useBookings from '@/hooks/useBookings';
 import useNotifications from '@/hooks/useNotifications';
+import { FaBolt, FaMoneyBillWave, FaClock } from 'react-icons/fa';
+import { GiCricketBat } from 'react-icons/gi';
+import { Calendar, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   getMinDate,
   generateBookingRef,
@@ -23,6 +29,11 @@ export default function Home() {
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
   const [showSummary, setShowSummary] = useState<boolean>(false);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+  
+  // Payment state
+  const [showPayment, setShowPayment] = useState(false);
+  const [orderId, setOrderId] = useState<string>('');
+  const [paymentAmount, setPaymentAmount] = useState(0);
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
   const { notifications, addNotification, removeNotification } = useNotifications();
@@ -79,6 +90,8 @@ export default function Home() {
 
     try {
       const slotIds = selectedSlots.map(slot => parseInt(slot.replace('slot-', '')));
+      const totalAmount = calculateTotalPrice(selectedBox.pricePerHour, selectedSlots.length);
+      const bookingRef = generateBookingRef();
 
       const booking: Booking = {
         boxId: selectedBox.id,
@@ -90,31 +103,82 @@ export default function Home() {
         email: customerData.email,
         phone: customerData.phone,
         pricePerHour: selectedBox.pricePerHour,
-        totalAmount: calculateTotalPrice(
-          selectedBox.pricePerHour,
-          selectedSlots.length
-        ),
-        bookingRef: generateBookingRef(),
+        totalAmount,
+        bookingRef,
         createdAt: new Date().toISOString(),
+        status: 'active',
+        paymentStatus: 'pending',
       };
 
       // Store the current user's email for showing their bookings
       setCurrentUserEmail(customerData.email);
 
-      await addBooking(booking);
-      addNotification('Booking confirmed successfully!', 'success');
+      // Create Razorpay order
+      const response = await fetch('/api/bookings/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          boxId: booking.boxId,
+          boxName: booking.boxName,
+          date: booking.date,
+          timeSlotIds: booking.timeSlotIds,
+          customerName: booking.customerName,
+          email: booking.email,
+          phone: booking.phone,
+          pricePerHour: booking.pricePerHour,
+          totalAmount: booking.totalAmount,
+          bookingRef: booking.bookingRef,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create payment order');
+      }
+
+      // Show payment modal
       setCurrentBooking(booking);
-      setShowSummary(true);
-      setSelectedSlots([]);
+      setOrderId(data.data.orderId);
+      setPaymentAmount(data.data.amount);
+      setShowPayment(true);
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || 'Failed to create booking. Please try again.';
+      const errorMessage = error.message || 'Failed to initiate payment. Please try again.';
       addNotification(errorMessage, 'error');
       
       // If specific slots are booked, update the UI
-      if (error.response?.data?.bookedSlots) {
-        await refreshBookings();
-      }
+      await refreshBookings();
     }
+  };
+
+  const handlePaymentSuccess = async (paymentId: string, signature: string) => {
+    try {
+      setShowPayment(false);
+      addNotification('Payment successful! Finalizing your booking...', 'info');
+      
+      // Refresh bookings to show updated booking with confirmed status
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      await refreshBookings();
+
+      addNotification('Booking confirmed successfully! Check your email and SMS for confirmation details.', 'success');
+      
+      // Show booking summary
+      setShowSummary(true);
+      
+      // Reset form
+      setSelectedSlots([]);
+    } catch (error: any) {
+      addNotification('Error finalizing booking. Please contact support.', 'error');
+    }
+  };
+
+  const handlePaymentFailure = (error: string) => {
+    setShowPayment(false);
+    addNotification(`Payment failed: ${error}. Please try again.`, 'error');
+    setCurrentBooking(null);
+    setOrderId('');
   };
 
   const handleCloseSummary = (): void => {
@@ -125,6 +189,24 @@ export default function Home() {
   return (
     <>
       <NotificationBanner notifications={notifications} onRemove={removeNotification} />
+      
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {showPayment && currentBooking && (
+          <PaymentModal
+            booking={currentBooking}
+            orderId={orderId}
+            amount={paymentAmount}
+            onSuccess={handlePaymentSuccess}
+            onFailure={handlePaymentFailure}
+            onClose={() => {
+              setShowPayment(false);
+              setCurrentBooking(null);
+              setOrderId('');
+            }}
+          />
+        )}
+      </AnimatePresence>
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
         {/* Professional Hero Section */}
@@ -138,7 +220,7 @@ export default function Home() {
           <div className="relative container mx-auto px-0 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
             <div className="max-w-4xl mx-auto text-center">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
-                <span className="text-2xl">🏏</span>
+                <GiCricketBat className="text-2xl" />
                 <span className="text-sm font-semibold tracking-wide">
                   PREMIUM CRICKET FACILITIES
                 </span>
@@ -157,7 +239,7 @@ export default function Home() {
               {/* Key Features */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-0 sm:gap-3 md:gap-4 max-w-3xl mx-auto px-0 sm:px-2">
                 <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2">⚡</div>
+                  <div className="text-3xl mb-2"><FaBolt className="text-yellow-500" /></div>
                   <div className="text-2xl font-bold mb-1">18</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
                     Time Slots
@@ -171,14 +253,14 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2">💰</div>
+                  <div className="text-3xl mb-2"><FaMoneyBillWave className="text-green-600" /></div>
                   <div className="text-2xl font-bold mb-1">₹1.5K</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
                     Starting From
                   </div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-none sm:rounded-xl p-4 border-0 sm:border border-white/20">
-                  <div className="text-3xl mb-2">🕐</div>
+                  <div className="text-3xl mb-2"><FaClock className="text-blue-600" /></div>
                   <div className="text-2xl font-bold mb-1">24/7</div>
                   <div className="text-xs text-primary-100 uppercase tracking-wide">
                     Available
@@ -203,16 +285,17 @@ export default function Home() {
             </div>
 
             {/* Booking Grid */}
-            <div className="grid lg:grid-cols-12 gap-0 sm:gap-6 md:gap-8">
-              {/* Booking Form - Left Sidebar */}
-              <div className="lg:col-span-4">
-                <div className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-xl border-0 sm:border border-gray-200 overflow-hidden sm:sticky sm:top-4">
-                  <div className="bg-gradient-to-r from-primary-500 to-primary-600 px-4 sm:px-6 py-3 sm:py-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                      <span>📝</span> Booking Details
-                    </h3>
-                  </div>
-                  <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
+              {/* Booking Form - Left Column */}
+              <div className="w-full lg:col-span-1">
+                <Card className="rounded-none sm:rounded-lg lg:sticky lg:top-4 shadow-none sm:shadow-xl w-full border-x-0 sm:border-x">
+                  <CardHeader className="bg-green-500">
+                    <CardTitle className="text-white flex items-center">
+                      <Calendar className="w-5 h-5 mr-2" />
+                      Booking Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
                     {loading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
@@ -228,20 +311,20 @@ export default function Home() {
                         onBoxChange={handleBoxChange}
                       />
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              {/* Right Content Area */}
-              <div className="lg:col-span-8">
-                {/* Time Slots */}
-                <div className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-xl border-0 sm:border border-gray-200 overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 sm:px-6 py-3 sm:py-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                      <span>⏰</span> Choose Time Slots
-                    </h3>
-                  </div>
-                  <div className="p-4 sm:p-6">
+              {/* Right Content Area - Time Slots */}
+              <div className="lg:col-span-2 mt-0 lg:mt-0">
+                <Card className="rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-x-0 sm:border-x border-t-0 sm:border-t">
+                  <CardHeader className="bg-green-500">
+                    <CardTitle className="text-white flex items-center">
+                      <Clock className="w-5 h-5 mr-2" />
+                      Available Time Slots
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
                     <SlotPicker
                       selectedDate={selectedDate}
                       selectedBox={selectedBox}
@@ -251,8 +334,8 @@ export default function Home() {
                       bookedSlotsDetails={getBookedSlotsDetails()}
                       currentUserEmail={currentUserEmail}
                     />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
@@ -273,7 +356,7 @@ export default function Home() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 sm:gap-4 md:gap-6 lg:gap-8 max-w-6xl mx-auto">
               <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-b sm:border-0">
-                <div className="text-5xl mb-4">⚡</div>
+                <div className="text-5xl mb-4"><FaBolt className="text-yellow-500" /></div>
                 <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
                   Instant Booking
                 </h3>
@@ -284,7 +367,7 @@ export default function Home() {
               </div>
 
               <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-b sm:border-0">
-                <div className="text-5xl mb-4">🏏</div>
+                <div className="text-5xl mb-4"><GiCricketBat className="text-green-600" /></div>
                 <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
                   Professional Setup
                 </h3>
@@ -295,7 +378,7 @@ export default function Home() {
               </div>
 
               <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 sm:col-span-2 lg:col-span-1 border-b sm:border-0">
-                <div className="text-5xl mb-4">💰</div>
+                <div className="text-5xl mb-4"><FaMoneyBillWave className="text-green-600" /></div>
                 <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
                   Affordable Rates
                 </h3>
