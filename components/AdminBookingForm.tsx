@@ -47,7 +47,16 @@ const AdminBookingForm: React.FC<AdminBookingFormProps> = ({
         const result = await response.json();
         if (result.success) {
           // Extract all timeSlotIds from bookings for this date and box
-          const bookedSlotIds = result.data.map((booking: any) => booking.timeSlotId);
+          const bookedSlotIds: number[] = [];
+          result.data.forEach((booking: any) => {
+            // Add all slots from timeSlotIds array
+            if (booking.timeSlotIds && booking.timeSlotIds.length > 0) {
+              bookedSlotIds.push(...booking.timeSlotIds);
+            } else if (booking.timeSlotId) {
+              // Fallback to single timeSlotId for legacy bookings
+              bookedSlotIds.push(booking.timeSlotId);
+            }
+          });
           setBookedSlots(bookedSlotIds);
         }
       } catch (error) {

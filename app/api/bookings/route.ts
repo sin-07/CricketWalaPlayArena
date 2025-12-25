@@ -62,46 +62,48 @@ export async function POST(request: NextRequest) {
     const existingBookings = await Booking.find({
       boxId,
       date,
-      timeSlotId: { $in: timeSlotIds },
       status: 'active',
+      $or: [
+        { timeSlotIds: { $elemMatch: { $in: timeSlotIds } } },
+        { timeSlotId: { $in: timeSlotIds } }
+      ]
     });
 
     if (existingBookings.length > 0) {
+      // Get all booked slots
+      const bookedSlots: number[] = [];
+      existingBookings.forEach(b => {
+        if (b.timeSlotIds && b.timeSlotIds.length > 0) {
+          bookedSlots.push(...b.timeSlotIds.filter((s: number) => timeSlotIds.includes(s)));
+        } else if (timeSlotIds.includes(b.timeSlotId)) {
+          bookedSlots.push(b.timeSlotId);
+        }
+      });
       return NextResponse.json(
         {
           success: false,
           error: 'One or more time slots are already booked',
-          bookedSlots: existingBookings.map(b => b.timeSlotId),
+          bookedSlots,
         },
         { status: 400 }
       );
     }
 
-    // Create bookings for each time slot
-    const bookings = [];
-    const baseBookingRef = body.bookingRef; // Get the base reference from frontend
-    
-    for (let i = 0; i < timeSlotIds.length; i++) {
-      const timeSlotId = timeSlotIds[i];
-      // Generate unique booking ref for each slot while keeping them linked
-      const uniqueBookingRef = timeSlotIds.length > 1 
-        ? `${baseBookingRef}-${i + 1}` 
-        : baseBookingRef;
-      
-      const booking = await Booking.create({
-        ...body,
-        timeSlotId,
-        bookingRef: uniqueBookingRef,
-        status: 'active',
-      });
-      bookings.push(booking);
-    }
+    // Create ONE booking with all time slots (not separate bookings)
+    const booking = await Booking.create({
+      ...body,
+      timeSlotId: timeSlotIds[0], // First slot for legacy compatibility
+      timeSlotIds: timeSlotIds,   // All slots in array
+      bookingRef: body.bookingRef,
+      status: 'active',
+      paymentStatus: 'success', // Admin bookings are pre-paid/offline
+    });
 
     return NextResponse.json(
       {
         success: true,
         message: 'Booking created successfully',
-        data: bookings,
+        data: [booking],
       },
       { status: 201 }
     );

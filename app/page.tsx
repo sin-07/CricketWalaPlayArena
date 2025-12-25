@@ -41,12 +41,24 @@ export default function Home() {
   const getUnavailableSlots = (): string[] => {
     if (!selectedBox) return [];
 
-    return bookings
+    const unavailable: string[] = [];
+    bookings
       .filter(
         (booking) =>
           booking.boxId === selectedBox.id && booking.date === selectedDate
       )
-      .map((booking) => `slot-${booking.timeSlotId}`);
+      .forEach((booking) => {
+        // Add all slots from timeSlotIds array
+        if (booking.timeSlotIds && booking.timeSlotIds.length > 0) {
+          booking.timeSlotIds.forEach(slotId => {
+            unavailable.push(`slot-${slotId}`);
+          });
+        } else if (booking.timeSlotId) {
+          // Fallback for legacy single slot bookings
+          unavailable.push(`slot-${booking.timeSlotId}`);
+        }
+      });
+    return unavailable;
   };
 
   const getBookedSlotsDetails = () => {

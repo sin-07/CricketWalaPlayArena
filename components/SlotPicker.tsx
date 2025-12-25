@@ -100,7 +100,8 @@ const SlotPicker: React.FC<SlotPickerProps> = ({
 
   const getSlotButtonClass = (slotId: string): string => {
     if (isSlotUnavailable(slotId)) {
-      return 'bg-gray-200 text-gray-400 cursor-not-allowed';
+      // Show booked slots in RED like the booking page
+      return 'bg-red-100 text-red-600 border-red-300 cursor-not-allowed';
     }
     if (isSlotSelected(slotId)) {
       return 'bg-primary-600 text-white border-primary-600 shadow-md';
@@ -135,9 +136,12 @@ const SlotPicker: React.FC<SlotPickerProps> = ({
                     disabled={!selectedBox || isUnavailable}
                     className={`${getSlotButtonClass(
                       slot.id
-                    )} border-2 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 w-full`}
+                    )} border-2 px-3 py-3 rounded-lg text-sm font-medium transition-all duration-200 w-full flex flex-col items-center justify-center`}
                   >
-                    {slot.display}
+                    <span>{slot.display}</span>
+                    {isUnavailable && (
+                      <span className="text-xs text-red-500 mt-1">Booked</span>
+                    )}
                   </button>
                   
                   {/* Tooltip for booked slots */}
