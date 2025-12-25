@@ -7,13 +7,17 @@ import { bookingService } from '@/services/bookingService';
 // Custom hook to manage bookings
 const useBookings = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
 
   // Fetch bookings from API
   const fetchBookings = async (params?: { boxId?: number; date?: string; email?: string }) => {
     try {
-      setLoading(true);
+      // Only show loading on subsequent fetches, not initial load
+      if (!isInitialLoad) {
+        setLoading(true);
+      }
       const response = await bookingService.getBookings(params);
       if (response.success) {
         setBookings(response.data);
@@ -23,6 +27,7 @@ const useBookings = () => {
       console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 

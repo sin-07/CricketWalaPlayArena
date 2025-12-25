@@ -264,21 +264,14 @@ export default function Home() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
-                    {loading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                        <p className="mt-4 text-gray-600">Loading...</p>
-                      </div>
-                    ) : (
-                      <BookingForm
-                        onSubmit={handleBookingSubmit}
-                        selectedDate={selectedDate}
-                        selectedBox={selectedBox}
-                        selectedSlots={selectedSlots}
-                        onDateChange={handleDateChange}
-                        onBoxChange={handleBoxChange}
-                      />
-                    )}
+                    <BookingForm
+                      onSubmit={handleBookingSubmit}
+                      selectedDate={selectedDate}
+                      selectedBox={selectedBox}
+                      selectedSlots={selectedSlots}
+                      onDateChange={handleDateChange}
+                      onBoxChange={handleBoxChange}
+                    />
                   </CardContent>
                 </Card>
               </div>
