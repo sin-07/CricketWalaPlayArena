@@ -187,7 +187,7 @@ export default function AdminDashboard() {
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-3">Session Expired</h2>
               <p className="text-gray-600 mb-6">
-                Your admin session has expired after 2 hours of inactivity. Please login again to continue.
+                Your admin session has expired. For security reasons, sessions automatically expire after 2 hours. Please login again to continue.
               </p>
               <button
                 onClick={handleLoginAgain}

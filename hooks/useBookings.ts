@@ -49,8 +49,12 @@ const useBookings = () => {
       (booking) =>
         booking.boxId === boxId &&
         booking.date === date &&
-        booking.timeSlotId === timeSlotId &&
-        (booking as any).status === 'active'
+        (booking as any).status === 'active' &&
+        (
+          // Check both timeSlotIds array and legacy timeSlotId
+          (booking.timeSlotIds && booking.timeSlotIds.includes(timeSlotId)) ||
+          booking.timeSlotId === timeSlotId
+        )
     );
   };
 

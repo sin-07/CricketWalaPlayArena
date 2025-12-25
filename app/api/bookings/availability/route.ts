@@ -19,11 +19,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all bookings for the box within the date range
+    // Get only CONFIRMED bookings (paymentStatus: success)
+    // This ensures unpaid/cancelled bookings don't block slots
     const bookings = await Booking.find({
       boxId: parseInt(boxId),
       date: { $gte: startDate, $lte: endDate },
-      status: 'active',
+      paymentStatus: 'success', // Only show slots booked by confirmed payments
     });
 
     // Group booked slots by date
@@ -32,7 +33,12 @@ export async function GET(request: NextRequest) {
       if (!bookedSlotsByDate[booking.date]) {
         bookedSlotsByDate[booking.date] = [];
       }
-      bookedSlotsByDate[booking.date].push(booking.timeSlotId);
+      // Add all time slots from the booking
+      if (booking.timeSlotIds && booking.timeSlotIds.length > 0) {
+        bookedSlotsByDate[booking.date].push(...booking.timeSlotIds);
+      } else if (booking.timeSlotId) {
+        bookedSlotsByDate[booking.date].push(booking.timeSlotId);
+      }
     });
 
     return NextResponse.json({

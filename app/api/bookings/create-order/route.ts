@@ -58,6 +58,22 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Invalid amount calculation');
     }
 
+    // Check if slots are still available (only check confirmed bookings)
+    // Use $elemMatch to properly check if any timeSlotId in the booking overlaps with requested slots
+    const existingBookings = await Booking.find({
+      boxId,
+      date,
+      paymentStatus: 'success', // Only check paid/confirmed bookings
+      $or: [
+        { timeSlotIds: { $elemMatch: { $in: timeSlotIds } } },
+        { timeSlotId: { $in: timeSlotIds } }
+      ]
+    });
+
+    if (existingBookings.length > 0) {
+      throw new ValidationError('One or more selected slots are no longer available. Please refresh and try again.');
+    }
+
     // Get Razorpay instance (will throw if not configured)
     const razorpay = getRazorpay();
 
@@ -73,35 +89,21 @@ export async function POST(request: NextRequest) {
       currency: 'INR',
       receipt: bookingRef,
       notes: {
-        boxId,
+        boxId: boxId.toString(),
         boxName,
         date,
+        timeSlotIds: JSON.stringify(timeSlotIds),
         customerName: sanitizedName,
         email: sanitizedEmail || phone,
         phone,
+        pricePerHour: pricePerHour.toString(),
+        totalAmount: totalAmount.toString(),
         bookingRef,
       },
     });
 
-    // Create booking document with pending payment status
-    const booking = new Booking({
-      boxId,
-      boxName,
-      date,
-      timeSlotId: timeSlotIds[0],
-      timeSlotIds,
-      customerName: sanitizedName,
-      email: sanitizedEmail || `phone-${phone}@booking.local`,
-      phone,
-      pricePerHour,
-      totalAmount,
-      bookingRef,
-      status: 'active',
-      paymentStatus: 'pending',
-      razorpayOrderId: razorpayOrder.id,
-    });
-
-    await booking.save();
+    // DO NOT save booking here - only save after successful payment
+    // Just return the order details for payment
 
     return NextResponse.json({
       success: true,
@@ -110,7 +112,18 @@ export async function POST(request: NextRequest) {
         amount: totalAmount,
         currency: 'INR',
         bookingRef,
-        bookingId: booking._id,
+        // Store booking details to be used after payment verification
+        bookingDetails: {
+          boxId,
+          boxName,
+          date,
+          timeSlotIds,
+          customerName: sanitizedName,
+          email: sanitizedEmail,
+          phone,
+          pricePerHour,
+          totalAmount,
+        },
       },
     });
   } catch (error: any) {

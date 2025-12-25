@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useBookings from '@/hooks/useBookings';
 import { getMinDate, getMaxDate, generateBookingRef, calculateTotalPrice } from '@/utils/helpers';
-import { Calendar, Clock, User, Mail, Phone, Check, MapPin } from 'lucide-react';
+import { Calendar, Clock, User, Mail, Phone, Check, MapPin, CheckCircle2, X } from 'lucide-react';
 
 // Fixed Arena - Arena A
 const FIXED_ARENA = CRICKET_BOXES[0];
@@ -41,6 +41,8 @@ export default function EnhancedBookingPage() {
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
   const [orderId, setOrderId] = useState<string>('');
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [bookingDetailsFromApi, setBookingDetailsFromApi] = useState<any>(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
 
@@ -54,9 +56,18 @@ export default function EnhancedBookingPage() {
 
   // Update booked slots when bookings change
   useEffect(() => {
-    const slots = bookings
+    const slots: number[] = [];
+    bookings
       .filter((b) => b.boxId === selectedBox.id && b.date === selectedDate && (b.status === 'active' || b.status === 'confirmed'))
-      .map((b) => b.timeSlotId);
+      .forEach((b) => {
+        // Add all slots from timeSlotIds array
+        if (b.timeSlotIds && b.timeSlotIds.length > 0) {
+          slots.push(...b.timeSlotIds);
+        } else if (b.timeSlotId) {
+          // Fallback to single timeSlotId for legacy bookings
+          slots.push(b.timeSlotId);
+        }
+      });
     setBookedSlots(slots);
   }, [bookings, selectedBox, selectedDate]);
 
@@ -152,6 +163,7 @@ export default function EnhancedBookingPage() {
       setCurrentBooking(booking);
       setOrderId(data.data.orderId);
       setPaymentAmount(data.data.amount);
+      setBookingDetailsFromApi(data.data.bookingDetails);
       setShowPayment(true);
     } catch (error: any) {
       addNotification(
@@ -164,13 +176,13 @@ export default function EnhancedBookingPage() {
   const handlePaymentSuccess = async (paymentId: string, signature: string) => {
     try {
       setShowPayment(false);
-      addNotification('Payment successful! Finalizing your booking...', 'info');
+      
+      // Show success popup immediately
+      setShowSuccessPopup(true);
       
       // Refresh bookings to show updated booking with confirmed status
       await new Promise(resolve => setTimeout(resolve, 2000));
       await refreshBookings();
-
-      addNotification('Booking confirmed successfully! Check your email and SMS for confirmation details.', 'success');
       
       // Reset form
       setSelectedSlots([]);
@@ -179,6 +191,7 @@ export default function EnhancedBookingPage() {
       setPhone('');
       setCurrentBooking(null);
       setOrderId('');
+      setBookingDetailsFromApi(null);
     } catch (error: any) {
       addNotification('Error finalizing booking. Please contact support.', 'error');
     }
@@ -195,6 +208,77 @@ export default function EnhancedBookingPage() {
     <div className="min-h-screen bg-green-50">
       <NotificationSystem notifications={notifications} onRemove={removeNotification} />
 
+      {/* Success Popup Modal */}
+      <AnimatePresence>
+        {showSuccessPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              {/* Success Icon */}
+              <div className="bg-green-500 py-8 flex justify-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                >
+                  <div className="bg-white rounded-full p-4">
+                    <CheckCircle2 className="w-16 h-16 text-green-500" />
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 text-center">
+                <motion.h2
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-2xl font-bold text-gray-800 mb-2"
+                >
+                  Payment Successful!
+                </motion.h2>
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-gray-600 mb-4"
+                >
+                  Your slot has been booked successfully!
+                </motion.p>
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-green-50 rounded-lg p-4 mb-6"
+                >
+                  <p className="text-sm text-green-700">
+                    📧 Confirmation details have been sent to your email and SMS.
+                  </p>
+                </motion.div>
+                <motion.button
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  onClick={() => setShowSuccessPopup(false)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  Done
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Payment Modal */}
       <AnimatePresence>
         {showPayment && currentBooking && (
@@ -202,12 +286,14 @@ export default function EnhancedBookingPage() {
             booking={currentBooking}
             orderId={orderId}
             amount={paymentAmount}
+            bookingDetails={bookingDetailsFromApi}
             onSuccess={handlePaymentSuccess}
             onFailure={handlePaymentFailure}
             onClose={() => {
               setShowPayment(false);
               setCurrentBooking(null);
               setOrderId('');
+              setBookingDetailsFromApi(null);
             }}
           />
         )}

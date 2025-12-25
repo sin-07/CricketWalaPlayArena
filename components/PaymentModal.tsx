@@ -10,6 +10,17 @@ interface PaymentModalProps {
   booking: Booking;
   orderId: string;
   amount: number;
+  bookingDetails?: {
+    boxId: number;
+    boxName: string;
+    date: string;
+    timeSlotIds: number[];
+    customerName: string;
+    email: string;
+    phone: string;
+    pricePerHour: number;
+    totalAmount: number;
+  };
   onSuccess: (paymentId: string, signature: string) => void;
   onFailure: (error: string) => void;
   onClose: () => void;
@@ -19,6 +30,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   booking,
   orderId,
   amount,
+  bookingDetails,
   onSuccess,
   onFailure,
   onClose,
@@ -59,7 +71,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         },
         handler: async (response: any) => {
           try {
-            // Verify payment on backend
+            // Ensure timeSlotIds is always an array
+            const timeSlotIds = bookingDetails?.timeSlotIds 
+              || booking.timeSlotIds 
+              || [booking.timeSlotId];
+            
+            // Verify payment on backend and CREATE booking
             const verifyResponse = await fetch('/api/bookings/verify-payment', {
               method: 'POST',
               headers: {
@@ -70,6 +87,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
                 bookingRef: booking.bookingRef,
+                bookingDetails: bookingDetails || {
+                  boxId: booking.boxId,
+                  boxName: booking.boxName,
+                  date: booking.date,
+                  timeSlotIds: Array.isArray(timeSlotIds) ? timeSlotIds : [timeSlotIds],
+                  customerName: booking.customerName,
+                  email: booking.email,
+                  phone: booking.phone,
+                  pricePerHour: booking.pricePerHour,
+                  totalAmount: booking.totalAmount,
+                },
               }),
             });
 
