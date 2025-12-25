@@ -316,13 +316,13 @@ export default function EnhancedBookingPage() {
           <p className="text-lg sm:text-xl text-gray-600">Select your preferred date, arena slot, and time slots</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8">
           {/* Left Column - Booking Form */}
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-full lg:col-span-1"
+            className="w-full lg:col-span-2"
           >
             <Card className="rounded-none sm:rounded-lg lg:sticky lg:top-4 shadow-none sm:shadow-xl w-full border-x-0 sm:border-x">
               <CardHeader className="bg-green-500">
@@ -465,7 +465,7 @@ export default function EnhancedBookingPage() {
             initial={{ x: 50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-2 mt-0 lg:mt-0"
+            className="lg:col-span-3 mt-0 lg:mt-0"
           >
             <Card className="rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-x-0 sm:border-x border-t-0 sm:border-t">
               <CardHeader className="bg-green-500">
