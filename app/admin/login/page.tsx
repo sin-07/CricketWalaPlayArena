@@ -27,9 +27,7 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        // Store admin token and login time
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminLoginTime', Date.now().toString());
+        // Cookies are now set by the server (HTTP-only)
         router.push('/admin');
       } else {
         setError(data.error || 'Invalid credentials');

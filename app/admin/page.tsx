@@ -51,48 +51,74 @@ export default function AdminDashboard() {
 
   // Check session and set up auto-logout
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    const loginTime = localStorage.getItem('adminLoginTime');
-    
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/admin/check-auth', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          router.push('/admin/login');
+          return;
+        }
 
-    // Check if session has expired
-    if (loginTime) {
-      const elapsed = Date.now() - parseInt(loginTime);
-      if (elapsed >= SESSION_TIMEOUT) {
-        handleSessionExpired();
-        return;
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+          router.push('/admin/login');
+          return;
+        }
+
+        // Check if session has expired based on login time
+        if (data.loginTime) {
+          const elapsed = Date.now() - data.loginTime;
+          if (elapsed >= SESSION_TIMEOUT) {
+            handleSessionExpired();
+            return;
+          }
+
+          // Set timeout for remaining time
+          const remainingTime = SESSION_TIMEOUT - elapsed;
+          const timeoutId = setTimeout(() => {
+            handleSessionExpired();
+          }, remainingTime);
+
+          setIsAuthenticated(true);
+          setLoading(false);
+          return () => clearTimeout(timeoutId);
+        } else {
+          // Refresh session time
+          await fetch('/api/admin/refresh-session', {
+            method: 'POST',
+            credentials: 'include',
+          });
+          setIsAuthenticated(true);
+          setLoading(false);
+
+          // Set timeout for full session
+          const timeoutId = setTimeout(() => {
+            handleSessionExpired();
+          }, SESSION_TIMEOUT);
+
+          return () => clearTimeout(timeoutId);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        router.push('/admin/login');
       }
+    };
 
-      // Set timeout for remaining time
-      const remainingTime = SESSION_TIMEOUT - elapsed;
-      const timeoutId = setTimeout(() => {
-        handleSessionExpired();
-      }, remainingTime);
-
-      setIsAuthenticated(true);
-      return () => clearTimeout(timeoutId);
-    } else {
-      // Set login time if not already set
-      localStorage.setItem('adminLoginTime', Date.now().toString());
-      setIsAuthenticated(true);
-
-      // Set timeout for full session
-      const timeoutId = setTimeout(() => {
-        handleSessionExpired();
-      }, SESSION_TIMEOUT);
-
-      return () => clearTimeout(timeoutId);
-    }
+    checkSession();
   }, [router]);
 
-  const handleSessionExpired = () => {
+  const handleSessionExpired = async () => {
     setShowSessionExpired(true);
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminLoginTime');
+    // Clear cookies via API
+    await fetch('/api/admin/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
     setIsAuthenticated(false);
   };
 

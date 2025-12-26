@@ -35,13 +35,28 @@ export default function AdminGallery() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
-    setIsAuthenticated(true);
-    fetchImages();
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/check-auth', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.authenticated) {
+            router.push('/admin/login');
+            return;
+          }
+          setIsAuthenticated(true);
+          fetchImages();
+        } else {
+          router.push('/admin/login');
+        }
+      } catch (error) {
+        router.push('/admin/login');
+      }
+    };
+    checkAuth();
   }, [router]);
 
   const fetchImages = async () => {

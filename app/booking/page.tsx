@@ -47,10 +47,25 @@ export default function EnhancedBookingPage() {
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
 
-  // Check if admin is logged in
+  // Check if admin is logged in via API
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    setIsAdmin(!!token);
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/check-auth', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.authenticated);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   // Real-time updates every 30 seconds

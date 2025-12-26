@@ -21,9 +21,24 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Check if admin is logged in
-    const token = localStorage.getItem('adminToken');
-    setIsAdmin(!!token);
+    // Check if admin is logged in via API
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/check-auth', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.authenticated);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    };
+    checkAuth();
   }, [pathname]);
 
   useEffect(() => {
@@ -31,11 +46,19 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     setIsAdmin(false);
     setIsMobileMenuOpen(false);
-    router.push('/');
+    // Force page reload to update all components' admin state
+    window.location.href = '/';
   };
 
   const isActive = (path: string): boolean => {

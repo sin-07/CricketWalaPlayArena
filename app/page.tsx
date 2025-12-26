@@ -39,10 +39,25 @@ export default function Home() {
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
   const { notifications, addNotification, removeNotification } = useNotifications();
 
-  // Check if admin is logged in
+  // Check if admin is logged in via API
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    setIsAdmin(!!token);
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/admin/check-auth', {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.authenticated);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    };
+    checkAuth();
   }, []);
 
   const getUnavailableSlots = (): string[] => {
