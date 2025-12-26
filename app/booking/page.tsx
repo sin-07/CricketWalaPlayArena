@@ -24,8 +24,7 @@ import { Calendar, Clock, User, Mail, Phone, Check, MapPin, CheckCircle2, X } fr
 const FIXED_ARENA = CRICKET_BOXES[0];
 
 export default function EnhancedBookingPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
+  const [isAdmin, setIsAdmin] = useState(false);  const [authLoading, setAuthLoading] = useState(true);  const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
   const [selectedBox, setSelectedBox] = useState<CricketBox>(FIXED_ARENA);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [bookedSlots, setBookedSlots] = useState<number[]>([]);
@@ -63,6 +62,8 @@ export default function EnhancedBookingPage() {
         }
       } catch (error) {
         setIsAdmin(false);
+      } finally {
+        setAuthLoading(false);
       }
     };
     checkAuth();
@@ -338,8 +339,12 @@ export default function EnhancedBookingPage() {
           <p className="text-lg sm:text-xl text-gray-600">Select your preferred date, arena slot, and time slots</p>
         </motion.div>
 
-        {/* Admin Message or Booking Form */}
-        {isAdmin ? (
+        {/* Show loading while checking auth, then Admin Message or Booking Form */}
+        {authLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          </div>
+        ) : isAdmin ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

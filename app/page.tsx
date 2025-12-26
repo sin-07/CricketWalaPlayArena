@@ -24,6 +24,7 @@ import {
 
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
   const [selectedBox, setSelectedBox] = useState<CricketBox | null>(CRICKET_BOXES[0]); // Auto-select first box
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
@@ -55,6 +56,8 @@ export default function Home() {
         }
       } catch (error) {
         setIsAdmin(false);
+      } finally {
+        setAuthLoading(false);
       }
     };
     checkAuth();
@@ -276,8 +279,12 @@ export default function Home() {
         {/* Main Booking Section */}
         <div className="container mx-auto px-0 sm:px-4 py-6 sm:py-8 md:py-12">
           <div className="max-w-7xl mx-auto">
-            {/* Admin Message - Show only if admin is logged in */}
-            {isAdmin ? (
+            {/* Show loading while checking auth, then Admin Message or Booking Form */}
+            {authLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+              </div>
+            ) : isAdmin ? (
               <div className="text-center py-12">
                 <Card className="max-w-2xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 shadow-xl">
                   <CardContent className="p-8">
