@@ -24,6 +24,7 @@ import { Calendar, Clock, User, Mail, Phone, Check, MapPin, CheckCircle2, X } fr
 const FIXED_ARENA = CRICKET_BOXES[0];
 
 export default function EnhancedBookingPage() {
+  const [isAdmin, setIsAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
   const [selectedBox, setSelectedBox] = useState<CricketBox>(FIXED_ARENA);
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
@@ -45,6 +46,12 @@ export default function EnhancedBookingPage() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
+
+  // Check if admin is logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    setIsAdmin(!!token);
+  }, []);
 
   // Real-time updates every 30 seconds
   useEffect(() => {
@@ -316,7 +323,39 @@ export default function EnhancedBookingPage() {
           <p className="text-lg sm:text-xl text-gray-600">Select your preferred date, arena slot, and time slots</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8">
+        {/* Admin Message or Booking Form */}
+        {isAdmin ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center py-12"
+          >
+            <Card className="max-w-2xl w-full bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 shadow-xl">
+              <CardContent className="p-8">
+                <div className="flex flex-col items-center">
+                  <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+                    <User className="text-white text-4xl" />
+                  </div>
+                  <h2 className="text-3xl font-bold text-gray-800 mb-3">You are Admin</h2>
+                  <p className="text-lg text-gray-700 mb-4 text-center">
+                    Administrators cannot book slots through this page.
+                  </p>
+                  <p className="text-xl font-semibold text-blue-700 mb-6 text-center">
+                    Please use the Admin Panel to create offline bookings.
+                  </p>
+                  <a
+                    href="/admin"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 inline-flex items-center"
+                  >
+                    <User className="mr-2" />
+                    Go to Admin Panel
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8">
           {/* Left Column - Booking Form */}
           <motion.div
             initial={{ x: -50, opacity: 0 }}
@@ -486,6 +525,7 @@ export default function EnhancedBookingPage() {
             </Card>
           </motion.div>
         </div>
+        )}
       </motion.div>
     </div>
   );

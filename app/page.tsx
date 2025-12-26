@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { CricketBox, CustomerData, Booking } from '@/types';
 import { CRICKET_BOXES } from '@/utils/dummyData';
@@ -23,6 +23,7 @@ import {
 } from '@/utils/helpers';
 
 export default function Home() {
+  const [isAdmin, setIsAdmin] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
   const [selectedBox, setSelectedBox] = useState<CricketBox | null>(CRICKET_BOXES[0]); // Auto-select first box
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
@@ -37,6 +38,12 @@ export default function Home() {
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
   const { notifications, addNotification, removeNotification } = useNotifications();
+
+  // Check if admin is logged in
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    setIsAdmin(!!token);
+  }, []);
 
   const getUnavailableSlots = (): string[] => {
     if (!selectedBox) return [];
@@ -254,63 +261,94 @@ export default function Home() {
         {/* Main Booking Section */}
         <div className="container mx-auto px-0 sm:px-4 py-6 sm:py-8 md:py-12">
           <div className="max-w-7xl mx-auto">
-            {/* Section Header */}
-            <div className="text-center mb-6 sm:mb-8 px-4 sm:px-0">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                Reserve Your Slot Now
-              </h2>
-              <p className="text-gray-600 text-lg">
-                Choose your preferred date, box, and time slots in 3 easy steps
-              </p>
-            </div>
-
-            {/* Booking Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8">
-              {/* Booking Form - Left Column */}
-              <div className="w-full lg:col-span-2">
-                <Card className="rounded-none sm:rounded-lg lg:sticky lg:top-4 shadow-none sm:shadow-xl w-full border-x-0 sm:border-x">
-                  <CardHeader className="bg-green-500">
-                    <CardTitle className="text-white flex items-center">
-                      <Calendar className="w-5 h-5 mr-2" />
-                      Booking Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <BookingForm
-                      onSubmit={handleBookingSubmit}
-                      selectedDate={selectedDate}
-                      selectedBox={selectedBox}
-                      selectedSlots={selectedSlots}
-                      onDateChange={handleDateChange}
-                      onBoxChange={handleBoxChange}
-                    />
+            {/* Admin Message - Show only if admin is logged in */}
+            {isAdmin ? (
+              <div className="text-center py-12">
+                <Card className="max-w-2xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 shadow-xl">
+                  <CardContent className="p-8">
+                    <div className="flex flex-col items-center">
+                      <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-4">
+                        <GiCricketBat className="text-white text-4xl" />
+                      </div>
+                      <h2 className="text-3xl font-bold text-gray-800 mb-3">Admin Access</h2>
+                      <p className="text-lg text-gray-700 mb-4">
+                        You are logged in as an administrator.
+                      </p>
+                      <p className="text-xl font-semibold text-blue-700 mb-6">
+                        Please use the Admin Panel to create offline bookings.
+                      </p>
+                      <a
+                        href="/admin"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 inline-flex items-center"
+                      >
+                        <GiCricketBat className="mr-2" />
+                        Go to Admin Panel
+                      </a>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
+            ) : (
+              <>
+                {/* Section Header */}
+                <div className="text-center mb-6 sm:mb-8 px-4 sm:px-0">
+                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                    Reserve Your Slot Now
+                  </h2>
+                  <p className="text-gray-600 text-lg">
+                    Choose your preferred date, box, and time slots in 3 easy steps
+                  </p>
+                </div>
 
-              {/* Right Content Area - Time Slots */}
-              <div className="lg:col-span-3 mt-0 lg:mt-0">
-                <Card className="rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-x-0 sm:border-x border-t-0 sm:border-t">
-                  <CardHeader className="bg-green-500">
-                    <CardTitle className="text-white flex items-center">
-                      <Clock className="w-5 h-5 mr-2" />
-                      Available Time Slots
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <SlotPicker
-                      selectedDate={selectedDate}
-                      selectedBox={selectedBox}
-                      selectedSlots={selectedSlots}
-                      onSlotToggle={handleSlotToggle}
-                      unavailableSlots={getUnavailableSlots()}
-                      bookedSlotsDetails={getBookedSlotsDetails()}
-                      currentUserEmail={currentUserEmail}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+                {/* Booking Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8">
+                  {/* Booking Form - Left Column */}
+                  <div className="w-full lg:col-span-2">
+                    <Card className="rounded-none sm:rounded-lg lg:sticky lg:top-4 shadow-none sm:shadow-xl w-full border-x-0 sm:border-x">
+                      <CardHeader className="bg-green-500">
+                        <CardTitle className="text-white flex items-center">
+                          <Calendar className="w-5 h-5 mr-2" />
+                          Booking Details
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <BookingForm
+                          onSubmit={handleBookingSubmit}
+                          selectedDate={selectedDate}
+                          selectedBox={selectedBox}
+                          selectedSlots={selectedSlots}
+                          onDateChange={handleDateChange}
+                          onBoxChange={handleBoxChange}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Right Content Area - Time Slots */}
+                  <div className="lg:col-span-3 mt-0 lg:mt-0">
+                    <Card className="rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-x-0 sm:border-x border-t-0 sm:border-t">
+                      <CardHeader className="bg-green-500">
+                        <CardTitle className="text-white flex items-center">
+                          <Clock className="w-5 h-5 mr-2" />
+                          Available Time Slots
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        <SlotPicker
+                          selectedDate={selectedDate}
+                          selectedBox={selectedBox}
+                          selectedSlots={selectedSlots}
+                          onSlotToggle={handleSlotToggle}
+                          unavailableSlots={getUnavailableSlots()}
+                          bookedSlotsDetails={getBookedSlotsDetails()}
+                          currentUserEmail={currentUserEmail}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
