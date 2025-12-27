@@ -18,12 +18,40 @@ export async function GET(request: NextRequest) {
     if (date) query.date = date;
     if (email) query.email = email;
 
-    // Automatically mark past bookings as completed
-    const today = new Date().toISOString().split('T')[0];
+    // Get current date and hour in local timezone
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const currentHour = now.getHours();
+
+    // Mark past date bookings as completed
     await Booking.updateMany(
       { date: { $lt: today }, status: 'active' },
       { $set: { status: 'completed' } }
     );
+
+    // Mark today's bookings as completed if all time slots have passed
+    // Time slots are stored as hour numbers (e.g., 6 = 06:00-07:00, 7 = 07:00-08:00)
+    // A slot is considered completed when the current hour is greater than the slot end time
+    const todayActiveBookings = await Booking.find({ date: today, status: 'active' });
+    
+    for (const booking of todayActiveBookings) {
+      // Get the latest (highest) time slot from the booking
+      let latestSlot = 0;
+      if (booking.timeSlotIds && booking.timeSlotIds.length > 0) {
+        latestSlot = Math.max(...booking.timeSlotIds);
+      } else if (booking.timeSlotId) {
+        latestSlot = booking.timeSlotId;
+      }
+      
+      // The slot ends at (latestSlot + 1) hour
+      // If current hour >= slot end hour, the booking is completed
+      if (currentHour >= latestSlot + 1) {
+        await Booking.updateOne(
+          { _id: booking._id },
+          { $set: { status: 'completed' } }
+        );
+      }
+    }
 
     const bookings = await Booking.find(query).sort({ date: 1, timeSlotId: 1 });
 

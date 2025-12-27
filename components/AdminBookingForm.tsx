@@ -205,23 +205,12 @@ const AdminBookingForm: React.FC<AdminBookingFormProps> = ({
               />
             </div>
 
-            {/* Box Selection */}
+            {/* Arena Display */}
             <div>
-              <Label htmlFor="boxId">Select Box</Label>
-              <select
-                id="boxId"
-                value={formData.boxId}
-                onChange={(e) =>
-                  setFormData({ ...formData, boxId: parseInt(e.target.value) })
-                }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                {CRICKET_BOXES.map((box) => (
-                  <option key={box.id} value={box.id}>
-                    {box.name} - ₹{box.pricePerHour}/hour
-                  </option>
-                ))}
-              </select>
+              <Label>Arena</Label>
+              <div className="w-full px-4 py-3 bg-gradient-to-r from-primary-50 to-primary-100 border-2 border-primary-300 rounded-lg font-semibold text-primary-800">
+                Arena A - ₹10/hour
+              </div>
             </div>
 
             {/* Date */}
