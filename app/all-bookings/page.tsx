@@ -256,15 +256,7 @@ const AllBookingsPage: React.FC = () => {
                             <p className="text-xs text-gray-600">📅 {formatDate(booking.date)}</p>
                             <p className="text-xs text-gray-600">
                               ⏰ {booking.timeSlotIds && booking.timeSlotIds.length > 0
-                                ? `${booking.timeSlotIds.length} slot${
-                                    booking.timeSlotIds.length > 1 ? 's' : ''
-                                  }: ${formatTime(booking.timeSlotIds[0])}${
-                                    booking.timeSlotIds.length > 1
-                                      ? ` - ${formatTime(
-                                          booking.timeSlotIds[booking.timeSlotIds.length - 1]
-                                        )}`
-                                      : ''
-                                  }`
+                                ? `${booking.timeSlotIds.length} slot${booking.timeSlotIds.length > 1 ? 's' : ''}: ${booking.timeSlotIds.sort((a, b) => a - b).map(id => formatTime(id)).join(', ')}`
                                 : formatTime(booking.timeSlotId)}
                             </p>
                           </div>

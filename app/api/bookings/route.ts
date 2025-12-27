@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import { sendConfirmationEmail } from '@/services/emailService';
 
 // GET - Fetch all bookings or filter by query params
 export async function GET(request: NextRequest) {
@@ -136,6 +137,15 @@ export async function POST(request: NextRequest) {
       status: 'active',
       paymentStatus: 'success', // Admin bookings are pre-paid/offline
     });
+
+    // Send confirmation email asynchronously (non-blocking)
+    try {
+      sendConfirmationEmail(booking).catch((err) => {
+        console.error('Error sending confirmation email for offline booking:', err);
+      });
+    } catch (err) {
+      console.error('Failed to queue confirmation email:', err);
+    }
 
     return NextResponse.json(
       {

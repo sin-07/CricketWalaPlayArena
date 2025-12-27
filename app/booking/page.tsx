@@ -7,7 +7,6 @@ import { CRICKET_BOXES } from '@/utils/dummyData';
 import DatePickerComponent from '@/components/DatePickerComponent';
 import TimeSlotSelector from '@/components/TimeSlotSelector';
 import BookingHistoryComponent from '@/components/BookingHistoryComponent';
-import PaymentModal from '@/components/PaymentModal';
 import NotificationSystem, {
   Notification,
   NotificationType,
@@ -36,12 +35,8 @@ export default function EnhancedBookingPage() {
   const [phone, setPhone] = useState('');
   const [showHistory, setShowHistory] = useState(false);
   
-  // Payment state
-  const [showPayment, setShowPayment] = useState(false);
+  // Payment state (simplified - no payment modal needed)
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
-  const [orderId, setOrderId] = useState<string>('');
-  const [paymentAmount, setPaymentAmount] = useState(0);
-  const [bookingDetailsFromApi, setBookingDetailsFromApi] = useState<any>(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
@@ -139,7 +134,34 @@ export default function EnhancedBookingPage() {
       const totalAmount = calculateTotalPrice(selectedBox.pricePerHour, selectedSlots.length);
       const bookingRef = generateBookingRef();
 
-      const booking: Booking = {
+      // Direct booking without payment
+      const response = await fetch('/api/bookings/direct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          boxId: selectedBox.id,
+          boxName: selectedBox.name,
+          date: selectedDate,
+          timeSlotIds: selectedSlots,
+          customerName,
+          email: email || '',
+          phone,
+          pricePerHour: selectedBox.pricePerHour,
+          totalAmount,
+          bookingRef,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to create booking');
+      }
+
+      // Store booking details for success popup
+      setCurrentBooking({
         boxId: selectedBox.id,
         boxName: selectedBox.name,
         date: selectedDate,
@@ -150,81 +172,31 @@ export default function EnhancedBookingPage() {
         phone,
         pricePerHour: selectedBox.pricePerHour,
         totalAmount,
-        bookingRef,
+        bookingRef: data.data.bookingRef,
         createdAt: new Date().toISOString(),
-        status: 'active',
-        paymentStatus: 'pending',
-      };
-
-      // Create Razorpay order
-      const response = await fetch('/api/bookings/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          boxId: booking.boxId,
-          boxName: booking.boxName,
-          date: booking.date,
-          timeSlotIds: booking.timeSlotIds,
-          customerName: booking.customerName,
-          email: booking.email,
-          phone: booking.phone,
-          pricePerHour: booking.pricePerHour,
-          totalAmount: booking.totalAmount,
-          bookingRef: booking.bookingRef,
-        }),
+        status: 'confirmed',
+        paymentStatus: 'success',
       });
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create payment order');
-      }
-
-      // Show payment modal
-      setCurrentBooking(booking);
-      setOrderId(data.data.orderId);
-      setPaymentAmount(data.data.amount);
-      setBookingDetailsFromApi(data.data.bookingDetails);
-      setShowPayment(true);
-    } catch (error: any) {
-      addNotification(
-        error.message || 'Failed to initiate payment. Please try again.',
-        'error'
-      );
-    }
-  };
-
-  const handlePaymentSuccess = async (paymentId: string, signature: string) => {
-    try {
-      setShowPayment(false);
-      
-      // Show success popup immediately
+      // Show success popup
       setShowSuccessPopup(true);
-      
-      // Refresh bookings to show updated booking with confirmed status
-      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Refresh bookings
       await refreshBookings();
-      
+
       // Reset form
       setSelectedSlots([]);
       setCustomerName('');
       setEmail('');
       setPhone('');
-      setCurrentBooking(null);
-      setOrderId('');
-      setBookingDetailsFromApi(null);
-    } catch (error: any) {
-      addNotification('Error finalizing booking. Please contact support.', 'error');
-    }
-  };
 
-  const handlePaymentFailure = (error: string) => {
-    setShowPayment(false);
-    addNotification(`Payment failed: ${error}. Please try again.`, 'error');
-    setCurrentBooking(null);
-    setOrderId('');
+      addNotification('Booking confirmed successfully!', 'success');
+    } catch (error: any) {
+      addNotification(
+        error.message || 'Failed to create booking. Please try again.',
+        'error'
+      );
+    }
   };
 
   return (
@@ -267,7 +239,7 @@ export default function EnhancedBookingPage() {
                   transition={{ delay: 0.3 }}
                   className="text-2xl font-bold text-gray-800 mb-2"
                 >
-                  Payment Successful!
+                  Booking Confirmed!
                 </motion.h2>
                 <motion.p
                   initial={{ y: 20, opacity: 0 }}
@@ -277,6 +249,18 @@ export default function EnhancedBookingPage() {
                 >
                   Your slot has been booked successfully!
                 </motion.p>
+                {currentBooking && (
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.45 }}
+                    className="bg-gray-50 rounded-lg p-4 mb-4 text-left"
+                  >
+                    <p className="text-sm text-gray-600"><strong>Arena:</strong> {currentBooking.boxName}</p>
+                    <p className="text-sm text-gray-600"><strong>Date:</strong> {currentBooking.date}</p>
+                    <p className="text-sm text-gray-600"><strong>Ref:</strong> {currentBooking.bookingRef}</p>
+                  </motion.div>
+                )}
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -284,7 +268,7 @@ export default function EnhancedBookingPage() {
                   className="bg-green-50 rounded-lg p-4 mb-6"
                 >
                   <p className="text-sm text-green-700">
-                    📧 Confirmation details have been sent to your email and SMS.
+                    📧 Confirmation details have been sent to your email.
                   </p>
                 </motion.div>
                 <motion.button
@@ -299,26 +283,6 @@ export default function EnhancedBookingPage() {
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Payment Modal */}
-      <AnimatePresence>
-        {showPayment && currentBooking && (
-          <PaymentModal
-            booking={currentBooking}
-            orderId={orderId}
-            amount={paymentAmount}
-            bookingDetails={bookingDetailsFromApi}
-            onSuccess={handlePaymentSuccess}
-            onFailure={handlePaymentFailure}
-            onClose={() => {
-              setShowPayment(false);
-              setCurrentBooking(null);
-              setOrderId('');
-              setBookingDetailsFromApi(null);
-            }}
-          />
         )}
       </AnimatePresence>
 
@@ -505,12 +469,12 @@ export default function EnhancedBookingPage() {
                     {loading ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Processing...
+                        Booking...
                       </>
                     ) : (
                       <>
                         <Check className="w-4 h-4 mr-2" />
-                        Proceed to Payment
+                        Book Now
                       </>
                     )}
                   </Button>
