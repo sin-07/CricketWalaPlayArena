@@ -67,6 +67,20 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
   }, [selectedDate, bookedSlots, isAdmin, currentHour, today]);
 
   const getSlotStyle = (slot: TimeSlot) => {
+    // Past and booked = Completed (blue)
+    if (slot.isPast && slot.isBooked) {
+      if (isAdmin) {
+        return 'bg-blue-100 border-blue-400 text-blue-800';
+      }
+      return 'bg-blue-100 border-blue-300 text-blue-700 cursor-not-allowed opacity-75';
+    }
+    
+    // Past and not booked = Past (gray)
+    if (slot.isPast && !slot.isBooked) {
+      return 'bg-gray-100 border-gray-300 text-gray-500';
+    }
+    
+    // Future/current booked
     if (slot.isBooked) {
       if (isAdmin) {
         // Admin can still select booked slots, but they're visually marked
@@ -78,13 +92,28 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
       // Regular users cannot select booked slots
       return 'bg-red-100 border-red-300 text-red-700 cursor-not-allowed opacity-75';
     }
-    if (slot.isPast && isAdmin && !slot.isBooked) {
-      return 'bg-gray-100 border-gray-300 text-gray-500';
-    }
+    
+    // Selected slots
     if (selectedSlots.includes(slot.id)) {
       return 'bg-primary-600 border-primary-600 text-white shadow-lg scale-105';
     }
+    
+    // Available slots
     return 'bg-white border-gray-300 text-gray-700 hover:border-primary-500 hover:bg-primary-50';
+  };
+
+  // Get display label for slot status
+  const getSlotStatusLabel = (slot: TimeSlot) => {
+    if (slot.isPast && slot.isBooked) {
+      return 'Completed';
+    }
+    if (slot.isPast && !slot.isBooked) {
+      return 'Past';
+    }
+    if (slot.isBooked) {
+      return isAdmin ? '(Active)' : 'Booked';
+    }
+    return null;
   };
 
   return (
@@ -132,13 +161,10 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
               >
                 <div className="flex flex-col items-center justify-center h-full">
                   <span className="font-medium text-center leading-tight">{slot.label}</span>
-                  {slot.isBooked && (
+                  {getSlotStatusLabel(slot) && (
                     <span className="text-xs mt-1 opacity-75">
-                      {isAdmin ? '(Booked)' : 'Booked'}
+                      {getSlotStatusLabel(slot)}
                     </span>
-                  )}
-                  {slot.isPast && isAdmin && !slot.isBooked && (
-                    <span className="text-xs mt-1 opacity-75">Past</span>
                   )}
                 </div>
                 {selectedSlots.includes(slot.id) && (
@@ -182,10 +208,20 @@ const TimeSlotSelector: React.FC<TimeSlotSelectorProps> = ({
           <span className="text-gray-600">Selected</span>
         </div>
         {isAdmin ? (
-          <div className="flex items-center">
-            <div className="w-4 h-4 bg-orange-100 border-2 border-orange-400 rounded mr-2"></div>
-            <span className="text-gray-600">Booked (can override)</span>
-          </div>
+          <>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-orange-100 border-2 border-orange-400 rounded mr-2"></div>
+              <span className="text-gray-600">Active Booking</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-blue-100 border-2 border-blue-400 rounded mr-2"></div>
+              <span className="text-gray-600">Completed</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-gray-100 border-2 border-gray-300 rounded mr-2"></div>
+              <span className="text-gray-600">Past (Unbooked)</span>
+            </div>
+          </>
         ) : (
           <div className="flex items-center">
             <div className="w-4 h-4 bg-red-100 border-2 border-red-300 rounded mr-2"></div>
