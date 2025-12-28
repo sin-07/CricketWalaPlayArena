@@ -19,6 +19,7 @@ const Header: React.FC = () => {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // Check if admin is logged in via API
@@ -47,16 +48,21 @@ const Header: React.FC = () => {
   }, [pathname]);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
       await fetch('/api/admin/logout', {
         method: 'POST',
         credentials: 'include',
       });
+      
+      // Wait 800ms to show the logging out message
+      await new Promise(resolve => setTimeout(resolve, 800));
     } catch (error) {
       console.error('Logout error:', error);
     }
     setIsAdmin(false);
     setIsMobileMenuOpen(false);
+    setIsLoggingOut(false);
     // Force page reload to update all components' admin state
     window.location.href = '/';
   };
@@ -78,6 +84,36 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+      {/* Logging Out Modal */}
+      <AnimatePresence>
+        {isLoggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <LogOut className="w-10 h-10 text-red-500 animate-pulse" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">Logging Out...</h2>
+              <p className="text-gray-600">
+                Please wait while we securely log you out.
+              </p>
+              <div className="mt-6">
+                <div className="w-12 h-12 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto"></div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="container mx-auto px-4 py-3 md:py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
