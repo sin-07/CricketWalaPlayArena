@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create booking directly with confirmed status
+    // Create booking directly with active status
     const newBooking = new Booking({
       boxId,
       boxName: boxName || `Arena ${boxId}`,
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       pricePerHour: pricePerHour || 10,
       totalAmount: totalAmount || pricePerHour * timeSlotIds.length,
       bookingRef,
-      status: 'confirmed',
+      status: 'active',
       paymentStatus: 'success',
       bookingType: 'online',
       createdAt: new Date(),

@@ -26,14 +26,14 @@ export async function GET(request: NextRequest) {
 
     // Mark past date bookings as completed
     await Booking.updateMany(
-      { date: { $lt: today }, status: 'active' },
+      { date: { $lt: today }, status: { $in: ['active', 'confirmed'] } },
       { $set: { status: 'completed' } }
     );
 
     // Mark today's bookings as completed if all time slots have passed
     // Time slots are stored as hour numbers (e.g., 6 = 06:00-07:00, 7 = 07:00-08:00)
     // A slot is considered completed when the current hour is greater than the slot end time
-    const todayActiveBookings = await Booking.find({ date: today, status: 'active' });
+    const todayActiveBookings = await Booking.find({ date: today, status: { $in: ['active', 'confirmed'] } });
     
     for (const booking of todayActiveBookings) {
       // Get the latest (highest) time slot from the booking

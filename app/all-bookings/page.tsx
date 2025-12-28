@@ -57,6 +57,7 @@ const AllBookingsPage: React.FC = () => {
   const getStatusBadgeClass = (status?: string) => {
     switch (status) {
       case 'active':
+      case 'confirmed':
         return 'bg-green-100 text-green-700 border-green-300';
       case 'completed':
         return 'bg-blue-100 text-blue-700 border-blue-300';
@@ -65,6 +66,14 @@ const AllBookingsPage: React.FC = () => {
       default:
         return 'bg-gray-100 text-gray-700 border-gray-300';
     }
+  };
+
+  // Display status - treat confirmed as Active
+  const getDisplayStatus = (status?: string) => {
+    if (status === 'confirmed' || status === 'active') return 'ACTIVE';
+    if (status === 'completed') return 'COMPLETED';
+    if (status === 'cancelled') return 'CANCELLED';
+    return 'ACTIVE';
   };
 
   const formatDate = (dateString: string) => {
@@ -250,7 +259,7 @@ const AllBookingsPage: React.FC = () => {
                               booking.status
                             )}`}
                           >
-                            {booking.status?.toUpperCase() || 'ACTIVE'}
+                            {getDisplayStatus(booking.status)}
                           </span>
                           <span className="text-sm font-mono bg-gray-100 px-3 py-1 rounded text-gray-700">
                             {booking.bookingRef}
