@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { Booking } from '@/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// Use relative URLs for API calls - works on both localhost and production
+const API_URL = '';
 
 export const bookingService = {
   // Get all bookings or filter by params
@@ -13,20 +14,20 @@ export const bookingService = {
       }, {} as Record<string, string>)
     ).toString();
 
-    const response = await axios.get(`${API_URL}/api/bookings?${query}`);
+    const response = await axios.get(`/api/bookings?${query}`);
     return response.data;
   },
 
   // Create a new booking
   async createBooking(bookingData: Omit<Booking, '_id' | 'createdAt'>) {
-    const response = await axios.post(`${API_URL}/api/bookings`, bookingData);
+    const response = await axios.post(`/api/bookings`, bookingData);
     return response.data;
   },
 
   // Get availability for a box within a date range
   async getAvailability(boxId: number, startDate: string, endDate: string) {
     const response = await axios.get(
-      `${API_URL}/api/bookings/availability?boxId=${boxId}&startDate=${startDate}&endDate=${endDate}`
+      `/api/bookings/availability?boxId=${boxId}&startDate=${startDate}&endDate=${endDate}`
     );
     return response.data;
   },
