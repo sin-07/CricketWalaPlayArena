@@ -126,13 +126,19 @@ export default function EnhancedBookingPage() {
       return;
     }
 
-    if (!customerName || !phone) {
-      addNotification('Please fill in all required fields', 'error');
+    if (!customerName || !phone || !email) {
+      addNotification('Please fill in all required fields (Name, Phone, Email)', 'error');
       return;
     }
 
     if (!isValidPhoneNumber(phone)) {
       addNotification('Please enter a valid 10-digit mobile number', 'error');
+      return;
+    }
+
+    // Validate email format
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      addNotification('Please enter a valid email address', 'error');
       return;
     }
 
@@ -427,7 +433,7 @@ export default function EnhancedBookingPage() {
                   <div>
                     <Label htmlFor="email">
                       <Mail className="inline w-4 h-4 mr-2" />
-                      Email (Optional)
+                      Email *
                     </Label>
                     <Input
                       id="email"
@@ -435,6 +441,7 @@ export default function EnhancedBookingPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="your@email.com"
+                      required
                       className="mt-2"
                     />
                   </div>

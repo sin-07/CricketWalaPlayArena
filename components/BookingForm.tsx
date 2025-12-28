@@ -58,7 +58,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
       newErrors.customerName = 'Name is required';
     }
     
-    if (email.trim() && !/\S+@\S+\.\S+/.test(email)) {
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email is invalid';
     }
     
@@ -203,13 +205,14 @@ const BookingForm: React.FC<BookingFormProps> = ({
         <div>
           <label className="flex items-center text-xs md:text-sm font-medium text-gray-700 mb-1">
             <Mail className="w-4 h-4 mr-1" />
-            Email (Optional)
+            Email *
           </label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
+            required
             className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           {errors.email && (

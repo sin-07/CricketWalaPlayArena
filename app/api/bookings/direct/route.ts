@@ -72,6 +72,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Email is required for online bookings
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      return NextResponse.json(
+        { success: false, error: 'A valid email address is required for booking confirmation' },
+        { status: 400 }
+      );
+    }
+
     // Normalize and validate phone number
     const normalizedPhone = normalizePhoneNumber(phone);
     if (!isValidPhoneNumber(normalizedPhone)) {
