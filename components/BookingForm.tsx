@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { CricketBox, CustomerData } from '@/types';
 import { getMinDate, getMaxDate, calculateTotalPrice } from '@/utils/helpers';
+import { normalizePhoneNumber, getPhoneValidationError } from '@/utils/phoneUtils';
 import { CRICKET_BOXES } from '@/utils/dummyData';
 import UserHistory from './UserHistory';
 import { Calendar, User, Mail, Phone, CreditCard, MapPin } from 'lucide-react';
@@ -61,10 +62,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
       newErrors.email = 'Email is invalid';
     }
     
-    if (!phone.trim()) {
-      newErrors.phone = 'Phone is required';
-    } else if (!/^\d{10}$/.test(phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Phone must be 10 digits';
+    const phoneError = getPhoneValidationError(phone);
+    if (phoneError) {
+      newErrors.phone = phoneError;
     }
     
     if (!selectedDate) {
@@ -184,8 +184,14 @@ const BookingForm: React.FC<BookingFormProps> = ({
           <input
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(normalizePhoneNumber(e.target.value))}
+            onPaste={(e) => {
+              e.preventDefault();
+              const pastedText = e.clipboardData.getData('text');
+              setPhone(normalizePhoneNumber(pastedText));
+            }}
             placeholder="9876543210"
+            maxLength={10}
             className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           {errors.phone && (

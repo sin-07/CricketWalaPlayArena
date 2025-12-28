@@ -3,6 +3,41 @@ import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { sendBookingConfirmationEmail } from '@/services/emailService';
 
+/**
+ * Normalizes an Indian phone number by removing prefixes and special characters
+ */
+function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  
+  // Remove all non-digit characters
+  let normalized = phone.replace(/\D/g, '');
+  
+  // Handle various prefixes
+  if (normalized.length >= 12 && normalized.startsWith('91')) {
+    normalized = normalized.slice(2);
+  } else if (normalized.length >= 13 && normalized.startsWith('091')) {
+    normalized = normalized.slice(3);
+  } else if (normalized.length === 11 && normalized.startsWith('0')) {
+    normalized = normalized.slice(1);
+  }
+  
+  // Limit to 10 digits
+  if (normalized.length > 10) {
+    normalized = normalized.slice(0, 10);
+  }
+  
+  return normalized;
+}
+
+/**
+ * Validates if a phone number is a valid 10-digit Indian mobile number
+ */
+function isValidPhoneNumber(phone: string): boolean {
+  if (!phone || !/^\d{10}$/.test(phone)) return false;
+  const firstDigit = phone.charAt(0);
+  return ['6', '7', '8', '9'].includes(firstDigit);
+}
+
 // POST - Create a direct booking (without payment)
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +68,15 @@ export async function POST(request: NextRequest) {
     if (!customerName || !phone) {
       return NextResponse.json(
         { success: false, error: 'Customer name and phone are required' },
+        { status: 400 }
+      );
+    }
+
+    // Normalize and validate phone number
+    const normalizedPhone = normalizePhoneNumber(phone);
+    if (!isValidPhoneNumber(normalizedPhone)) {
+      return NextResponse.json(
+        { success: false, error: 'Please provide a valid 10-digit Indian mobile number' },
         { status: 400 }
       );
     }
@@ -86,7 +130,7 @@ export async function POST(request: NextRequest) {
       timeSlotIds,
       customerName,
       email: email || '',
-      phone,
+      phone: normalizedPhone,
       pricePerHour: pricePerHour || 10,
       totalAmount: totalAmount || pricePerHour * timeSlotIds.length,
       bookingRef,

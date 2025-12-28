@@ -1,20 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CricketBox, CustomerData, Booking } from '@/types';
 import { CRICKET_BOXES } from '@/utils/dummyData';
 import BookingForm from '@/components/BookingForm';
 import SlotPicker from '@/components/SlotPicker';
-import BookingSummary from '@/components/BookingSummary';
 import NotificationBanner from '@/components/NotificationBanner';
 import Gallery from '@/components/Gallery';
-import PaymentModal from '@/components/PaymentModal';
 import useBookings from '@/hooks/useBookings';
 import useNotifications from '@/hooks/useNotifications';
 import { FaBolt, FaMoneyBillWave, FaClock } from 'react-icons/fa';
 import { GiCricketBat } from 'react-icons/gi';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   getMinDate,
@@ -29,13 +27,8 @@ export default function Home() {
   const [selectedBox, setSelectedBox] = useState<CricketBox | null>(CRICKET_BOXES[0]); // Auto-select first box
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
   const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
-  const [showSummary, setShowSummary] = useState<boolean>(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
-  
-  // Payment state
-  const [showPayment, setShowPayment] = useState(false);
-  const [orderId, setOrderId] = useState<string>('');
-  const [paymentAmount, setPaymentAmount] = useState(0);
 
   const { bookings, addBooking, loading, refreshBookings } = useBookings();
   const { notifications, addNotification, removeNotification } = useNotifications();
@@ -143,15 +136,15 @@ export default function Home() {
         totalAmount,
         bookingRef,
         createdAt: new Date().toISOString(),
-        status: 'active',
-        paymentStatus: 'pending',
+        status: 'confirmed',
+        paymentStatus: 'success',
       };
 
       // Store the current user's email for showing their bookings
       setCurrentUserEmail(customerData.email);
 
-      // Create Razorpay order
-      const response = await fetch('/api/bookings/create-order', {
+      // Direct booking without payment
+      const response = await fetch('/api/bookings/direct', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,16 +166,22 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create payment order');
+        throw new Error(data.error || 'Failed to create booking');
       }
 
-      // Show payment modal
-      setCurrentBooking(booking);
-      setOrderId(data.data.orderId);
-      setPaymentAmount(data.data.amount);
-      setShowPayment(true);
+      // Show success popup
+      setCurrentBooking({
+        ...booking,
+        bookingRef: data.data.bookingRef,
+      });
+      setShowSuccessPopup(true);
+      setSelectedSlots([]);
+      addNotification('Booking confirmed successfully! Check your email for details.', 'success');
+      
+      // Refresh bookings to show the new booking
+      await refreshBookings();
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to initiate payment. Please try again.';
+      const errorMessage = error.message || 'Failed to create booking. Please try again.';
       addNotification(errorMessage, 'error');
       
       // If specific slots are booked, update the UI
@@ -190,36 +189,8 @@ export default function Home() {
     }
   };
 
-  const handlePaymentSuccess = async (paymentId: string, signature: string) => {
-    try {
-      setShowPayment(false);
-      addNotification('Payment successful! Finalizing your booking...', 'info');
-      
-      // Refresh bookings to show updated booking with confirmed status
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await refreshBookings();
-
-      addNotification('Booking confirmed successfully! Check your email and SMS for confirmation details.', 'success');
-      
-      // Show booking summary
-      setShowSummary(true);
-      
-      // Reset form
-      setSelectedSlots([]);
-    } catch (error: any) {
-      addNotification('Error finalizing booking. Please contact support.', 'error');
-    }
-  };
-
-  const handlePaymentFailure = (error: string) => {
-    setShowPayment(false);
-    addNotification(`Payment failed: ${error}. Please try again.`, 'error');
-    setCurrentBooking(null);
-    setOrderId('');
-  };
-
-  const handleCloseSummary = (): void => {
-    setShowSummary(false);
+  const handleCloseSuccessPopup = (): void => {
+    setShowSuccessPopup(false);
     setCurrentBooking(null);
   };
 
@@ -227,27 +198,92 @@ export default function Home() {
     <>
       <NotificationBanner notifications={notifications} onRemove={removeNotification} />
       
-      {/* Payment Modal */}
+      {/* Success Popup Modal */}
       <AnimatePresence>
-        {showPayment && currentBooking && (
-          <PaymentModal
-            booking={currentBooking}
-            orderId={orderId}
-            amount={paymentAmount}
-            onSuccess={handlePaymentSuccess}
-            onFailure={handlePaymentFailure}
-            onClose={() => {
-              setShowPayment(false);
-              setCurrentBooking(null);
-              setOrderId('');
-            }}
-          />
+        {showSuccessPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            >
+              {/* Success Icon */}
+              <div className="bg-green-500 py-8 flex justify-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                >
+                  <div className="bg-white rounded-full p-4">
+                    <CheckCircle2 className="w-16 h-16 text-green-500" />
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 text-center">
+                <motion.h2
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-2xl font-bold text-gray-800 mb-2"
+                >
+                  Booking Confirmed!
+                </motion.h2>
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-gray-600 mb-4"
+                >
+                  Your slot has been booked successfully!
+                </motion.p>
+                {currentBooking && (
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.45 }}
+                    className="bg-gray-50 rounded-lg p-4 mb-4 text-left"
+                  >
+                    <p className="text-sm text-gray-600"><strong>Arena:</strong> {currentBooking.boxName}</p>
+                    <p className="text-sm text-gray-600"><strong>Date:</strong> {currentBooking.date}</p>
+                    <p className="text-sm text-gray-600"><strong>Ref:</strong> {currentBooking.bookingRef}</p>
+                  </motion.div>
+                )}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-green-50 rounded-lg p-4 mb-6"
+                >
+                  <p className="text-sm text-green-700">
+                    📧 Confirmation details have been sent to your email.
+                  </p>
+                </motion.div>
+                <motion.button
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  onClick={handleCloseSuccessPopup}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  Done
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 -mt-16 md:-mt-20">
         {/* Professional Hero Section */}
-        <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden">
+        <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden pt-16 md:pt-20">
           {/* Animated Background */}
           <div className="absolute inset-0 opacity-20">
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
@@ -500,11 +536,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Booking Summary Modal */}
-        {showSummary && (
-          <BookingSummary booking={currentBooking} onClose={handleCloseSummary} />
-        )}
       </div>
     </>
   );

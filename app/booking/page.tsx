@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import useBookings from '@/hooks/useBookings';
 import { getMinDate, getMaxDate, generateBookingRef, calculateTotalPrice } from '@/utils/helpers';
+import { normalizePhoneNumber, isValidPhoneNumber } from '@/utils/phoneUtils';
 import { Calendar, Clock, User, Mail, Phone, Check, MapPin, CheckCircle2, X } from 'lucide-react';
 
 // Fixed Arena - Arena A
@@ -127,6 +128,11 @@ export default function EnhancedBookingPage() {
 
     if (!customerName || !phone) {
       addNotification('Please fill in all required fields', 'error');
+      return;
+    }
+
+    if (!isValidPhoneNumber(phone)) {
+      addNotification('Please enter a valid 10-digit mobile number', 'error');
       return;
     }
 
@@ -404,9 +410,14 @@ export default function EnhancedBookingPage() {
                       id="phone"
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => setPhone(normalizePhoneNumber(e.target.value))}
+                      onPaste={(e) => {
+                        e.preventDefault();
+                        const pastedText = e.clipboardData.getData('text');
+                        setPhone(normalizePhoneNumber(pastedText));
+                      }}
                       placeholder="9876543210"
-                      pattern="[0-9]{10}"
+                      maxLength={10}
                       required
                       className="mt-2"
                     />

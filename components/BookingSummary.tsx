@@ -105,15 +105,9 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ booking, onClose }) => 
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"
             >
               Done
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-            >
-              Print Receipt
             </button>
           </div>
         </div>

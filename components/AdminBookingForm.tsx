@@ -16,6 +16,7 @@ import {
   getMinDate,
   getMaxDate,
 } from "@/utils/helpers";
+import { normalizePhoneNumber, isValidPhoneNumber } from "@/utils/phoneUtils";
 
 interface AdminBookingFormProps {
   onBookingComplete: () => void;
@@ -87,6 +88,11 @@ const AdminBookingForm: React.FC<AdminBookingFormProps> = ({
 
     if (!formData.customerName || !formData.phone) {
       setError("Please fill in all required fields");
+      return;
+    }
+
+    if (!isValidPhoneNumber(formData.phone)) {
+      setError("Please enter a valid 10-digit mobile number");
       return;
     }
 
@@ -183,10 +189,15 @@ const AdminBookingForm: React.FC<AdminBookingFormProps> = ({
                 type="tel"
                 value={formData.phone}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({ ...formData, phone: normalizePhoneNumber(e.target.value) })
                 }
+                onPaste={(e) => {
+                  e.preventDefault();
+                  const pastedText = e.clipboardData.getData('text');
+                  setFormData({ ...formData, phone: normalizePhoneNumber(pastedText) });
+                }}
                 placeholder="9876543210"
-                pattern="[0-9]{10}"
+                maxLength={10}
                 required
               />
             </div>

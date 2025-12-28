@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Booking } from '@/types';
+import { normalizePhoneNumber } from '@/utils/phoneUtils';
 import { FaPhone, FaClipboardList, FaCalendarAlt, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
 import { GiCricketBat } from 'react-icons/gi';
 
@@ -156,7 +157,20 @@ const AllBookingsPage: React.FC = () => {
                 <input
                   type="text"
                   value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
+                  onChange={(e) => {
+                    if (searchType === 'phone') {
+                      setSearchValue(normalizePhoneNumber(e.target.value));
+                    } else {
+                      setSearchValue(e.target.value);
+                    }
+                  }}
+                  onPaste={(e) => {
+                    if (searchType === 'phone') {
+                      e.preventDefault();
+                      const pastedText = e.clipboardData.getData('text');
+                      setSearchValue(normalizePhoneNumber(pastedText));
+                    }
+                  }}
                   placeholder={
                     searchType === 'bookingRef'
                       ? 'e.g., CB-1234567890'
@@ -164,6 +178,7 @@ const AllBookingsPage: React.FC = () => {
                       ? 'e.g., 9876543210'
                       : ''
                   }
+                  maxLength={searchType === 'phone' ? 10 : undefined}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   required
                 />

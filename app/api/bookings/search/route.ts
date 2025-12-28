@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 
+// Normalize Indian phone number
+function normalizePhoneNumber(phone: string): string {
+  if (!phone) return '';
+  let normalized = phone.replace(/\D/g, '');
+  if (normalized.length >= 12 && normalized.startsWith('91')) {
+    normalized = normalized.slice(2);
+  } else if (normalized.length >= 13 && normalized.startsWith('091')) {
+    normalized = normalized.slice(3);
+  } else if (normalized.length === 11 && normalized.startsWith('0')) {
+    normalized = normalized.slice(1);
+  }
+  if (normalized.length > 10) {
+    normalized = normalized.slice(0, 10);
+  }
+  return normalized;
+}
+
 // GET - Search bookings by various criteria
 export async function GET(request: NextRequest) {
   try {
@@ -30,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (phone) {
-      query.phone = phone;
+      query.phone = normalizePhoneNumber(phone);
     }
 
     if (date) {
