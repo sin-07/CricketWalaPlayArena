@@ -111,18 +111,28 @@ const AdminTable: React.FC<AdminTableProps> = ({
   }, [fetchUserHistory]);
 
   const getStatusBadge = useCallback((status?: string) => {
+    // Treat 'confirmed' as 'active' for display
+    const displayStatus = (status === 'confirmed' || status === 'active') ? 'active' : status;
+    
     const statusClass =
-      status === 'active'
+      displayStatus === 'active'
         ? 'bg-green-100 text-green-700 border-green-300'
-        : status === 'completed'
+        : displayStatus === 'completed'
         ? 'bg-blue-100 text-blue-700 border-blue-300'
         : 'bg-red-100 text-red-700 border-red-300';
+
+    // Display text: confirmed/active -> ACTIVE
+    const displayText = (status === 'confirmed' || status === 'active') 
+      ? 'ACTIVE' 
+      : status === 'completed' 
+      ? 'COMPLETED' 
+      : status?.toUpperCase() || 'ACTIVE';
 
     return (
       <span
         className={`px-2 py-1 rounded-full text-xs font-semibold border ${statusClass}`}
       >
-        {status?.toUpperCase() || 'ACTIVE'}
+        {displayText}
       </span>
     );
   }, []);
