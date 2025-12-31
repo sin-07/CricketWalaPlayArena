@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
+import { verifyAdminAuth } from '@/lib/authUtils';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -9,6 +10,12 @@ cloudinary.config({
 });
 
 export async function POST(request: NextRequest) {
+  // Verify admin authentication
+  const authResult = await verifyAdminAuth();
+  if (!authResult.authenticated && authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

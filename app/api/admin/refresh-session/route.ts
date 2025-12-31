@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { verifyAdminAuth } from '@/lib/authUtils';
 
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
 export async function POST(request: NextRequest) {
+  // Verify admin authentication before refreshing session
+  const authResult = await verifyAdminAuth();
+  if (!authResult.authenticated && authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('adminToken');

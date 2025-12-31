@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { sendConfirmationEmail } from '@/services/emailService';
+import { verifyAdminAuth } from '@/lib/authUtils';
 
 // GET - Fetch all bookings or filter by query params
 export async function GET(request: NextRequest) {
@@ -69,8 +70,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new booking
+// POST - Create a new booking (Admin only - creates offline/pre-paid bookings)
 export async function POST(request: NextRequest) {
+  // Verify admin authentication for direct booking creation
+  const authResult = await verifyAdminAuth();
+  if (!authResult.authenticated && authResult.response) {
+    return authResult.response;
+  }
+
   try {
     await dbConnect();
 

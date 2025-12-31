@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { verifyAdminAuth } from '@/lib/authUtils';
 
 export async function POST(request: NextRequest) {
+  // Verify admin authentication before logout
+  const authResult = await verifyAdminAuth();
+  if (!authResult.authenticated && authResult.response) {
+    return authResult.response;
+  }
+
   try {
     const cookieStore = await cookies();
     

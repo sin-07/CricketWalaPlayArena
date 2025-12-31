@@ -22,6 +22,12 @@ const Header: React.FC = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
+    // Don't check auth on login page
+    if (pathname === '/admin/login') {
+      setIsAdmin(false);
+      return;
+    }
+
     // Check if admin is logged in via API
     const checkAuth = async () => {
       try {
@@ -163,20 +169,25 @@ const Header: React.FC = () => {
 
           {/* Desktop Auth Button */}
           <div className="hidden md:block">
-            {isAdmin ? (
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-lg text-sm md:text-base font-semibold hover:bg-red-700 transition-colors shadow-md"
-              >
-                Logout
-              </button>
-            ) : (
-              <Link
-                href="/admin/login"
-                className="bg-primary-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-lg text-sm md:text-base font-semibold hover:bg-primary-700 transition-colors shadow-md"
-              >
-                Admin Login
-              </Link>
+            {/* Don't show any auth button on login page */}
+            {pathname !== '/admin/login' && (
+              <>
+                {isAdmin ? (
+                  <button
+                    onClick={handleLogout}
+                    className="bg-red-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-lg text-sm md:text-base font-semibold hover:bg-red-700 transition-colors shadow-md"
+                  >
+                    Logout
+                  </button>
+                ) : (
+                  <Link
+                    href="/admin/login"
+                    className="bg-primary-600 text-white px-4 py-2 md:px-6 md:py-2 rounded-lg text-sm md:text-base font-semibold hover:bg-primary-700 transition-colors shadow-md"
+                  >
+                    Admin Login
+                  </Link>
+                )}
+              </>
             )}
           </div>
 
@@ -326,24 +337,29 @@ const Header: React.FC = () => {
 
               {/* Auth Button */}
               <div className="p-6 border-t border-gray-200 mt-auto">
-                {isAdmin ? (
-                  <motion.button
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md"
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span>Logout</span>
-                  </motion.button>
-                ) : (
-                  <Link
-                    href="/admin/login"
-                    className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Lock className="w-5 h-5" />
-                    <span>Admin Login</span>
-                  </Link>
+                {/* Don't show any auth button on login page */}
+                {pathname !== '/admin/login' && (
+                  <>
+                    {isAdmin ? (
+                      <motion.button
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center space-x-2 bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors shadow-md"
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span>Logout</span>
+                      </motion.button>
+                    ) : (
+                      <Link
+                        href="/admin/login"
+                        className="w-full flex items-center justify-center space-x-2 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Lock className="w-5 h-5" />
+                        <span>Admin Login</span>
+                      </Link>
+                    )}
+                  </>
                 )}
               </div>
             </motion.div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 import { sendBookingConfirmationEmail } from '@/services/emailService';
+import { verifyAdminAuth } from '@/lib/authUtils';
 
 /**
  * Normalizes an Indian phone number by removing prefixes and special characters
@@ -38,8 +39,14 @@ function isValidPhoneNumber(phone: string): boolean {
   return ['6', '7', '8', '9'].includes(firstDigit);
 }
 
-// POST - Create a direct booking (without payment)
+// POST - Create a direct booking (Admin only - without payment)
 export async function POST(request: NextRequest) {
+  // Verify admin authentication for direct booking creation
+  const authResult = await verifyAdminAuth();
+  if (!authResult.authenticated && authResult.response) {
+    return authResult.response;
+  }
+
   try {
     await dbConnect();
 
