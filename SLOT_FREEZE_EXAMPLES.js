@@ -21,10 +21,10 @@ export function FreezeSlotExample() {
     );
 
     if (result.success) {
-      console.log('✅ Slot frozen successfully!', result.data);
+      console.log('SUCCESS: Slot frozen successfully!', result.data);
       // Show success toast to user
     } else {
-      console.error('❌ Error:', error);
+      console.error('ERROR:', error);
       // Show error toast to user
     }
   };
@@ -50,7 +50,7 @@ export function UnfreezeSlotExample() {
     );
 
     if (result.success) {
-      console.log('✅ Slot unfrozen!');
+      console.log('SUCCESS: Slot unfrozen!');
     }
   };
 
@@ -119,10 +119,10 @@ export async function freezeSlotAPI() {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      console.log('✅', data.message);
+      console.log('SUCCESS:', data.message);
       return { success: true, data: data.data };
     } else {
-      console.error('❌', data.message);
+      console.error('ERROR:', data.message);
       return { success: false, error: data.message };
     }
   } catch (error) {
@@ -150,10 +150,10 @@ export async function unfreezeSlotAPI() {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      console.log('✅ Unfrozen:', data.message);
+      console.log('SUCCESS: Unfrozen:', data.message);
       return { success: true };
     } else {
-      console.error('❌', data.message);
+      console.error('ERROR:', data.message);
       return { success: false };
     }
   } catch (error) {
@@ -185,7 +185,7 @@ export async function getFrozenSlotsAPI(filters = {}) {
       console.log(`Found ${data.count} frozen slots`);
       return { success: true, slots: data.data, count: data.count };
     } else {
-      console.error('❌', data.message);
+      console.error('ERROR:', data.message);
       return { success: false, slots: [] };
     }
   } catch (error) {
@@ -211,10 +211,10 @@ export async function checkSlotBeforeBooking() {
   );
 
   if (!validation.isValid) {
-    console.log('❌ Cannot book:', validation.message);
+    console.log('ERROR: Cannot book:', validation.message);
     // Show error to user
   } else {
-    console.log('✅ Slot is available, proceed with booking');
+    console.log('SUCCESS: Slot is available, proceed with booking');
     // Allow booking
   }
 }
@@ -231,9 +231,9 @@ export async function checkMultipleSlotsExample() {
   const frozenSlots = await checkMultipleFrozenSlots(slotsToCheck);
 
   if (frozenSlots.length > 0) {
-    console.log('❌ Some slots are frozen:', frozenSlots);
+    console.log('ERROR: Some slots are frozen:', frozenSlots);
   } else {
-    console.log('✅ All slots are available');
+    console.log('SUCCESS: All slots are available');
   }
 }
 

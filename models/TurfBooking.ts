@@ -8,9 +8,13 @@ export interface ITurfBooking extends Document {
   name: string;
   mobile: string; // 10-digit mobile number
   email: string;
-  basePrice: number; // Price before discount
-  finalPrice: number; // Price after discount
-  discountPercentage: number; // Discount applied
+  basePrice: number; // Price before any discount
+  finalPrice: number; // Price after all discounts (weekly + coupon)
+  discountPercentage: number; // Weekly offer discount applied
+  couponCode?: string; // Applied coupon code (if any)
+  couponDiscount?: number; // Discount amount from coupon
+  bookingCharge?: number; // Booking processing charge
+  totalPrice?: number; // Final total: finalPrice + bookingCharge
   status: 'confirmed' | 'cancelled' | 'completed';
   createdAt: Date;
   updatedAt: Date;
@@ -72,6 +76,27 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
       default: 0,
       min: 0,
       max: 100,
+    },
+    couponCode: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
+    },
+    couponDiscount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    bookingCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     status: {
       type: String,

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, Clock, Check } from 'lucide-react';
 
 interface Slot {
   slot: string;
@@ -29,6 +31,7 @@ export default function SlotSelector({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (!date || !sport) {
@@ -88,30 +91,91 @@ export default function SlotSelector({
 
   const availableSlots = slots.filter((s) => s.available);
 
+  const handleSlotSelect = (slot: string) => {
+    onSlotChange(slot);
+    setIsOpen(false);
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 relative">
       <label className="block text-sm font-medium text-gray-700">
+        <Clock className="inline-block w-4 h-4 mr-1" />
         Select Time Slot <span className="text-red-500">*</span>
       </label>
       {error && <div className="text-red-500 text-sm">{error}</div>}
-      <select
-        value={selectedSlot}
-        onChange={(e) => onSlotChange(e.target.value)}
-        disabled={isLoading || loading || availableSlots.length === 0}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed"
-      >
-        <option value="">
-          {isLoading ? 'Loading slots...' : 'Choose a time slot'}
-        </option>
-        {availableSlots.length === 0 && !isLoading && (
-          <option disabled>No available slots for this date</option>
-        )}
-        {availableSlots.map((slot) => (
-          <option key={slot.slot} value={slot.slot}>
-            {slot.slot}
-          </option>
-        ))}
-      </select>
+      
+      {/* Custom Animated Dropdown */}
+      <div className="relative">
+        <motion.button
+          type="button"
+          onClick={() => !isLoading && !loading && availableSlots.length > 0 && setIsOpen(!isOpen)}
+          disabled={isLoading || loading || availableSlots.length === 0}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed bg-white text-left flex items-center justify-between"
+          whileTap={{ scale: 0.98 }}
+        >
+          <span className={selectedSlot ? 'text-gray-900' : 'text-gray-500'}>
+            {isLoading 
+              ? 'Loading slots...' 
+              : selectedSlot || 'Choose a time slot'}
+          </span>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown className="w-5 h-5 text-gray-400" />
+          </motion.div>
+        </motion.button>
+
+        <AnimatePresence>
+          {isOpen && availableSlots.length > 0 && (
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setIsOpen(false)}
+              />
+              
+              {/* Dropdown Menu */}
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+              >
+                {availableSlots.map((slot, index) => (
+                  <motion.button
+                    key={slot.slot}
+                    type="button"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    onClick={() => handleSlotSelect(slot.slot)}
+                    className={`w-full px-4 py-3 text-left hover:bg-green-50 transition-colors flex items-center justify-between group ${
+                      selectedSlot === slot.slot ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-400 group-hover:text-green-500" />
+                      {slot.slot}
+                    </span>
+                    {selectedSlot === slot.slot && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      >
+                        <Check className="w-5 h-5 text-green-600" />
+                      </motion.div>
+                    )}
+                  </motion.button>
+                ))}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+
       {!isLoading && (
         <div className="text-sm text-gray-500 space-y-1">
           <p>{availableSlots.length} of {slots.length} slots available</p>

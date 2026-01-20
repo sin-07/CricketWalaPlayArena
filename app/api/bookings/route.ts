@@ -65,7 +65,9 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('🔍 Fetching bookings with query:', query);
-    const bookings = await Booking.find(query).sort({ date: 1, timeSlotId: 1 });
+    const bookings = await Booking.find(query)
+      .lean() // Use lean() for better performance
+      .sort({ date: 1, timeSlotId: 1 });
     console.log(`✅ Found ${bookings.length} bookings`);
 
     return NextResponse.json({

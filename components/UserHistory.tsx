@@ -78,7 +78,7 @@ const UserHistory: React.FC<UserHistoryProps> = ({ phone, email, onHistoryLoad }
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-sm text-red-700">⚠️ {error}</p>
+        <p className="text-sm text-red-700">{error}</p>
       </div>
     );
   }
@@ -100,7 +100,6 @@ const UserHistory: React.FC<UserHistoryProps> = ({ phone, email, onHistoryLoad }
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-gray-800 flex items-center">
-            <span className="mr-2">📋</span>
             Your Booking History
           </h4>
           <button
@@ -159,7 +158,7 @@ const UserHistory: React.FC<UserHistoryProps> = ({ phone, email, onHistoryLoad }
                     <div className="space-y-1">
                       <p className="text-sm font-semibold text-gray-800">{booking.boxName}</p>
                       <p className="text-xs text-gray-600">
-                        📅 {new Date(booking.date).toLocaleDateString('en-US', {
+                        {new Date(booking.date).toLocaleDateString('en-US', {
                           weekday: 'short',
                           year: 'numeric',
                           month: 'short',
@@ -167,7 +166,7 @@ const UserHistory: React.FC<UserHistoryProps> = ({ phone, email, onHistoryLoad }
                         })}
                       </p>
                       <p className="text-xs text-gray-600">
-                        ⏰ {booking.timeSlotIds && booking.timeSlotIds.length > 0
+                        {booking.timeSlotIds && booking.timeSlotIds.length > 0
                           ? `${booking.timeSlotIds.length} slot${booking.timeSlotIds.length > 1 ? 's' : ''}`
                           : '1 slot'}
                       </p>

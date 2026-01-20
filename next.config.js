@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  },
+  
   // Optimize images
   images: {
     remotePatterns: [
@@ -12,6 +17,8 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
   // Compression
@@ -55,6 +62,16 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Cache API responses (where appropriate)
+        source: '/api/bookings/slots',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=120',
           },
         ],
       },

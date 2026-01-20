@@ -59,6 +59,10 @@ export async function PUT(request: NextRequest) {
       updateData.assignedUsers = body.assignedUsers;
     }
 
+    if (body.adminPhones !== undefined) {
+      updateData.adminPhones = body.adminPhones;
+    }
+
     if (body.minAmount !== undefined) {
       updateData.minAmount = body.minAmount;
     }
@@ -73,6 +77,14 @@ export async function PUT(request: NextRequest) {
 
     if (body.perUserLimit !== undefined) {
       updateData.perUserLimit = body.perUserLimit;
+    }
+
+    if (body.showOnHomePage !== undefined) {
+      updateData.showOnHomePage = body.showOnHomePage;
+    }
+
+    if (body.offerTitle !== undefined) {
+      updateData.offerTitle = body.offerTitle;
     }
 
     if (Object.keys(updateData).length === 0) {

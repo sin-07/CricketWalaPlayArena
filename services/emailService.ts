@@ -80,7 +80,7 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
   try {
     // Skip if email service not configured
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.warn('⚠️ Email service not configured. Skipping email notification.');
+      console.warn('WARNING: Email service not configured. Skipping email notification.');
       console.warn('Set EMAIL_USER and EMAIL_PASSWORD in .env to enable emails.');
       return false;
     }
@@ -114,7 +114,7 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
             <td style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 30px 20px; text-align: center;">
               <table width="70" height="70" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 15px auto; background: white; border-radius: 12px;">
                 <tr>
-                  <td align="center" valign="middle" style="font-size: 36px;">🏏</td>
+                  <td align="center" valign="middle" style="font-size: 36px; font-weight: bold; color: #16a34a;">⚾</td>
                 </tr>
               </table>
               <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold;">
@@ -142,7 +142,7 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
           <tr>
             <td style="padding: 20px; background-color: #f0fdf4;">
               <h2 style="color: #166534; font-size: 16px; margin: 0 0 15px 0; border-bottom: 2px solid #86efac; padding-bottom: 10px;">
-                📋 Booking Details
+                Booking Details
               </h2>
               
               <p style="color: #6b7280; font-size: 13px; margin: 10px 0;">
@@ -151,22 +151,22 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
               </p>
 
               <p style="color: #6b7280; font-size: 13px; margin: 10px 0;">
-                <strong>🏟️ Arena:</strong><br/>
+                <strong>Arena:</strong><br/>
                 <span style="color: #1f2937; font-size: 14px;">${booking.boxName}</span>
               </p>
 
               <p style="color: #6b7280; font-size: 13px; margin: 10px 0;">
-                <strong>📅 Date:</strong><br/>
+                <strong>Date:</strong><br/>
                 <span style="color: #1f2937; font-size: 14px;">${formattedDate}</span>
               </p>
 
               <p style="color: #6b7280; font-size: 13px; margin: 10px 0;">
-                <strong>⏰ Time Slots:</strong><br/>
+                <strong>Time Slots:</strong><br/>
                 <span style="color: #1f2937; font-size: 14px;">${formattedTimeSlots}</span>
               </p>
 
               <p style="background-color: #166534; color: #ffffff; padding: 12px; border-radius: 6px; margin: 15px 0 0 0;">
-                <strong>💰 Total Amount:</strong> <span style="font-size: 18px; font-weight: bold;">₹${booking.totalAmount}</span>
+                <strong>Total Amount:</strong> <span style="font-size: 18px; font-weight: bold;">₹${booking.totalAmount}</span>
               </p>
             </td>
           </tr>
@@ -178,13 +178,13 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
                 Your Details
               </h3>
               <p style="color: #6b7280; font-size: 13px; margin: 6px 0;">
-                👤 <strong>${booking.customerName}</strong>
+                <strong>${booking.customerName}</strong>
               </p>
               <p style="color: #6b7280; font-size: 13px; margin: 6px 0;">
-                📧 ${booking.email}
+                ${booking.email}
               </p>
               <p style="color: #6b7280; font-size: 13px; margin: 6px 0;">
-                📱 ${booking.phone}
+                ${booking.phone}
               </p>
             </td>
           </tr>
@@ -193,7 +193,7 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
           <tr>
             <td style="padding: 20px; background-color: #fef3c7;">
               <h3 style="color: #92400e; font-size: 14px; margin: 0 0 10px 0;">
-                ⚠️ Important Information
+                Important Information
               </h3>
               <p style="color: #78350f; font-size: 12px; margin: 6px 0; line-height: 1.6;">
                 • Please arrive 15 minutes before your scheduled time<br/>
@@ -207,7 +207,7 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
           <tr>
             <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="color: #22c55e; font-size: 14px; font-weight: bold; margin: 0 0 8px 0;">
-                🏏 Cricket Wala Play Arena
+                Cricket Wala Play Arena
               </p>
               <p style="color: #9ca3af; font-size: 11px; margin: 0;">
                 Thank you for choosing us! See you at the arena.
@@ -234,10 +234,10 @@ export async function sendBookingConfirmationEmail(booking: BookingEmailData): P
     };
 
     await transport.sendMail(mailOptions);
-    console.log(`✅ Confirmation email sent successfully to ${booking.email}`);
+    console.log(`SUCCESS: Confirmation email sent successfully to ${booking.email}`);
     return true;
   } catch (error) {
-    console.error('❌ Error sending confirmation email:', error);
+    console.error('ERROR: Error sending confirmation email:', error);
     return false;
   }
 }

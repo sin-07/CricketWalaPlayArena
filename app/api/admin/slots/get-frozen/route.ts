@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Slot from '@/models/Slot';
+import { cleanupExpiredFrozenSlots } from '@/lib/frozenSlotValidation';
 
 /**
  * GET /api/admin/slots/get-frozen
  * Fetch all frozen slots (admin only)
  * Query params: bookingType, sport, date
+ * Auto-cleans expired frozen slots (past dates and past time slots for today)
  */
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+
+    // Auto-cleanup expired frozen slots using utility function
+    await cleanupExpiredFrozenSlots();
 
     const searchParams = request.nextUrl.searchParams;
     const bookingType = searchParams.get('bookingType');

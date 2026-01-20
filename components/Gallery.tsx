@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes } from 'react-icons/fa';
+import Image from 'next/image';
 
 interface GalleryImage {
   _id: string;

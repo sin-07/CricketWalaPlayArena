@@ -5,18 +5,18 @@ const { MongoClient } = require('mongodb');
 const uri = 'mongodb://aniketsingh9322_db_user:qC6O9yyyhHCbf0hR@ac-rwzhqr9-shard-00-00.2rttseq.mongodb.net:27017,ac-rwzhqr9-shard-00-01.2rttseq.mongodb.net:27017,ac-rwzhqr9-shard-00-02.2rttseq.mongodb.net:27017/CWPA?ssl=true&replicaSet=atlas-u3q1ps-shard-0&authSource=admin';
 
 async function test() {
-  console.log('🔗 Connecting...');
+  console.log('Connecting...');
   const client = new MongoClient(uri);
   
   try {
     await client.connect();
-    console.log('✅ Connected!');
+    console.log('SUCCESS: Connected!');
     const db = client.db();
-    console.log('📊 Database:', db.databaseName);
+    console.log('Database:', db.databaseName);
     const cols = await db.listCollections().toArray();
-    console.log('📁 Collections:', cols.map(c => c.name).join(', ') || 'none');
+    console.log('Collections:', cols.map(c => c.name).join(', ') || 'none');
   } catch (e) {
-    console.log('❌', e.message);
+    console.log('ERROR:', e.message);
   } finally {
     await client.close();
   }

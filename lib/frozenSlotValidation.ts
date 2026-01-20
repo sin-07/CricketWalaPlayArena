@@ -2,6 +2,52 @@ import dbConnect from '@/lib/mongodb';
 import Slot from '@/models/Slot';
 
 /**
+ * Auto-cleanup expired frozen slots
+ * Removes frozen slots for past dates and past time slots for today
+ */
+export async function cleanupExpiredFrozenSlots() {
+  try {
+    await dbConnect();
+
+    const today = new Date().toISOString().split('T')[0];
+    const currentHour = new Date().getHours();
+
+    // Delete all frozen slots from past dates
+    const pastDatesResult = await Slot.deleteMany({
+      isFrozen: true,
+      date: { $lt: today }
+    });
+
+    // Delete frozen slots for today that have already passed
+    const pastTimeSlots: string[] = [];
+    for (let hour = 0; hour <= currentHour; hour++) {
+      const startHour = hour.toString().padStart(2, '0');
+      const endHour = ((hour + 1) % 24).toString().padStart(2, '0');
+      pastTimeSlots.push(`${startHour}:00-${endHour}:00`);
+    }
+
+    let todayResult = { deletedCount: 0 };
+    if (pastTimeSlots.length > 0) {
+      todayResult = await Slot.deleteMany({
+        isFrozen: true,
+        date: today,
+        slot: { $in: pastTimeSlots }
+      });
+    }
+
+    const totalDeleted = (pastDatesResult.deletedCount || 0) + (todayResult.deletedCount || 0);
+    if (totalDeleted > 0) {
+      console.log(`Auto-cleanup: Removed ${totalDeleted} expired frozen slots`);
+    }
+
+    return totalDeleted;
+  } catch (error) {
+    console.error('Error in auto-cleanup:', error);
+    return 0;
+  }
+}
+
+/**
  * Validate that a slot is not frozen before allowing a booking
  * @param bookingType - 'match' or 'practice'
  * @param sport - The sport being booked
@@ -17,6 +63,9 @@ export async function validateSlotNotFrozen(
 ) {
   try {
     await dbConnect();
+
+    // Auto-cleanup expired frozen slots first
+    await cleanupExpiredFrozenSlots();
 
     const frozenSlot = await Slot.findOne({
       bookingType,

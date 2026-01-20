@@ -5,14 +5,14 @@ const dns = require('dns').promises;
 async function test() {
   const uri = process.env.MONGODB_URI;
   
-  console.log('🔗 Testing SRV connection with +srv...');
+  console.log('Testing SRV connection with +srv...');
   
   // Try to manually resolve SRV first
   try {
     const records = await dns.resolveSrv('_mongodb._tcp.cluster0.2rttseq.mongodb.net');
-    console.log('✅ DNS SRV resolution works:', records.length, 'servers found');
+    console.log('SUCCESS: DNS SRV resolution works:', records.length, 'servers found');
   } catch (e) {
-    console.log('⚠️ DNS SRV resolution failed:', e.message);
+    console.log('WARNING: DNS SRV resolution failed:', e.message);
     console.log('Try: netsh interface ipv4 set dns "Wi-Fi" static 8.8.8.8');
     return;
   }
@@ -24,11 +24,11 @@ async function test() {
   
   try {
     await client.connect();
-    console.log('✅ Connected with +srv!');
+    console.log('SUCCESS: Connected with +srv!');
     const db = client.db();
-    console.log('📊 Database:', db.databaseName);
+    console.log('Database:', db.databaseName);
   } catch (error) {
-    console.log('❌ Connection error:', error.message);
+    console.log('ERROR: Connection error:', error.message);
   } finally {
     await client.close();
   }

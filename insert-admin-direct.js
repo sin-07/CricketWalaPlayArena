@@ -3,10 +3,10 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const dns = require('dns');
 
-// Set DNS resolver fallback
-dns.setServers(['8.8.8.8', '8.8.4.4']);
+// Force Node.js to prefer IPv4 for DNS resolution
+dns.setDefaultResultOrder('ipv4first');
 
-const mongoUri = 'mongodb+srv://aniketsingh9322_db_user:qC6O9yyyhHCbf0hR@cluster0.2rttseq.mongodb.net/CWPA?retryWrites=true&w=majority&appName=Cluster0';
+const mongoUri = 'mongodb+srv://aniketsingh9322_db_user:UKxrEtvM1KDGiUSG@cluster0.trpgklj.mongodb.net/CricketBox?retryWrites=true&w=majority&appName=Cluster0';
 
 // Admin schema definition
 const adminSchema = new mongoose.Schema({
@@ -36,12 +36,12 @@ async function insertAdmin() {
   try {
     console.log('Connecting to MongoDB...');
     await mongoose.connect(mongoUri);
-    console.log('✅ Connected to MongoDB');
+    console.log('SUCCESS: Connected to MongoDB');
 
     // Check if admin already exists
     const existing = await Admin.findOne({ username: 'rahul' });
     if (existing) {
-      console.log('⚠️  Admin user "rahul" already exists');
+      console.log('WARNING: Admin user "rahul" already exists');
       await mongoose.connection.close();
       return;
     }
@@ -52,17 +52,17 @@ async function insertAdmin() {
 
     // Create admin with hashed password
     const admin = await Admin.create({
-      username: 'Rahul',
+      username: 'rahul',
       password: hashedPassword,
     });
 
-    console.log('✅ Admin inserted successfully!');
+    console.log('SUCCESS: Admin inserted successfully!');
     console.log('Username:', admin.username);
     console.log('Password: Rahul@123 (stored as hashed)');
     
     await mongoose.connection.close();
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('ERROR:', error.message);
     await mongoose.connection.close();
   }
 }

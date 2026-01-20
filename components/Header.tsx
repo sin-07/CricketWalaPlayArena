@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Home, Calendar, List, LayoutDashboard, Images, LogOut, Lock, LucideIcon } from 'lucide-react';
+import { Home, Calendar, List, LayoutDashboard, Images, LogOut, Lock, LucideIcon, Phone, MessageCircle, MapPin } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 
 interface NavItem {
@@ -53,6 +53,18 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  // Freeze body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
@@ -90,6 +102,42 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+      {/* Mobile Quick Contact Bar */}
+      <div className="md:hidden bg-gradient-to-r from-green-700 via-green-600 to-emerald-600">
+        <div className="flex items-center justify-center gap-5 py-2">
+          <a 
+            href="tel:+918340296635" 
+            className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
+            aria-label="Call Us"
+          >
+            <Phone className="w-3.5 h-3.5" />
+            <span>Call</span>
+          </a>
+          <span className="text-white/40">|</span>
+          <a 
+            href="https://wa.me/918340296635" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
+            aria-label="WhatsApp"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>WhatsApp</span>
+          </a>
+          <span className="text-white/40">|</span>
+          <a 
+            href="https://maps.google.com/?q=Kanti+Factory,Patna,Bihar+800007" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
+            aria-label="Location"
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Location</span>
+          </a>
+        </div>
+      </div>
+
       {/* Logging Out Modal */}
       <AnimatePresence>
         {isLoggingOut && (
@@ -139,10 +187,10 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-3 md:py-4">
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3 md:py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="relative w-8 h-8 md:w-10 md:h-10">
+          <Link href="/" className="flex items-center space-x-1.5 sm:space-x-2">
+            <div className="relative w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 flex-shrink-0">
               <Image
                 src="/cwpa.jpg"
                 alt="Cricket Wala Play Arena"
@@ -151,7 +199,7 @@ const Header: React.FC = () => {
                 priority
               />
             </div>
-            <span className="text-xl md:text-2xl font-bold text-gray-800">
+            <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 whitespace-nowrap">
               Cricket Wala <span className="text-primary-600">Play Arena</span>
             </span>
           </Link>
@@ -211,35 +259,40 @@ const Header: React.FC = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden relative w-10 h-10 flex items-center justify-center text-gray-700 hover:text-primary-600 transition-colors"
-            whileTap={{ scale: 0.9 }}
+            className={`md:hidden relative w-10 h-10 flex items-center justify-center focus:outline-none group z-[80] transition-colors rounded-lg ${
+              isMobileMenuOpen ? 'bg-primary-600' : ''
+            }`}
+            aria-label="Toggle menu"
           >
-            <AnimatePresence mode="wait">
-              {isMobileMenuOpen ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X className="w-6 h-6" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Menu className="w-6 h-6" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.button>
+            <div className="relative w-6 h-5 flex flex-col justify-center items-center">
+              {/* Top line */}
+              <span
+                className={`absolute w-6 h-0.5 rounded-full transform transition-all duration-300 ease-in-out ${
+                  isMobileMenuOpen 
+                    ? 'rotate-45 translate-y-0 bg-white' 
+                    : '-translate-y-2 bg-gray-700 group-hover:bg-primary-600'
+                }`}
+              />
+              {/* Middle line */}
+              <span
+                className={`absolute w-6 h-0.5 rounded-full transition-all duration-300 ease-in-out ${
+                  isMobileMenuOpen 
+                    ? 'opacity-0 scale-0 bg-white' 
+                    : 'opacity-100 scale-100 bg-gray-700 group-hover:bg-primary-600'
+                }`}
+              />
+              {/* Bottom line */}
+              <span
+                className={`absolute w-6 h-0.5 rounded-full transform transition-all duration-300 ease-in-out ${
+                  isMobileMenuOpen 
+                    ? '-rotate-45 translate-y-0 bg-white' 
+                    : 'translate-y-2 bg-gray-700 group-hover:bg-primary-600'
+                }`}
+              />
+            </div>
+          </button>
         </div>
       </div>
 
@@ -253,7 +306,7 @@ const Header: React.FC = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/50 z-[60] md:hidden"
+              className="fixed top-[calc(2.25rem+4rem)] left-0 right-0 bottom-0 bg-black/50 z-[60] md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -263,35 +316,8 @@ const Header: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-80 bg-white shadow-2xl z-[70] md:hidden overflow-y-auto"
+              className="fixed top-[calc(2.25rem+4rem)] right-0 bottom-0 w-80 bg-white shadow-2xl z-[70] md:hidden overflow-y-auto"
             >
-              {/* Sidebar Header */}
-              <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative w-10 h-10">
-                      <Image
-                        src="/cwpa.jpg"
-                        alt="Cricket Wala Play Arena"
-                        fill
-                        className="object-contain bg-white rounded-lg p-1"
-                      />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold">Cricket Wala</h2>
-                      <p className="text-xs text-primary-100">Play Arena</p>
-                    </div>
-                  </div>
-                  <motion.button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 hover:bg-primary-800 rounded-lg transition-colors"
-                    whileTap={{ scale: 0.9, rotate: 90 }}
-                  >
-                    <X className="w-6 h-6" />
-                  </motion.button>
-                </div>
-              </div>
-
               {/* Navigation Links */}
               <nav className="p-6 space-y-2">
                 {navItems.map((item, index) => {

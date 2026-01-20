@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     let adminId: string;
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
-      adminId = decoded.id;
+      adminId = decoded.adminId || decoded.id || 'admin';
     } catch (err) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
@@ -33,10 +33,13 @@ export async function POST(request: NextRequest) {
       sport,
       bookingType,
       assignedUsers,
+      adminPhones,
       minAmount,
       expiryDate,
       usageLimit,
       perUserLimit,
+      showOnHomePage,
+      offerTitle,
     } = body;
 
     // Validation
@@ -91,12 +94,15 @@ export async function POST(request: NextRequest) {
       sport: sport || [],
       bookingType: bookingType || 'both',
       assignedUsers: assignedUsers || [],
+      adminPhones: adminPhones || ['8340296635'],
       minAmount: minAmount || 0,
       expiryDate: new Date(expiryDate),
       usageLimit: usageLimit || 0,
       usedCount: 0,
       perUserLimit: perUserLimit || 1,
       isActive: true,
+      showOnHomePage: showOnHomePage || false,
+      offerTitle: offerTitle || '',
       createdBy: adminId,
     });
 

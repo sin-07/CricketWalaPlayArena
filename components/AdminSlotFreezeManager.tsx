@@ -4,6 +4,22 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import Link from 'next/link';
+import { 
+  ArrowLeft, 
+  Snowflake, 
+  Calendar, 
+  Clock, 
+  Filter, 
+  Unlock, 
+  CheckCircle2, 
+  AlertCircle,
+  Layers,
+  Trophy,
+  Target,
+  RefreshCw
+} from 'lucide-react';
+import { GiCricketBat, GiSoccerBall, GiShuttlecock } from 'react-icons/gi';
 
 interface FrozenSlot {
   _id: string;
@@ -31,9 +47,9 @@ export default function AdminSlotFreezeManager() {
   // Form state for freezing slots
   const [freezeForm, setFreezeForm] = useState<SlotFilterParams>({
     bookingType: 'match',
-    sports: ['Cricket'], // Multiple sports with default
+    sports: [], // Start empty - no default selection
     date: new Date().toISOString().split('T')[0],
-    slots: ['06:00-07:00'], // Multiple slots with default
+    slots: [], // Start empty - no default selection
   });
 
   // Filter state for viewing frozen slots
@@ -72,6 +88,28 @@ export default function AdminSlotFreezeManager() {
 
   const sports = ['Cricket', 'Football', 'Badminton'];
   const bookingTypes = ['match', 'practice'];
+
+  // Get current hour to filter past slots for today
+  const getCurrentHour = () => {
+    return new Date().getHours();
+  };
+
+  // Filter available slots based on selected date
+  const getFilteredSlots = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const isToday = freezeForm.date === today;
+    
+    if (!isToday) {
+      return availableSlots; // Show all slots for future dates
+    }
+    
+    // For today, filter out past time slots
+    const currentHour = getCurrentHour();
+    return availableSlots.filter(slot => {
+      const slotStartHour = parseInt(slot.split(':')[0]);
+      return slotStartHour > currentHour; // Only show future slots
+    });
+  };
 
   // Fetch frozen slots
   useEffect(() => {
@@ -173,9 +211,9 @@ export default function AdminSlotFreezeManager() {
         });
         setFreezeForm({
           bookingType: 'match',
-          sports: ['Cricket'],
+          sports: [], // Reset to empty
           date: new Date().toISOString().split('T')[0],
-          slots: ['06:00-07:00'],
+          slots: [], // Reset to empty
         });
         setTimeout(() => fetchFrozenSlots(), 500);
       } else {
@@ -233,172 +271,292 @@ export default function AdminSlotFreezeManager() {
   };
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 pt-10 md:pt-12">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Slot Freeze Manager</h1>
-        <p className="text-gray-600">Freeze multiple slots across multiple sports at once</p>
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link 
+                href="/admin" 
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Snowflake className="w-7 h-7 text-green-600" />
+                  Slot Freeze Manager
+                </h1>
+                <p className="text-sm text-gray-500">Freeze multiple slots across multiple sports at once</p>
+              </div>
+            </div>
+            <button
+              onClick={() => fetchFrozenSlots()}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-700 font-medium"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Message Display */}
-      {message && (
-        <div
-          className={`p-4 rounded-lg ${
-            message.type === 'success'
-              ? 'bg-green-50 border border-green-200 text-green-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Freeze Slots Section */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Freeze Multiple Slots</h2>
-
-          <form onSubmit={handleFreezeBulk} className="space-y-6">
-            {/* Booking Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Booking Type</label>
-              <select
-                value={freezeForm.bookingType}
-                onChange={(e) =>
-                  setFreezeForm({
-                    ...freezeForm,
-                    bookingType: e.target.value as 'match' | 'practice',
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {bookingTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sports Multi-Select */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Select Sports (Multiple)
-              </label>
-              <div className="space-y-2 border border-gray-300 rounded-lg p-3 bg-gray-50">
-                {sports.map((sport) => (
-                  <div key={sport} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`sport-${sport}`}
-                      checked={freezeForm.sports.includes(sport)}
-                      onChange={() => handleSportToggle(sport)}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                    />
-                    <label
-                      htmlFor={`sport-${sport}`}
-                      className="ml-2 text-sm text-gray-700 cursor-pointer font-medium"
-                    >
-                      {sport}
-                    </label>
-                  </div>
-                ))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Frozen</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{frozenSlots.length}</p>
               </div>
-              <p className="text-xs text-gray-600 mt-1">
-                Selected: {freezeForm.sports.length} sport(s)
-              </p>
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <Snowflake className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Match Frozen</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
+                  {frozenSlots.filter(s => s.bookingType === 'match').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <Trophy className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Practice Frozen</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
+                  {frozenSlots.filter(s => s.bookingType === 'practice').length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <Target className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500">To Freeze</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">
+                  {freezeForm.sports.length * freezeForm.slots.length}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <Layers className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Message Display */}
+        {message && (
+          <div
+            className={`p-4 rounded-xl flex items-center gap-3 ${
+              message.type === 'success'
+                ? 'bg-green-50 border border-green-200 text-green-800'
+                : 'bg-red-50 border border-red-200 text-red-800'
+            }`}
+          >
+            {message.type === 'success' ? (
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            )}
+            <p className="font-medium">{message.text}</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Freeze Slots Section */}
+          <Card className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <Snowflake className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Freeze Multiple Slots</h2>
+                <p className="text-sm text-gray-500">Select sports, date, and time slots</p>
+              </div>
             </div>
 
-            {/* Date */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <Input
-                type="date"
-                value={freezeForm.date}
-                onChange={(e) =>
-                  setFreezeForm({
-                    ...freezeForm,
-                    date: e.target.value,
-                  })
-                }
-                min={getMinDate()}
-                required
-                className="w-full"
-              />
-            </div>
-
-            {/* Slots Multi-Select */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Select Time Slots (Multiple)
-              </label>
-              <div className="border border-gray-300 rounded-lg p-3 bg-gray-50 max-h-64 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-2">
-                  {availableSlots.map((slot) => (
-                    <div key={slot} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={`slot-${slot}`}
-                        checked={freezeForm.slots.includes(slot)}
-                        onChange={() => handleSlotToggle(slot)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
-                      />
-                      <label
-                        htmlFor={`slot-${slot}`}
-                        className="ml-2 text-sm text-gray-700 cursor-pointer"
-                      >
-                        {slot}
-                      </label>
-                    </div>
+            <form onSubmit={handleFreezeBulk} className="space-y-6">
+              {/* Booking Type */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Booking Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {bookingTypes.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setFreezeForm({ ...freezeForm, bookingType: type as 'match' | 'practice' })}
+                      className={`px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                        freezeForm.bookingType === type
+                          ? 'bg-green-600 text-white shadow-lg shadow-green-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type === 'match' ? <Trophy className="w-4 h-4" /> : <Target className="w-4 h-4" />}
+                      {type === 'match' ? 'Match' : 'Practice'}
+                    </button>
                   ))}
                 </div>
               </div>
-              <p className="text-xs text-gray-600 mt-1">
-                Selected: {freezeForm.slots.length} slot(s)
-              </p>
-            </div>
 
-            {/* Summary */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-900">
-                <strong>Summary:</strong> Will freeze{' '}
-                <strong>{freezeForm.sports.length * freezeForm.slots.length}</strong> slot
-                combination(s) ({freezeForm.sports.length} sport(s) × {freezeForm.slots.length}{' '}
-                slot(s)) on <strong>{freezeForm.date}</strong>
-              </p>
-            </div>
+              {/* Sports Multi-Select */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Select Sports
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {sports.map((sport) => (
+                    <button
+                      key={sport}
+                      type="button"
+                      onClick={() => handleSportToggle(sport)}
+                      className={`px-4 py-3 rounded-xl font-medium transition-all text-sm flex items-center justify-center gap-2 ${
+                        freezeForm.sports.includes(sport)
+                          ? 'bg-green-600 text-white shadow-lg shadow-green-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {sport === 'Cricket' ? <GiCricketBat className="w-4 h-4" /> : sport === 'Football' ? <GiSoccerBall className="w-4 h-4" /> : <GiShuttlecock className="w-4 h-4" />} {sport}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {freezeForm.sports.length} sport(s) selected
+                </p>
+              </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg"
-            >
-              {loading
-                ? 'Processing...'
-                : `Freeze ${freezeForm.sports.length * freezeForm.slots.length} Slot(s)`}
-            </Button>
-          </form>
-        </Card>
+              {/* Date */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Date
+                </label>
+                <Input
+                  type="date"
+                  value={freezeForm.date}
+                  onChange={(e) => {
+                    const newDate = e.target.value;
+                    setFreezeForm({
+                      ...freezeForm,
+                      date: newDate,
+                      slots: [], // Clear slot selections when date changes
+                    });
+                  }}
+                  min={getMinDate()}
+                  required
+                  className="w-full rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
 
-        {/* Filter and View Frozen Slots */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Filter Frozen Slots</h2>
+              {/* Slots Multi-Select */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Select Time Slots
+                  {freezeForm.date === new Date().toISOString().split('T')[0] && (
+                    <span className="text-xs text-orange-600 font-normal">(Past slots hidden for today)</span>
+                  )}
+                </label>
+                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 max-h-52 overflow-y-auto">
+                  {getFilteredSlots().length === 0 ? (
+                    <p className="text-center text-gray-500 py-4">No available slots for today. Select a future date.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {getFilteredSlots().map((slot) => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => handleSlotToggle(slot)}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                            freezeForm.slots.includes(slot)
+                              ? 'bg-green-600 text-white shadow-md'
+                              : 'bg-white text-gray-700 hover:bg-green-50 border border-gray-200'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {freezeForm.slots.length} slot(s) selected
+                </p>
+              </div>
 
-          <div className="space-y-4 mb-6">
-            {/* Filter Booking Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Booking Type</label>
-              <select
-                value={filterParams.bookingType}
-                onChange={(e) =>
-                  setFilterParams({
-                    ...filterParams,
-                    bookingType: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              {/* Summary */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                <p className="text-sm text-green-900">
+                  <strong>Summary:</strong> Will freeze{' '}
+                  <span className="text-lg font-bold text-green-600">
+                    {freezeForm.sports.length * freezeForm.slots.length}
+                  </span>{' '}
+                  slot combination(s)
+                </p>
+                <p className="text-xs text-green-700 mt-1">
+                  {freezeForm.sports.length} sport(s) × {freezeForm.slots.length} slot(s) on {freezeForm.date}
+                </p>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={loading || freezeForm.sports.length === 0 || freezeForm.slots.length === 0}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2">
+                    <Snowflake className="w-4 h-4" />
+                    Freeze {freezeForm.sports.length * freezeForm.slots.length} Slot(s)
+                  </span>
+                )}
+              </Button>
+            </form>
+          </Card>
+
+          {/* Filter and View Frozen Slots */}
+          <Card className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                <Filter className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Filter Frozen Slots</h2>
+                <p className="text-sm text-gray-500">Filter by type, sport, or date</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              {/* Filter Booking Type */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Booking Type</label>
+                <select
+                  value={filterParams.bookingType}
+                  onChange={(e) =>
+                    setFilterParams({
+                      ...filterParams,
+                      bookingType: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
+                >
                 <option value="">All Types</option>
                 {bookingTypes.map((type) => (
                   <option key={type} value={type}>
@@ -410,7 +568,7 @@ export default function AdminSlotFreezeManager() {
 
             {/* Filter Sport */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Sport</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Sport</label>
               <select
                 value={filterParams.sport}
                 onChange={(e) =>
@@ -419,7 +577,7 @@ export default function AdminSlotFreezeManager() {
                     sport: e.target.value,
                   })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
               >
                 <option value="">All Sports</option>
                 {sports.map((sport) => (
@@ -432,7 +590,10 @@ export default function AdminSlotFreezeManager() {
 
             {/* Filter Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Date
+              </label>
               <Input
                 type="date"
                 value={filterParams.date}
@@ -442,71 +603,107 @@ export default function AdminSlotFreezeManager() {
                     date: e.target.value,
                   })
                 }
-                className="w-full"
+                className="w-full rounded-xl border-gray-200 focus:border-green-500 focus:ring-green-500"
               />
             </div>
+
+            {/* Clear Filters */}
+            <button
+              type="button"
+              onClick={() => setFilterParams({ bookingType: '', sport: '', date: '' })}
+              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors text-sm"
+            >
+              Clear All Filters
+            </button>
           </div>
 
-          <p className="text-sm text-gray-600">
-            Total frozen slots: <strong>{frozenSlots.length}</strong>
-          </p>
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+            <p className="text-sm text-green-900">
+              Total frozen slots: <span className="text-lg font-bold text-green-600">{frozenSlots.length}</span>
+            </p>
+          </div>
         </Card>
       </div>
 
       {/* Frozen Slots List */}
       <div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Frozen Slots List</h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+              <Snowflake className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Frozen Slots List</h2>
+              <p className="text-sm text-gray-500">
+                {frozenSlots.length} slot(s) currently frozen
+              </p>
+            </div>
+          </div>
+        </div>
 
         {frozenSlots.length === 0 ? (
-          <Card className="p-6 text-center text-gray-500">
-            <p>No frozen slots found</p>
+          <Card className="p-12 text-center bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Snowflake className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-gray-500 font-medium">No frozen slots found</p>
+            <p className="text-sm text-gray-400 mt-1">Freeze some slots to see them here</p>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {frozenSlots.map((slot) => (
-              <Card key={slot._id} className="p-4 border-2 border-red-200 bg-red-50">
-                <div className="space-y-2">
+              <Card key={slot._id} className="p-5 bg-white rounded-2xl shadow-sm border border-red-100 hover:shadow-lg hover:border-red-200 transition-all group">
+                <div className="space-y-3">
                   <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-semibold text-gray-900">{slot.sport}</p>
-                      <p className="text-sm text-gray-600">
-                        {slot.bookingType.charAt(0).toUpperCase() + slot.bookingType.slice(1)}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">
+                        {slot.sport === 'Cricket' ? <GiCricketBat className="w-6 h-6 text-green-600" /> : slot.sport === 'Football' ? <GiSoccerBall className="w-6 h-6 text-blue-600" /> : <GiShuttlecock className="w-6 h-6 text-purple-600" />}
+                      </span>
+                      <div>
+                        <p className="font-bold text-gray-900">{slot.sport}</p>
+                        <p className="text-xs text-gray-500 capitalize">{slot.bookingType}</p>
+                      </div>
                     </div>
-                    <span className="inline-block px-2 py-1 bg-red-600 text-white text-xs font-semibold rounded">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-lg">
+                      <Snowflake className="w-3 h-3" />
                       Frozen
                     </span>
                   </div>
 
-                  <div className="border-t border-red-200 pt-2">
-                    <p className="text-sm font-medium text-gray-700">{slot.date}</p>
-                    <p className="text-sm font-medium text-gray-700">{slot.slot}</p>
+                  <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium text-gray-700">{slot.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="font-medium text-gray-700">{slot.slot}</span>
+                    </div>
                   </div>
 
-                  {slot.frozenBy && (
-                    <p className="text-xs text-gray-600">
-                      Frozen by: <strong>{slot.frozenBy}</strong>
-                    </p>
-                  )}
-
-                  {slot.frozenAt && (
-                    <p className="text-xs text-gray-600">
-                      At: {new Date(slot.frozenAt).toLocaleString()}
-                    </p>
+                  {(slot.frozenBy || slot.frozenAt) && (
+                    <div className="text-xs text-gray-400 space-y-1">
+                      {slot.frozenBy && <p>By: {slot.frozenBy}</p>}
+                      {slot.frozenAt && <p>At: {new Date(slot.frozenAt).toLocaleString()}</p>}
+                    </div>
                   )}
 
                   <Button
                     onClick={() => handleUnfreezeSlot(slot)}
                     disabled={loading}
-                    className="w-full mt-3 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg text-sm"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-green-100 transition-all"
                   >
-                    Unfreeze
+                    <span className="flex items-center justify-center gap-2">
+                      <Unlock className="w-4 h-4" />
+                      Unfreeze
+                    </span>
                   </Button>
                 </div>
               </Card>
             ))}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

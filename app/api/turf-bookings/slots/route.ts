@@ -3,16 +3,21 @@ import dbConnect from '@/lib/mongodb';
 import TurfBooking from '@/models/TurfBooking';
 import Slot from '@/models/Slot';
 import { AVAILABLE_SLOTS } from '@/lib/bookingValidation';
+import { cleanupExpiredFrozenSlots } from '@/lib/frozenSlotValidation';
 
 /**
  * GET /api/turf-bookings/slots
  * Fetch available slots for a specific date and sport
  * Returns all slots with booking status
  * Filters out frozen and booked slots
+ * Auto-cleans expired frozen slots before fetching
  */
 export async function GET(request: NextRequest) {
   try {
     await dbConnect();
+
+    // Auto-cleanup expired frozen slots
+    await cleanupExpiredFrozenSlots();
 
     const searchParams = request.nextUrl.searchParams;
     const date = searchParams.get('date');

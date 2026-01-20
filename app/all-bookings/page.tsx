@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Booking } from '@/types';
 import { normalizePhoneNumber } from '@/utils/phoneUtils';
-import { FaPhone, FaClipboardList, FaCalendarAlt, FaSearch, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPhone, FaClipboardList, FaCalendarAlt, FaSearch, FaExclamationTriangle, FaEnvelope, FaClock } from 'react-icons/fa';
 import { GiCricketBat } from 'react-icons/gi';
 
 const AllBookingsPage: React.FC = () => {
@@ -103,64 +103,64 @@ const AllBookingsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6 md:py-8">
+      <div className="container mx-auto px-3 sm:px-4 max-w-6xl">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">All Bookings</h1>
-          <p className="text-gray-600">Search and view your booking details</p>
+        <div className="mb-5 sm:mb-6 md:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">All Bookings</h1>
+          <p className="text-sm sm:text-base text-gray-600">Search and view your booking details</p>
         </div>
 
         {/* Search Form */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Search Your Bookings</h2>
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 md:p-6 mb-5 sm:mb-6 md:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4">Search Your Bookings</h2>
           
-          <form onSubmit={handleSearch} className="space-y-4">
+          <form onSubmit={handleSearch} className="space-y-3 sm:space-y-4">
             {/* Search Type Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 Search By
               </label>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setSearchType('bookingRef')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 ${
                     searchType === 'bookingRef'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <FaClipboardList /> Booking ID
+                  <FaClipboardList className="w-3 h-3 sm:w-auto sm:h-auto" /> Booking ID
                 </button>
                 <button
                   type="button"
                   onClick={() => setSearchType('phone')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 ${
                     searchType === 'phone'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <FaPhone className="inline mr-1" /> Mobile Number
+                  <FaPhone className="w-3 h-3 sm:w-auto sm:h-auto" /> Mobile
                 </button>
                 <button
                   type="button"
                   onClick={() => setSearchType('date')}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 ${
                     searchType === 'date'
                       ? 'bg-primary-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <FaCalendarAlt /> Date
+                  <FaCalendarAlt className="w-3 h-3 sm:w-auto sm:h-auto" /> Date
                 </button>
               </div>
             </div>
 
             {/* Search Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                 {searchType === 'bookingRef' && 'Enter Booking ID'}
                 {searchType === 'phone' && 'Enter Mobile Number'}
                 {searchType === 'date' && 'Select Date'}
@@ -170,7 +170,7 @@ const AllBookingsPage: React.FC = () => {
                   type="date"
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
                   required
                 />
               ) : (
@@ -199,26 +199,26 @@ const AllBookingsPage: React.FC = () => {
                       : ''
                   }
                   maxLength={searchType === 'phone' ? 10 : undefined}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm sm:text-base"
                   required
                 />
               )}
             </div>
 
             {/* Search Buttons */}
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-primary-600 text-white py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
               >
-                <FaSearch /> {loading ? 'Searching...' : 'Search Bookings'}
+                <FaSearch className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {loading ? 'Searching...' : 'Search'}
               </button>
               {hasSearched && (
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="px-6 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="px-4 sm:px-6 bg-gray-200 text-gray-700 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors text-sm sm:text-base"
                 >
                   Clear
                 </button>
@@ -229,9 +229,9 @@ const AllBookingsPage: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-700 flex items-center">
-              <FaExclamationTriangle className="mr-2" />
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-5 sm:mb-8">
+            <p className="text-red-700 flex items-center text-sm sm:text-base">
+              <FaExclamationTriangle className="mr-2 flex-shrink-0" />
               {error}
             </p>
           </div>
@@ -240,18 +240,18 @@ const AllBookingsPage: React.FC = () => {
         {/* Search Results */}
         {hasSearched && !loading && (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4">
-              <h2 className="text-xl font-semibold text-white">
-                Search Results ({bookings.length})
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-4 sm:px-6 py-3 sm:py-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">
+                Results ({bookings.length})
               </h2>
             </div>
 
             {bookings.length === 0 ? (
-              <div className="p-12 text-center">
-                <FaSearch className="text-6xl mb-4 text-gray-400 mx-auto" />
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">No Bookings Found</h3>
-                <p className="text-gray-600">
-                  No bookings match your search criteria. Please try a different search.
+              <div className="p-8 sm:p-12 text-center">
+                <FaSearch className="text-4xl sm:text-6xl mb-3 sm:mb-4 text-gray-400 mx-auto" />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">No Bookings Found</h3>
+                <p className="text-sm sm:text-base text-gray-600">
+                  No bookings match your search criteria.
                 </p>
               </div>
             ) : (
@@ -259,41 +259,41 @@ const AllBookingsPage: React.FC = () => {
                 {bookings.map((booking, index) => (
                   <div
                     key={booking._id || index}
-                    className="p-6 hover:bg-gray-50 transition-colors"
+                    className="p-4 sm:p-6 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
                       {/* Left Section - Booking Info */}
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex-1 space-y-2 sm:space-y-3">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadgeClass(
+                            className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold border ${getStatusBadgeClass(
                               booking.status
                             )}`}
                           >
                             {getDisplayStatus(booking.status)}
                           </span>
-                          <span className="text-sm font-mono bg-gray-100 px-3 py-1 rounded text-gray-700">
+                          <span className="text-xs sm:text-sm font-mono bg-gray-100 px-2 sm:px-3 py-0.5 sm:py-1 rounded text-gray-700">
                             {booking.bookingRef}
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">Customer Details</p>
-                            <p className="text-sm font-semibold text-gray-800">{booking.customerName}</p>
-                            <p className="text-xs text-gray-600">📧 {booking.email}</p>
-                            <p className="text-xs text-gray-600 flex items-center"><FaPhone className="mr-1" /> {booking.phone}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Customer Details</p>
+                            <p className="text-xs sm:text-sm font-semibold text-gray-800">{booking.customerName}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600 flex items-center"><FaEnvelope className="mr-1 flex-shrink-0 w-2.5 h-2.5 sm:w-3 sm:h-3" /> <span className="truncate">{booking.email}</span></p>
+                            <p className="text-[10px] sm:text-xs text-gray-600 flex items-center"><FaPhone className="mr-1 flex-shrink-0 w-2.5 h-2.5 sm:w-3 sm:h-3" /> {booking.phone}</p>
                           </div>
 
                           <div>
-                            <p className="text-xs text-gray-500 mb-1">Booking Details</p>
-                            <p className="text-sm font-semibold text-gray-800">{booking.boxName}</p>
-                            <p className="text-xs text-gray-600">📅 {formatDate(booking.date)}</p>
-                            <p className="text-xs text-gray-600">
-                              ⏰ {(booking as any).slot 
+                            <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Booking Details</p>
+                            <p className="text-xs sm:text-sm font-semibold text-gray-800">{booking.boxName}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600 flex items-center"><FaCalendarAlt className="mr-1 flex-shrink-0 w-2.5 h-2.5 sm:w-3 sm:h-3" /> {formatDate(booking.date)}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-600 flex items-center">
+                              <FaClock className="mr-1 flex-shrink-0 w-2.5 h-2.5 sm:w-3 sm:h-3" /> {(booking as any).slot 
                                 ? (booking as any).slot
                                 : booking.timeSlotIds && booking.timeSlotIds.length > 0
-                                ? `${booking.timeSlotIds.length} slot${booking.timeSlotIds.length > 1 ? 's' : ''}: ${booking.timeSlotIds.sort((a, b) => a - b).map(id => formatTime(id)).join(', ')}`
+                                ? `${booking.timeSlotIds.length} slot${booking.timeSlotIds.length > 1 ? 's' : ''}`
                                 : formatTime(booking.timeSlotId)}
                             </p>
                           </div>
@@ -301,10 +301,10 @@ const AllBookingsPage: React.FC = () => {
                       </div>
 
                       {/* Right Section - Price */}
-                      <div className="lg:text-right">
-                        <p className="text-xs text-gray-500 mb-1">Total Amount</p>
-                        <p className="text-3xl font-bold text-primary-600">₹{booking.totalAmount}</p>
-                        <p className="text-xs text-gray-500 mt-2">
+                      <div className="lg:text-right mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Total Amount</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-primary-600">₹{booking.totalAmount}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2">
                           Booked on {formatDate(booking.createdAt)}
                         </p>
                       </div>
@@ -318,10 +318,10 @@ const AllBookingsPage: React.FC = () => {
 
         {/* Initial State */}
         {!hasSearched && !loading && (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="text-6xl mb-4"><GiCricketBat className="text-gray-400" /></div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Ready to Search</h3>
-            <p className="text-gray-600">
+          <div className="bg-white rounded-xl shadow-lg p-8 sm:p-12 text-center">
+            <div className="text-4xl sm:text-6xl mb-3 sm:mb-4"><GiCricketBat className="text-gray-400 mx-auto" /></div>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Ready to Search</h3>
+            <p className="text-sm sm:text-base text-gray-600">
               Enter your booking details above to view your bookings
             </p>
           </div>

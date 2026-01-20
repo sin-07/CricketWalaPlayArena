@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import AdminSlotFreezeManager from '@/components/AdminSlotFreezeManager';
+import { Snowflake } from 'lucide-react';
 
 export default function AdminSlotFreezePage() {
   const router = useRouter();
@@ -17,10 +18,12 @@ export default function AdminSlotFreezePage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Snowflake className="w-8 h-8 text-green-600 animate-spin" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading Slot Manager...</p>
         </div>
       </div>
     );
@@ -30,9 +33,5 @@ export default function AdminSlotFreezePage() {
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminSlotFreezeManager />
-    </div>
-  );
+  return <AdminSlotFreezeManager />;
 }

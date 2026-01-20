@@ -23,6 +23,8 @@ interface Coupon {
   usedCount: number;
   perUserLimit: number;
   isActive: boolean;
+  showOnHomePage: boolean;
+  offerTitle: string;
   createdAt: string;
 }
 
@@ -53,16 +55,22 @@ export default function AdminCouponManager() {
     expiryDate: '',
     usageLimit: 0,
     perUserLimit: 1,
+    showOnHomePage: false,
+    offerTitle: '',
   });
 
   // Fetch coupons
   const fetchCoupons = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/coupons/list');
+      const response = await fetch('/api/admin/coupons/list', {
+        credentials: 'include',
+      });
       const data = await response.json();
       if (response.ok) {
         setCoupons(data.coupons);
+      } else {
+        console.error('Failed to fetch coupons:', data.error);
       }
     } catch (error) {
       console.error('Error fetching coupons:', error);
@@ -101,6 +109,7 @@ export default function AdminCouponManager() {
       const response = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -133,6 +142,7 @@ export default function AdminCouponManager() {
       const response = await fetch('/api/admin/coupons/delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ id }),
       });
 
@@ -152,6 +162,7 @@ export default function AdminCouponManager() {
       const response = await fetch('/api/admin/coupons/toggle', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ id, isActive: !isActive }),
       });
 
@@ -178,6 +189,8 @@ export default function AdminCouponManager() {
       expiryDate: coupon.expiryDate.split('T')[0],
       usageLimit: coupon.usageLimit,
       perUserLimit: coupon.perUserLimit,
+      showOnHomePage: coupon.showOnHomePage || false,
+      offerTitle: coupon.offerTitle || '',
     });
     setEditingId(coupon._id);
     setShowForm(true);
@@ -197,6 +210,8 @@ export default function AdminCouponManager() {
       expiryDate: '',
       usageLimit: 0,
       perUserLimit: 1,
+      showOnHomePage: false,
+      offerTitle: '',
     });
     setEditingId(null);
     setShowForm(false);
@@ -426,6 +441,42 @@ export default function AdminCouponManager() {
               />
             </div>
 
+            {/* Show on Homepage */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <input
+                  type="checkbox"
+                  id="showOnHomePage"
+                  checked={formData.showOnHomePage}
+                  onChange={(e) =>
+                    setFormData({ ...formData, showOnHomePage: e.target.checked })
+                  }
+                  className="w-4 h-4 text-purple-600"
+                />
+                <Label htmlFor="showOnHomePage" className="font-semibold text-purple-700">
+                  📢 Show on Homepage Marquee
+                </Label>
+              </div>
+              
+              {formData.showOnHomePage && (
+                <div>
+                  <Label htmlFor="offerTitle">Offer Title (for homepage display)</Label>
+                  <Input
+                    id="offerTitle"
+                    value={formData.offerTitle}
+                    onChange={(e) =>
+                      setFormData({ ...formData, offerTitle: e.target.value })
+                    }
+                    placeholder="Special Weekend Offer - Use code WEEKEND20!"
+                    maxLength={100}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    This will be displayed on the homepage to attract customers
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2 justify-end">
               <Button type="submit" disabled={loading}>
                 {editingId ? 'Update Coupon' : 'Create Coupon'}
@@ -449,7 +500,7 @@ export default function AdminCouponManager() {
             <Card key={coupon._id} className="p-4">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-lg font-bold">{coupon.code}</h3>
                     <span
                       className={`px-2 py-1 rounded text-sm ${
@@ -465,7 +516,17 @@ export default function AdminCouponManager() {
                         ? `₹${coupon.discountValue}`
                         : `${coupon.discountValue}%`}
                     </span>
+                    {coupon.showOnHomePage && (
+                      <span className="px-2 py-1 rounded text-sm bg-purple-100 text-purple-800 flex items-center gap-1">
+                        📢 On Homepage
+                      </span>
+                    )}
                   </div>
+                  {coupon.showOnHomePage && coupon.offerTitle && (
+                    <p className="text-sm text-purple-600 mt-1 font-medium">
+                      "{coupon.offerTitle}"
+                    </p>
+                  )}
                   <p className="text-sm text-gray-600 mt-1">
                     Expires: {new Date(coupon.expiryDate).toLocaleDateString()}
                   </p>

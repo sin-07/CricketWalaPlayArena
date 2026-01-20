@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { getMinDate, getMaxDate } from '@/lib/bookingValidation';
 
 interface DatePickerProps {
@@ -12,6 +12,10 @@ export default function DatePickerComponent({
   selectedDate,
   onDateChange,
 }: DatePickerProps) {
+  // Memoize min and max dates since they don't change often
+  const minDate = useMemo(() => getMinDate(), []);
+  const maxDate = useMemo(() => getMaxDate(), []);
+  
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
@@ -21,8 +25,8 @@ export default function DatePickerComponent({
         type="date"
         value={selectedDate}
         onChange={(e) => onDateChange(e.target.value)}
-        min={getMinDate()}
-        max={getMaxDate()}
+        min={minDate}
+        max={maxDate}
         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
       />
     </div>

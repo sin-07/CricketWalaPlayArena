@@ -31,7 +31,7 @@ export default function TurfBookingPage() {
                 : 'bg-white text-gray-700 border border-gray-300 hover:border-green-500'
             }`}
           >
-            🏏 Match
+            Match
           </button>
           <button
             onClick={() => setActiveTab('practice')}
@@ -41,7 +41,7 @@ export default function TurfBookingPage() {
                 : 'bg-white text-gray-700 border border-gray-300 hover:border-green-500'
             }`}
           >
-            🎯 Practice
+            Practice
           </button>
         </div>
 

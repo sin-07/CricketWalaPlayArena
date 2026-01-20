@@ -22,6 +22,24 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Booking } from '@/types';
 
+// TurfBooking interface matching the TurfBooking model
+interface TurfBooking {
+  _id: string;
+  bookingType: 'match' | 'practice';
+  sport: 'Cricket' | 'Football' | 'Badminton';
+  date: string;
+  slot: string;
+  name: string;
+  mobile: string;
+  email: string;
+  basePrice: number;
+  finalPrice: number;
+  discountPercentage: number;
+  status: 'confirmed' | 'cancelled' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Helper function to convert slot ID to time range
 const getTimeRange = (slotId: number): string => {
   const startHour = slotId;
@@ -63,19 +81,37 @@ const getDetailedTimeSlots = (timeSlotIds: number[] | undefined, fallbackSlotId?
 
 interface AdminTableProps {
   bookings?: Booking[];
+  turfBookings?: TurfBooking[];
   loading?: boolean;
 }
 
 const AdminTable: React.FC<AdminTableProps> = ({ 
   bookings = [],
+  turfBookings = [],
   loading = false 
 }) => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedTurfBooking, setSelectedTurfBooking] = useState<TurfBooking | null>(null);
   const [userHistory, setUserHistory] = useState<Booking[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter bookings based on search term
+  // Filter turf bookings based on search term
+  const filteredTurfBookings = useMemo(() => {
+    if (!searchTerm.trim()) return turfBookings;
+    
+    const search = searchTerm.toLowerCase();
+    return turfBookings.filter(booking => 
+      booking.name?.toLowerCase().includes(search) ||
+      booking.mobile?.toLowerCase().includes(search) ||
+      booking.email?.toLowerCase().includes(search) ||
+      booking.sport?.toLowerCase().includes(search) ||
+      booking.bookingType?.toLowerCase().includes(search) ||
+      booking.status?.toLowerCase().includes(search)
+    );
+  }, [turfBookings, searchTerm]);
+
+  // Filter old bookings based on search term
   const filteredBookings = useMemo(() => {
     if (!searchTerm.trim()) return bookings;
     
@@ -89,6 +125,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
       booking.status?.toLowerCase().includes(search)
     );
   }, [bookings, searchTerm]);
+
+  const handleTurfBookingClick = useCallback((booking: TurfBooking) => {
+    setSelectedTurfBooking(booking);
+    setSelectedBooking(null);
+    setIsModalOpen(true);
+  }, []);
 
   const fetchUserHistory = useCallback(async (booking: Booking) => {
     try {
@@ -175,7 +217,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
           </div>
           {searchTerm && (
             <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-green-700 font-medium">
-              Found {filteredBookings.length} result{filteredBookings.length !== 1 ? 's' : ''}
+              Found {filteredTurfBookings.length + filteredBookings.length} result{(filteredTurfBookings.length + filteredBookings.length) !== 1 ? 's' : ''}
             </p>
           )}
         </div>
@@ -185,12 +227,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
           <Table>
             <TableHeader className="sticky top-0 bg-gray-50 z-10">
               <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold text-xs sm:text-sm">Booking ID</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm">ID</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm">Customer</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Phone</TableHead>
-                <TableHead className="font-semibold text-xs sm:text-sm">Box</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm">Sport</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Date</TableHead>
-                <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Time Slots</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Time Slot</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm">Amount</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm hidden sm:table-cell">Status</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm text-center">Action</TableHead>
@@ -198,6 +240,62 @@ const AdminTable: React.FC<AdminTableProps> = ({
             </TableHeader>
             <TableBody>
               <AnimatePresence mode="popLayout">
+                {/* Turf Bookings */}
+                {filteredTurfBookings.map((booking) => (
+                  <motion.tr
+                    key={booking._id}
+                    layout
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    onClick={() => handleTurfBookingClick(booking)}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                  >
+                    <TableCell className="font-mono text-xs">
+                      {booking._id.slice(-8).toUpperCase()}
+                    </TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">
+                      {booking.name}
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden md:table-cell">{booking.mobile}</TableCell>
+                    <TableCell className="text-xs sm:text-sm">
+                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+                        {booking.sport}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                      {new Date(booking.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-xs hidden xl:table-cell">
+                      <div className="max-w-[150px] truncate" title={booking.slot}>
+                        {booking.slot}
+                      </div>
+                      <span className="text-gray-500 text-[10px] capitalize">
+                        ({booking.bookingType})
+                      </span>
+                    </TableCell>
+                    <TableCell className="font-semibold text-primary-600 text-xs sm:text-sm">
+                      <div>₹{booking.finalPrice}</div>
+                      {booking.discountPercentage > 0 && (
+                        <div className="text-[10px] text-gray-400 line-through">₹{booking.basePrice}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTurfBookingClick(booking);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </motion.tr>
+                ))}
+                {/* Legacy Bookings */}
                 {filteredBookings.map((booking) => (
                   <motion.tr
                     key={booking._id || booking.bookingRef}
@@ -250,7 +348,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
           </Table>
         </div>
 
-        {filteredBookings.length === 0 && !loading && (
+        {filteredTurfBookings.length === 0 && filteredBookings.length === 0 && !loading && (
           <div className="text-center py-12">
             <p className="text-gray-500">
               {searchTerm ? `No bookings found matching "${searchTerm}"` : 'No bookings found'}
@@ -277,6 +375,122 @@ const AdminTable: React.FC<AdminTableProps> = ({
             </DialogDescription>
           </DialogHeader>
 
+          {/* Turf Booking Details */}
+          {selectedTurfBooking && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              {/* Customer Info */}
+              <Card className="p-4 bg-gradient-to-r from-primary-50 to-blue-50">
+                <h3 className="font-semibold text-lg mb-3 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-primary-600" />
+                  Customer Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center">
+                    <User className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">Name:</span>
+                    <span className="ml-2">{selectedTurfBooking.name}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Phone className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">Phone:</span>
+                    <span className="ml-2">{selectedTurfBooking.mobile}</span>
+                  </div>
+                  <div className="flex items-center col-span-2">
+                    <Mail className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">Email:</span>
+                    <span className="ml-2">{selectedTurfBooking.email}</span>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Booking Info */}
+              <Card className="p-4">
+                <h3 className="font-semibold text-lg mb-3 flex items-center">
+                  <Calendar className="w-5 h-5 mr-2 text-primary-600" />
+                  Booking Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center">
+                    <Hash className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">ID:</span>
+                    <span className="ml-2 font-mono">{selectedTurfBooking._id.slice(-8).toUpperCase()}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <MapPin className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">Sport:</span>
+                    <span className="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">{selectedTurfBooking.sport}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">Date:</span>
+                    <span className="ml-2">
+                      {new Date(selectedTurfBooking.date).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="font-medium">Time:</span>
+                    <span className="ml-2 bg-primary-50 px-3 py-1 rounded text-primary-700 font-medium">{selectedTurfBooking.slot}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium">Type:</span>
+                    <span className="ml-2 capitalize">{selectedTurfBooking.bookingType}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="font-medium">Status:</span>
+                    <span className="ml-2">{getStatusBadge(selectedTurfBooking.status)}</span>
+                  </div>
+                  <div className="flex items-center col-span-2 pt-3 border-t">
+                    <div className="w-full">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-600">Original Price:</span>
+                        <span className="text-gray-600">₹{selectedTurfBooking.basePrice}</span>
+                      </div>
+                      {selectedTurfBooking.discountPercentage > 0 && (
+                        <div className="flex justify-between items-center mb-1 text-green-600">
+                          <span>Discount ({selectedTurfBooking.discountPercentage}%):</span>
+                          <span>-₹{selectedTurfBooking.basePrice - selectedTurfBooking.finalPrice}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t">
+                        <span className="text-lg font-semibold">Final Amount:</span>
+                        <span className="text-2xl font-bold text-primary-600">₹{selectedTurfBooking.finalPrice}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Booking Timeline */}
+              <Card className="p-4">
+                <h3 className="font-semibold text-lg mb-3 flex items-center">
+                  <Clock className="w-5 h-5 mr-2 text-primary-600" />
+                  Booking Timeline
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created:</span>
+                    <span>{new Date(selectedTurfBooking.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Last Updated:</span>
+                    <span>{new Date(selectedTurfBooking.updatedAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Legacy Booking Details */}
           {selectedBooking && (
             <motion.div
               initial={{ opacity: 0 }}

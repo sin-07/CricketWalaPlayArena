@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Admin from '@/models/Admin';
+import jwt from 'jsonwebtoken';
 
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
@@ -38,8 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a secure token
-    const token = Buffer.from(`${admin.username}:${Date.now()}:${admin._id}`).toString('base64');
+    // Generate a JWT token
+    const token = jwt.sign(
+      { 
+        username: admin.username, 
+        adminId: admin._id,
+        role: admin.role 
+      },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '2h' }
+    );
     const loginTime = Date.now();
 
     const response = NextResponse.json(

@@ -5,17 +5,38 @@
 // Base prices for different booking types
 const BASE_PRICES = {
   match: 1200,     // ₹1200 for match bookings
-  practice: 600,   // ₹600 for practice bookings
+  practice: 250,   // ₹250 for practice bookings
 } as const;
+
+// Booking platform charge (fixed)
+const BOOKING_CHARGE = 200; // ₹200 booking charge
 
 /**
  * Get day of week from date string
  * @param dateStr - Date in YYYY-MM-DD format
  * @returns Day number (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
  */
+const dayCache = new Map<string, number>();
+
 export function getDayOfWeek(dateStr: string): number {
+  // Use cache to avoid repeated date parsing
+  if (dayCache.has(dateStr)) {
+    return dayCache.get(dateStr)!;
+  }
+  
   const date = new Date(dateStr + 'T00:00:00Z');
-  return date.getUTCDay();
+  const day = date.getUTCDay();
+  dayCache.set(dateStr, day);
+  
+  // Clear cache if it gets too large (> 100 entries)
+  if (dayCache.size > 100) {
+    const firstKey = dayCache.keys().next().value as string | undefined;
+    if (firstKey) {
+      dayCache.delete(firstKey);
+    }
+  }
+  
+  return day;
 }
 
 /**
@@ -63,12 +84,15 @@ export function calculateFinalPrice(
   discountPercentage: number;
   discountAmount: number;
   finalPrice: number;
+  bookingCharge: number;
+  totalPrice: number;
   dayName: string;
 } {
   const basePrice = BASE_PRICES[bookingType];
   const discountPercentage = getDiscountPercentage(dateStr);
   const discountAmount = (basePrice * discountPercentage) / 100;
   const finalPrice = basePrice - discountAmount;
+  const totalPrice = finalPrice + BOOKING_CHARGE;
   const dayName = getDayName(dateStr);
 
   return {
@@ -76,6 +100,8 @@ export function calculateFinalPrice(
     discountPercentage,
     discountAmount,
     finalPrice,
+    bookingCharge: BOOKING_CHARGE,
+    totalPrice,
     dayName,
   };
 }
@@ -87,9 +113,9 @@ export function getDiscountInfo(bookingType: 'match' | 'practice', dateStr: stri
   const { discountPercentage, dayName } = calculateFinalPrice(bookingType, dateStr);
 
   if (discountPercentage === 30) {
-    return `🎉 30% discount on ${dayName}s (Mon-Thu)`;
+    return `30% discount on ${dayName}s (Mon-Thu)`;
   } else if (discountPercentage === 10) {
-    return `✨ 10% discount on ${dayName}s (Fri-Sun)`;
+    return `10% discount on ${dayName}s (Fri-Sun)`;
   }
 
   return `Regular pricing on ${dayName}s`;

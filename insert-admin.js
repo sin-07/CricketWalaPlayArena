@@ -19,11 +19,11 @@ async function insertAdmin() {
     const data = await response.json();
 
     if (response.ok) {
-      console.log('✅ Admin inserted successfully!');
+      console.log('SUCCESS: Admin inserted successfully!');
       console.log('Username:', data.username);
       console.log('Password: Rahul@123');
     } else {
-      console.log('❌ Error:', data.error);
+      console.log('ERROR:', data.error);
     }
   } catch (error) {
     console.error('Connection error:', error.message);

@@ -132,7 +132,7 @@ export default function RootLayout({
       <body className={sora.className}>
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-1 pt-16 md:pt-20">
+          <main className="flex-1 pt-24 md:pt-28">
             {children}
           </main>
           <FooterSection />

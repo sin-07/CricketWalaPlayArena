@@ -17,16 +17,36 @@ export const formatDateForInput = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-// Get minimum date (today) - uses local timezone
+// Memoized date values
+let cachedMinDate: string | null = null;
+let cachedMaxDate: string | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 60000; // 1 minute cache
+
+// Get minimum date (today) - uses local timezone with caching
 export const getMinDate = (): string => {
-  return formatDateForInput(new Date());
+  const now = Date.now();
+  if (cachedMinDate && (now - cacheTimestamp) < CACHE_DURATION) {
+    return cachedMinDate;
+  }
+  
+  cachedMinDate = formatDateForInput(new Date());
+  cacheTimestamp = now;
+  return cachedMinDate;
 };
 
-// Get maximum date (14 days from now)
+// Get maximum date (14 days from now) with caching
 export const getMaxDate = (): string => {
+  const now = Date.now();
+  if (cachedMaxDate && (now - cacheTimestamp) < CACHE_DURATION) {
+    return cachedMaxDate;
+  }
+  
   const maxDate = new Date();
   maxDate.setDate(maxDate.getDate() + 14);
-  return formatDateForInput(maxDate);
+  cachedMaxDate = formatDateForInput(maxDate);
+  cacheTimestamp = now;
+  return cachedMaxDate;
 };
 
 // Check if a date is in the past

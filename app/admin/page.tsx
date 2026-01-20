@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag } from 'lucide-react';
 import AdminBookingForm from '@/components/AdminBookingForm';
 import AdminTable from '@/components/AdminTable';
+import AdminCouponManager from '@/components/AdminCouponManager';
 import NotificationSystem, {
   Notification,
   NotificationType,
@@ -17,6 +18,25 @@ import axios from 'axios';
 // Session timeout: 2 hours in milliseconds
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
 
+// TurfBooking interface matching the TurfBooking model
+interface TurfBooking {
+  _id: string;
+  bookingType: 'match' | 'practice';
+  sport: 'Cricket' | 'Football' | 'Badminton';
+  date: string;
+  slot: string;
+  name: string;
+  mobile: string;
+  email: string;
+  basePrice: number;
+  finalPrice: number;
+  discountPercentage: number;
+  status: 'confirmed' | 'cancelled' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Keep old Booking interface for backward compatibility
 interface Booking {
   _id: string;
   boxId: number;
@@ -37,8 +57,8 @@ interface Booking {
 export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'create'>('bookings');
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons'>('bookings');
+  const [turfBookings, setTurfBookings] = useState<TurfBooking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
@@ -143,9 +163,12 @@ export default function AdminDashboard() {
 
   const fetchBookings = async () => {
     try {
-      const response = await axios.get('/api/bookings');
+      const response = await axios.get('/api/turf-bookings');
+      console.log('📊 Admin Dashboard - API Response:', response.data);
+      console.log('📊 Admin Dashboard - Bookings count:', response.data.data?.length);
+      console.log('📊 Admin Dashboard - First booking:', response.data.data?.[0]);
       if (response.data.success) {
-        setBookings(response.data.data);
+        setTurfBookings(response.data.data);
         calculateStats(response.data.data);
       }
     } catch (error) {
@@ -155,10 +178,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const calculateStats = (bookingsList: Booking[]) => {
-    const active = bookingsList.filter((b) => b.status === 'active').length;
+  const calculateStats = (bookingsList: TurfBooking[]) => {
+    console.log('📊 Calculating stats for bookings:', bookingsList.length);
+    console.log('📊 Booking statuses:', bookingsList.map(b => b.status));
+    const active = bookingsList.filter((b) => b.status === 'confirmed').length;
     const completed = bookingsList.filter((b) => b.status === 'completed').length;
-    const revenue = bookingsList.reduce((sum, b) => sum + b.totalAmount, 0);
+    const revenue = bookingsList.reduce((sum, b) => sum + b.finalPrice, 0);
+
+    console.log('📊 Stats calculated - Active:', active, 'Completed:', completed, 'Total:', bookingsList.length);
 
     setStats({
       totalBookings: bookingsList.length,
@@ -353,6 +380,14 @@ export default function AdminDashboard() {
             <Snowflake className="w-4 h-4 mr-2" />
             Manage Frozen Slots
           </Button>
+          <Button
+            variant={activeTab === 'coupons' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('coupons')}
+            className="flex items-center bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700"
+          >
+            <Tag className="w-4 h-4 mr-2" />
+            Manage Coupons
+          </Button>
         </motion.div>
 
         {/* Content Area */}
@@ -364,12 +399,16 @@ export default function AdminDashboard() {
           transition={{ duration: 0.3 }}
         >
           {activeTab === 'bookings' ? (
-            <AdminTable bookings={bookings} loading={loading} />
-          ) : (
+            <AdminTable turfBookings={turfBookings} loading={loading} />
+          ) : activeTab === 'create' ? (
             <div className="max-w-3xl mx-auto">
               <AdminBookingForm
                 onBookingComplete={handleBookingComplete}
               />
+            </div>
+          ) : (
+            <div className="max-w-7xl mx-auto">
+              <AdminCouponManager />
             </div>
           )}
         </motion.div>

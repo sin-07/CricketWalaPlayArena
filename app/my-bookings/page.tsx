@@ -66,7 +66,7 @@ export default function MyBookings() {
         <div className="container mx-auto px-0 sm:px-4">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 sm:mb-8 px-4 sm:px-0">My Bookings</h1>
           <div className="bg-white rounded-none sm:rounded-lg shadow-md p-8 sm:p-12 text-center mx-0 sm:mx-auto">
-            <div className="text-6xl mb-4">📋</div>
+            <div className="text-6xl mb-4">�</div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">
               No Bookings Yet
             </h2>

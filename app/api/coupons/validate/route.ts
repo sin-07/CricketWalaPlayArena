@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       slot,
       basePrice,
       userEmail,
+      userMobile, // Added mobile for duplicate check
     } = body;
 
     // Validate required fields
@@ -34,7 +35,8 @@ export async function POST(request: NextRequest) {
       date,
       slot || '',
       basePrice,
-      userEmail
+      userEmail,
+      userMobile // Pass mobile for usage check
     );
 
     return NextResponse.json(result, { status: result.isValid ? 200 : 400 });

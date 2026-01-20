@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { CricketBox, CustomerData } from '@/types';
 import { getMinDate, getMaxDate, calculateTotalPrice } from '@/utils/helpers';
 import { normalizePhoneNumber, getPhoneValidationError } from '@/utils/phoneUtils';
@@ -50,8 +50,12 @@ const BookingForm: React.FC<BookingFormProps> = ({
       onBoxChange(FIXED_ARENA);
     }
   }, [selectedBox, onBoxChange]);
+  
+  // Memoize min and max dates
+  const minDate = useMemo(() => getMinDate(), []);
+  const maxDate = useMemo(() => getMaxDate(), []);
 
-  const validate = (): boolean => {
+  const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
     
     if (!customerName.trim()) {
@@ -79,7 +83,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [customerName, email, phone, selectedDate, selectedSlots]);
 
   // Auto-show history when phone or email is entered (after 10 digits for phone)
   useEffect(() => {
@@ -91,7 +95,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     }
   }, [phone, email]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (validate()) {
@@ -112,13 +116,15 @@ const BookingForm: React.FC<BookingFormProps> = ({
         setIsSubmitting(false);
       }
     }
-  };
+  }, [validate, onSubmit, customerName, email, phone]);
 
-  // Calculate total price using fixed arena
-  const activeBox = selectedBox || FIXED_ARENA;
-  const totalPrice = activeBox && selectedSlots.length > 0 
-    ? calculateTotalPrice(activeBox.pricePerHour, selectedSlots.length)
-    : 0;
+  // Calculate total price using fixed arena - memoized
+  const totalPrice = useMemo(() => {
+    const activeBox = selectedBox || FIXED_ARENA;
+    return activeBox && selectedSlots.length > 0 
+      ? calculateTotalPrice(activeBox.pricePerHour, selectedSlots.length)
+      : 0;
+  }, [selectedBox, selectedSlots.length]);
 
   return (
     <div className="h-full">
@@ -228,7 +234,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
         )}
 
         {/* Price Summary */}
-        {selectedSlots.length > 0 && activeBox && (
+        {selectedSlots.length > 0 && selectedBox && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-gray-700 font-medium text-sm">

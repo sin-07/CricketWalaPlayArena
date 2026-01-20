@@ -15,16 +15,16 @@ async function test() {
   
   const uri = `mongodb://${username}:${password}@${hosts.join(',')}/${dbName}?ssl=true&replicaSet=atlas-u3q1ps-shard-0&authSource=admin&retryWrites=true&w=majority`;
   
-  console.log('🔗 Connecting (direct, bypassing SRV)...');
+  console.log('Connecting (direct, bypassing SRV)...');
   const client = new MongoClient(uri);
   
   try {
     await client.connect();
-    console.log('✅ Connected!');
+    console.log('SUCCESS: Connected!');
     const db = client.db();
-    console.log('📊 Database:', db.databaseName);
+    console.log('Database:', db.databaseName);
   } catch (error) {
-    console.log('❌ Error:', error.message);
+    console.log('ERROR:', error.message);
   } finally {
     await client.close();
   }

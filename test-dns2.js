@@ -5,7 +5,7 @@ const dns2 = require('dns2');
 async function test() {
   const uri = process.env.MONGODB_URI;
   
-  console.log('🔗 Connecting with +srv...');
+  console.log('Connecting with +srv...');
   
   // Override Node DNS with dns2 (uses UDP directly to 8.8.8.8)
   const { UDPClient } = dns2;
@@ -31,13 +31,13 @@ async function test() {
   
   try {
     await client.connect();
-    console.log('✅ Connected with +srv!');
+    console.log('SUCCESS: Connected with +srv!');
     const db = client.db();
-    console.log('📊 Database:', db.databaseName);
+    console.log('Database:', db.databaseName);
     const collections = await db.listCollections().toArray();
-    console.log('📁 Collections:', collections.map(c => c.name).join(', ') || 'none');
+    console.log('Collections:', collections.map(c => c.name).join(', ') || 'none');
   } catch (error) {
-    console.log('❌ Error:', error.message);
+    console.log('ERROR:', error.message);
   } finally {
     await client.close();
   }

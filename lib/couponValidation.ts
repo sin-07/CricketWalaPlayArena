@@ -1,4 +1,5 @@
 import Coupon from '@/models/Coupon';
+import CouponUsage from '@/models/CouponUsage';
 import { calculateFinalPrice } from '@/lib/pricingUtils';
 
 interface CouponValidationResult {
@@ -11,6 +12,7 @@ interface CouponValidationResult {
 
 /**
  * Validate if a coupon code exists and is applicable
+ * Also checks if the user (by email OR mobile) has already used this coupon
  */
 export async function validateCoupon(
   code: string,
@@ -19,7 +21,8 @@ export async function validateCoupon(
   date: string,
   slot: string,
   basePrice: number,
-  userEmail: string
+  userEmail: string,
+  userMobile?: string
 ): Promise<CouponValidationResult> {
   try {
     // Find coupon by code
@@ -62,6 +65,34 @@ export async function validateCoupon(
         isValid: false,
         message: 'This coupon has reached its usage limit',
       };
+    }
+
+    // Check if user has already used this coupon (by email OR mobile)
+    // This prevents the same person from using the coupon multiple times
+    // even if they use different email/mobile combinations
+    if (coupon.perUserLimit > 0) {
+      const usageQuery: any[] = [
+        { couponCode: coupon.code, email: userEmail.toLowerCase() }
+      ];
+      
+      if (userMobile) {
+        usageQuery.push({ couponCode: coupon.code, mobile: userMobile });
+      }
+
+      const previousUsage = await CouponUsage.find({
+        $or: usageQuery
+      });
+
+      if (previousUsage.length >= coupon.perUserLimit) {
+        // Check if it was the same person with different details
+        const usedEmails = [...new Set(previousUsage.map(u => u.email))];
+        const usedMobiles = [...new Set(previousUsage.map(u => u.mobile))];
+        
+        return {
+          isValid: false,
+          message: `You have already used this coupon. Each user can only use this coupon ${coupon.perUserLimit} time(s).`,
+        };
+      }
     }
 
     // Check booking type
@@ -198,14 +229,30 @@ export async function getSlotCoupons(
 }
 
 /**
- * Increment coupon usage
+ * Increment coupon usage and record the user who used it
  */
-export async function incrementCouponUsage(couponCode: string): Promise<boolean> {
+export async function incrementCouponUsage(
+  couponCode: string,
+  userEmail: string,
+  userMobile: string,
+  bookingId?: string
+): Promise<boolean> {
   try {
+    // Increment the usage count on the coupon
     const result = await Coupon.updateOne(
       { code: couponCode.toUpperCase() },
       { $inc: { usedCount: 1 } }
     );
+
+    // Record the usage with user details
+    await CouponUsage.create({
+      couponCode: couponCode.toUpperCase(),
+      email: userEmail.toLowerCase(),
+      mobile: userMobile,
+      bookingId: bookingId || null,
+      usedAt: new Date(),
+    });
+
     return result.modifiedCount > 0;
   } catch (error: any) {
     console.error('Error incrementing coupon usage:', error);

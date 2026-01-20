@@ -70,7 +70,7 @@ const SlotStatus: React.FC<SlotStatusProps> = ({ boxId, date, onSlotsUpdate }) =
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-sm text-red-700">⚠️ {error}</p>
+        <p className="text-sm text-red-700">{error}</p>
       </div>
     );
   }
@@ -82,7 +82,6 @@ const SlotStatus: React.FC<SlotStatusProps> = ({ boxId, date, onSlotsUpdate }) =
       {/* Availability Overview */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
         <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
-          <span className="mr-2">📊</span>
           Slot Availability Overview
         </h4>
         
@@ -118,7 +117,6 @@ const SlotStatus: React.FC<SlotStatusProps> = ({ boxId, date, onSlotsUpdate }) =
       ) : (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h4 className="text-sm font-semibold text-yellow-800 mb-2 flex items-center">
-            <span className="mr-2">⚠️</span>
             All Slots Booked
           </h4>
           <p className="text-sm text-yellow-700">

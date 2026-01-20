@@ -24,7 +24,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({ booking, onClose }) => 
         <div className="bg-primary-600 text-white p-4 sm:p-6 rounded-t-none sm:rounded-t-xl">\n
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold">Booking Confirmed! 🎉</h2>
+              <h2 className="text-2xl font-bold">Booking Confirmed!</h2>
               <p className="text-primary-100 mt-1">Your Cricket Wala Play Arena slot has been reserved</p>
             </div>
             <button

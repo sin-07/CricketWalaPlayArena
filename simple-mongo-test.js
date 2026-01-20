@@ -9,24 +9,24 @@ async function test() {
   const uri = process.env.MONGODB_URI;
   
   if (!uri) {
-    console.log('❌ No MONGODB_URI');
+    console.log('ERROR: No MONGODB_URI');
     return;
   }
 
-  console.log('🔗 Connecting...');
+  console.log('Connecting...');
   const client = new MongoClient(uri, {
     family: 4  // Force IPv4
   });
   
   try {
     await client.connect();
-    console.log('✅ Connected!');
+    console.log('SUCCESS: Connected!');
     
     const db = client.db();
-    console.log('📊 Database:', db.databaseName);
+    console.log('Database:', db.databaseName);
     
   } catch (error) {
-    console.log('❌ Error:', error.message);
+    console.log('ERROR:', error.message);
   } finally {
     await client.close();
   }

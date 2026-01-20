@@ -17,6 +17,8 @@ export interface ICoupon extends Document {
   usedCount: number; // Current usage count
   perUserLimit: number; // Limit per user (0 = unlimited)
   isActive: boolean; // Admin can enable/disable
+  showOnHomePage: boolean; // Show this offer on homepage marquee
+  offerTitle: string; // Display title for homepage (e.g., "🎉 Special Weekend Offer!")
   createdBy: string; // Admin ID who created
   adminPhones: string[]; // Array of admin phone numbers who have access to manage this coupon
   createdAt: Date;
@@ -109,6 +111,15 @@ const CouponSchema = new Schema<ICoupon>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    showOnHomePage: {
+      type: Boolean,
+      default: false,
+    },
+    offerTitle: {
+      type: String,
+      default: '',
+      maxlength: [100, 'Offer title must not exceed 100 characters'],
     },
     createdBy: {
       type: String,
