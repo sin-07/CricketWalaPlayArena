@@ -120,6 +120,25 @@ const Header: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* Top Contact Bar */}
+      <div className="hidden md:block bg-gradient-to-r from-gray-900 to-gray-800 text-white py-2 border-b border-gray-700">
+        <div className="container mx-auto px-4 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-6">
+            <a href="tel:+918340296635" className="hover:text-green-400 transition-colors">
+              +91-8340296635
+            </a>
+            <a href="https://maps.google.com/?q=Kanti+Factory,Patna,Bihar+800007" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
+              Kanti Factory, Patna, Bihar 800007
+            </a>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="https://wa.me/918340296635" target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors">
+              WhatsApp Us
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-3 md:py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
@@ -167,9 +186,9 @@ const Header: React.FC = () => {
             ))}
           </nav>
 
-          {/* Desktop Auth Button */}
-          <div className="hidden md:block">
-            {/* Don't show any auth button on login page */}
+          {/* Desktop Auth Button + Contact Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Auth Button */}
             {pathname !== '/admin/login' && (
               <>
                 {isAdmin ? (

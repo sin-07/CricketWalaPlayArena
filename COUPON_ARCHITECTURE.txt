@@ -1,0 +1,507 @@
+# Coupon System - Technical Architecture
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Coupon System Architecture                │
+└─────────────────────────────────────────────────────────────┘
+
+┌──────────────────┐                    ┌──────────────────┐
+│   Admin Panel    │                    │  User Booking    │
+│                  │                    │     Form         │
+└────────┬─────────┘                    └────────┬─────────┘
+         │                                       │
+         │ (Create/Edit/Delete/Toggle)           │ (Apply Coupon)
+         │                                       │
+         v                                       v
+    ┌────────────────────────────────────────────────┐
+    │         Coupon API Layer                       │
+    ├────────────────────────────────────────────────┤
+    │ POST   /api/admin/coupons/create              │
+    │ GET    /api/admin/coupons/list                │
+    │ PUT    /api/admin/coupons/update              │
+    │ DELETE /api/admin/coupons/delete              │
+    │ PATCH  /api/admin/coupons/toggle              │
+    │                                               │
+    │ POST   /api/coupons/validate                  │
+    │ GET    /api/coupons/list                      │
+    └────────────────┬────────────────────────────────┘
+                     │
+                     v
+    ┌────────────────────────────────────────────────┐
+    │     Validation & Business Logic Layer          │
+    ├────────────────────────────────────────────────┤
+    │ validateCoupon()                               │
+    │ getUserCoupons()                               │
+    │ getSlotCoupons()                               │
+    │ incrementCouponUsage()                         │
+    │ calculateFinalPriceWithCoupon()                │
+    └────────────────┬────────────────────────────────┘
+                     │
+                     v
+    ┌────────────────────────────────────────────────┐
+    │         MongoDB Database                       │
+    ├────────────────────────────────────────────────┤
+    │ db.coupons (Indexed, Validated)                │
+    │   - code (unique index)                        │
+    │   - isActive + expiryDate (compound index)     │
+    │   - assignedUsers (array index)                │
+    │   - createdAt (sort index)                     │
+    └────────────────────────────────────────────────┘
+```
+
+## Data Flow - Creating a Coupon
+
+```
+Admin Dashboard
+      │
+      ├─► Form Validation (Frontend)
+      │   - Code format (3-20 chars, alphanumeric)
+      │   - Discount value (>0, <=100 for percent)
+      │   - Expiry date (future date)
+      │
+      └─► POST /api/admin/coupons/create
+          │
+          ├─► Auth Check (Admin Token)
+          │
+          ├─► Validation Layer
+          │   - Required fields check
+          │   - Discount value range
+          │   - Code uniqueness check
+          │
+          ├─► Database Operation
+          │   - Create new coupon document
+          │   - Set defaults (usedCount: 0, isActive: true)
+          │   - Build indexes
+          │
+          └─► Response (201 Created)
+              └─► UI shows success message
+```
+
+## Data Flow - Applying a Coupon
+
+```
+User Booking Form
+      │
+      ├─► Display Available Coupons
+      │   GET /api/coupons/list (background)
+      │   Filters: activeOnly, notExpired, userAssigned or public
+      │
+      └─► Manual Entry or Click Available
+          │
+          └─► POST /api/coupons/validate
+              │
+              ├─► Fetch Coupon Document
+              │
+              ├─► Multi-Layer Validation
+              │   1. Code exists?
+              │   2. Active?
+              │   3. Expired?
+              │   4. User assigned?
+              │   5. Usage limit OK?
+              │   6. Booking type match?
+              │   7. Sport match?
+              │   8. Slot match (if specified)?
+              │   9. Min amount met?
+              │
+              ├─► Discount Calculation
+              │   if flat: discount = discountValue
+              │   if percent: discount = (basePrice * discountValue) / 100
+              │
+              ├─► Safe Discount (cap at basePrice)
+              │   finalPrice = max(0, basePrice - discount)
+              │
+              └─► Response
+                  ├─► Valid: Show discount, update UI
+                  └─► Invalid: Show error message
+```
+
+## Data Flow - Booking with Coupon
+
+```
+Booking Creation
+      │
+      ├─► Collect Form Data
+      │   ├─ bookingType: 'match' | 'practice'
+      │   ├─ sport: string
+      │   ├─ date: YYYY-MM-DD
+      │   ├─ slot: HH:MM-HH:MM
+      │   ├─ basePrice: number
+      │   └─ couponCode: string (optional)
+      │
+      └─► POST /api/turf-bookings/create
+          │
+          ├─► Step 1: Day-Based Discount
+          │   ├─ Get day of week
+          │   ├─ Calculate day discount
+          │   │  Mon-Thu: 30% off
+          │   │  Fri-Sun: 10% off
+          │   └─ basePriceAfterDay = basePrice - dayDiscount
+          │
+          ├─► Step 2: Validate Coupon (if provided)
+          │   ├─ validateCoupon(couponCode, ...)
+          │   ├─ if invalid: return error
+          │   └─ couponDiscount = result.discount
+          │
+          ├─► Step 3: Calculate Final Price
+          │   finalPrice = basePriceAfterDay - couponDiscount
+          │
+          ├─► Step 4: Save Booking
+          │   ├─ Create booking document with:
+          │   │  - couponCode
+          │   │  - basePrice
+          │   │  - dayDiscount
+          │   │  - couponDiscount
+          │   │  - finalPrice
+          │   └─ Save to database
+          │
+          ├─► Step 5: Increment Coupon Usage
+          │   └─ incrementCouponUsage(couponCode)
+          │       └─ usedCount++
+          │
+          └─► Step 6: Return Response
+              └─ Booking confirmed with final price
+```
+
+## Class Diagram
+
+```
+┌──────────────────────────────┐
+│       ICoupon (Interface)    │
+├──────────────────────────────┤
+│ - _id: ObjectId              │
+│ - code: string (unique)      │
+│ - discountType: enum         │
+│ - discountValue: number      │
+│ - applicableSlots: Slot[]    │
+│ - sport: string[]            │
+│ - bookingType: enum          │
+│ - assignedUsers: string[]    │
+│ - minAmount: number          │
+│ - expiryDate: Date           │
+│ - usageLimit: number         │
+│ - usedCount: number          │
+│ - perUserLimit: number       │
+│ - isActive: boolean          │
+│ - createdBy: string          │
+│ - timestamps: true           │
+└──────────────────────────────┘
+           ▲
+           │ implements
+           │
+┌──────────────────────────────┐
+│  CouponSchema (MongoDB)      │
+├──────────────────────────────┤
+│ + validate()                 │
+│ + toJSON()                   │
+└──────────────────────────────┘
+           ▲
+           │ uses
+           │
+┌──────────────────────────────────────────┐
+│   Coupon Model & Validation Functions    │
+├──────────────────────────────────────────┤
+│ validateCoupon()                         │
+│ getUserCoupons()                         │
+│ getSlotCoupons()                         │
+│ incrementCouponUsage()                   │
+│ calculateFinalPriceWithCoupon()          │
+└──────────────────────────────────────────┘
+           ▲
+           │ used by
+           │
+┌──────────────────────────────────────────┐
+│  API Routes & Components                 │
+├──────────────────────────────────────────┤
+│ Admin APIs:                              │
+│ - /api/admin/coupons/*                   │
+│                                          │
+│ User APIs:                               │
+│ - /api/coupons/*                         │
+│                                          │
+│ Components:                              │
+│ - AdminCouponManager                     │
+│ - CouponApplier                          │
+└──────────────────────────────────────────┘
+```
+
+## Validation Pipeline
+
+```
+Coupon Validation Checklist
+═══════════════════════════════════════════════
+
+1. EXISTENCE CHECK
+   ├─ Query: Coupon.findOne({code: code.toUpperCase()})
+   └─ Result: Document exists? → Continue : Error
+
+2. STATUS CHECK
+   ├─ Field: isActive
+   └─ Result: true → Continue : "Coupon not active"
+
+3. EXPIRY CHECK
+   ├─ Field: expiryDate
+   ├─ Compare: expiryDate > now()
+   └─ Result: Future date → Continue : "Coupon expired"
+
+4. USER ASSIGNMENT CHECK
+   ├─ Field: assignedUsers (array)
+   ├─ Logic: If empty, all users allowed
+   │         If not empty, check if userEmail in array
+   └─ Result: Assigned or public → Continue : "Not assigned"
+
+5. USAGE LIMIT CHECK (Total)
+   ├─ Compare: usedCount < usageLimit (if > 0)
+   └─ Result: Under limit → Continue : "Usage limit exceeded"
+
+6. BOOKING TYPE CHECK
+   ├─ Field: bookingType (enum)
+   ├─ Logic: bookingType in [requested, 'both']
+   └─ Result: Matches → Continue : "Invalid for booking type"
+
+7. SPORT CHECK
+   ├─ Field: sport (array)
+   ├─ Logic: If empty, all sports allowed
+   │         If not empty, check if sport in array
+   └─ Result: Matches → Continue : "Invalid for sport"
+
+8. SLOT SPECIFICITY CHECK
+   ├─ Field: applicableSlots (array)
+   ├─ Logic: If empty, all slots allowed
+   │         If not empty, check date+slot match
+   └─ Result: Matches → Continue : "Invalid for slot"
+
+9. MINIMUM AMOUNT CHECK
+   ├─ Compare: bookingPrice >= minAmount
+   └─ Result: Meets requirement → Continue : "Below minimum"
+
+10. DISCOUNT CALCULATION
+    ├─ if discountType == 'flat':
+    │   discount = discountValue
+    │ else (percent):
+    │   discount = (basePrice * discountValue) / 100
+    │
+    ├─ Safety cap: discount = min(discount, basePrice)
+    └─ finalPrice = basePrice - discount
+
+11. RETURN RESULT
+    ├─ Success: {isValid: true, discount, finalPrice, couponData}
+    └─ Failure: {isValid: false, message}
+```
+
+## Database Indexing Strategy
+
+```
+Index 1: Unique Code
+┌─────────────────────────────────┐
+│ db.coupons.createIndex({        │
+│   code: 1                       │
+│ }, {unique: true})              │
+├─────────────────────────────────┤
+│ Used for: Fast code lookup      │
+│ Query: Coupon.findOne({code})   │
+└─────────────────────────────────┘
+
+Index 2: Active & Expiry (Compound)
+┌─────────────────────────────────┐
+│ db.coupons.createIndex({        │
+│   isActive: 1,                  │
+│   expiryDate: 1                 │
+│ })                              │
+├─────────────────────────────────┤
+│ Used for: Find active coupons   │
+│ Query: {isActive: true, exp > } │
+└─────────────────────────────────┘
+
+Index 3: Assigned Users
+┌─────────────────────────────────┐
+│ db.coupons.createIndex({        │
+│   assignedUsers: 1              │
+│ })                              │
+├─────────────────────────────────┤
+│ Used for: User-specific coupons │
+│ Query: {assignedUsers: email}   │
+└─────────────────────────────────┘
+
+Index 4: Created Date
+┌─────────────────────────────────┐
+│ db.coupons.createIndex({        │
+│   createdAt: -1                 │
+│ })                              │
+├─────────────────────────────────┤
+│ Used for: Sorting by creation   │
+│ Query: .sort({createdAt: -1})   │
+└─────────────────────────────────┘
+```
+
+## State Management - Component Level
+
+```
+AdminCouponManager Component
+════════════════════════════════════════════════
+
+State:
+├─ coupons: Coupon[] (fetched from API)
+├─ loading: boolean (API call status)
+├─ showForm: boolean (show/hide form)
+├─ editingId: string | null (edit mode)
+├─ message: string (success/error)
+│
+└─ formData:
+   ├─ code: string
+   ├─ discountType: 'flat' | 'percent'
+   ├─ discountValue: number
+   ├─ sport: string[]
+   ├─ bookingType: string
+   ├─ assignedUsers: string
+   ├─ minAmount: number
+   ├─ expiryDate: string
+   ├─ usageLimit: number
+   └─ perUserLimit: number
+
+Actions:
+├─ fetchCoupons()    → GET /api/admin/coupons/list
+├─ handleSubmit()    → POST create / PUT update
+├─ handleDelete()    → DELETE /api/admin/coupons/delete
+├─ handleToggle()    → PATCH /api/admin/coupons/toggle
+├─ handleEdit()      → Load coupon data into form
+└─ resetForm()       → Clear form state
+
+
+CouponApplier Component
+════════════════════════════════════════════════
+
+Props:
+├─ bookingType: 'match' | 'practice'
+├─ sport: string
+├─ date: string (YYYY-MM-DD)
+├─ slot: string (HH:MM-HH:MM)
+├─ basePrice: number
+├─ userEmail: string
+└─ onCouponApply(coupon): void (callback)
+
+State:
+├─ couponCode: string
+├─ loading: boolean
+├─ validationStatus:
+│  ├─ isValid: boolean
+│  ├─ message: string
+│  ├─ discount?: number
+│  └─ finalPrice?: number
+├─ availableCoupons: Coupon[]
+└─ showAvailable: boolean
+
+Effects:
+└─ useEffect on mount
+   └─ Fetch available coupons
+
+Actions:
+├─ handleValidate()      → POST /api/coupons/validate
+└─ Trigger onCouponApply on success
+```
+
+## Error Handling Flow
+
+```
+API Call → Response
+│
+├─ Response.ok (2xx)?
+│  ├─ YES: Parse data → Success
+│  │       └─ Component updates UI
+│  │
+│  └─ NO: Error response → 4xx/5xx
+│         │
+│         └─ Parse error.json()
+│            │
+│            ├─ 400 Bad Request
+│            │  └─ Validation error message
+│            │
+│            ├─ 401 Unauthorized
+│            │  └─ Admin not authenticated
+│            │
+│            ├─ 404 Not Found
+│            │  └─ Coupon not found
+│            │
+│            ├─ 409 Conflict
+│            │  └─ Code already exists
+│            │
+│            └─ 500 Server Error
+│               └─ Database error
+│
+└─ Exception catch
+   └─ Network error or JSON parse error
+```
+
+## Performance Considerations
+
+```
+Query Optimization
+═════════════════════════════════════════════════
+
+1. List Coupons (Paginated)
+   ├─ Index used: createdAt
+   ├─ Batch size: 10 (configurable)
+   ├─ Time complexity: O(log n) + O(m) where m ≤ 10
+   └─ Expected: <100ms
+
+2. Validate Coupon
+   ├─ Index used: code (unique)
+   ├─ Single document fetch
+   ├─ In-memory validation checks
+   ├─ Time complexity: O(log n) + O(k) where k ≈ 30 checks
+   └─ Expected: <50ms
+
+3. Get User Coupons
+   ├─ Index used: isActive+expiryDate, assignedUsers
+   ├─ Array field query
+   ├─ Time complexity: O(log n) + O(m) where m = applicable count
+   └─ Expected: <100ms
+
+4. Increment Usage
+   ├─ Index used: code (unique)
+   ├─ Atomic increment operation
+   ├─ Time complexity: O(log n)
+   └─ Expected: <20ms
+
+Caching Opportunities (Future):
+├─ Cache available coupons (5 min TTL)
+├─ Cache admin coupon list (1 min TTL)
+├─ Cache validation results per user (per session)
+└─ Cache expiry dates (refresh hourly)
+```
+
+## Security Considerations
+
+```
+1. Admin Authentication
+   ├─ Verify JWT token from cookie
+   ├─ Decode and extract admin ID
+   └─ All admin APIs require valid token
+
+2. Input Validation
+   ├─ Frontend: Prevent invalid entries
+   ├─ API layer: Re-validate all inputs
+   └─ Database: Schema validation + type coercion
+
+3. Injection Prevention
+   ├─ Use Mongoose schema validation
+   ├─ Escape user inputs
+   └─ Use parameterized queries (MongoDB)
+
+4. Rate Limiting (Recommended)
+   ├─ Limit coupon validation requests per user
+   ├─ Limit admin API calls per admin
+   └─ Prevent brute-force code guessing
+
+5. Audit Trail
+   ├─ Store createdBy (admin ID)
+   ├─ Store timestamps
+   └─ Consider: Admin action logs
+
+6. Double-Validation
+   ├─ Validate at coupon apply API
+   ├─ Re-validate at booking creation
+   └─ Prevent edge cases & race conditions
+```
+

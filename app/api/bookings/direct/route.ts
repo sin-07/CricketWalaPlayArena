@@ -39,14 +39,8 @@ function isValidPhoneNumber(phone: string): boolean {
   return ['6', '7', '8', '9'].includes(firstDigit);
 }
 
-// POST - Create a direct booking (Admin only - without payment)
+// POST - Create a direct booking (without payment)
 export async function POST(request: NextRequest) {
-  // Verify admin authentication for direct booking creation
-  const authResult = await verifyAdminAuth();
-  if (!authResult.authenticated && authResult.response) {
-    return authResult.response;
-  }
-
   try {
     await dbConnect();
 

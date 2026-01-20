@@ -1,0 +1,541 @@
+# Coupon System - API Examples & Testing
+
+## Admin APIs
+
+### 1. Create Coupon
+
+**Request**:
+```bash
+curl -X POST http://localhost:3000/api/admin/coupons/create \
+  -H "Content-Type: application/json" \
+  -H "Cookie: adminToken=YOUR_TOKEN" \
+  -d '{
+    "code": "SUMMER20",
+    "discountType": "percent",
+    "discountValue": 20,
+    "sport": ["Cricket", "Football"],
+    "bookingType": "match",
+    "assignedUsers": ["user1@email.com", "user2@email.com"],
+    "minAmount": 500,
+    "expiryDate": "2024-12-31",
+    "usageLimit": 100,
+    "perUserLimit": 2
+  }'
+```
+
+**Response (201 Created)**:
+```json
+{
+  "message": "Coupon created successfully",
+  "coupon": {
+    "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "code": "SUMMER20",
+    "discountType": "percent",
+    "discountValue": 20,
+    "applicableSlots": [],
+    "sport": ["Cricket", "Football"],
+    "bookingType": "match",
+    "assignedUsers": ["user1@email.com", "user2@email.com"],
+    "minAmount": 500,
+    "expiryDate": "2024-12-31T00:00:00.000Z",
+    "usageLimit": 100,
+    "usedCount": 0,
+    "perUserLimit": 2,
+    "isActive": true,
+    "createdBy": "admin_id_123",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+### 2. List Coupons
+
+**Request - All Coupons**:
+```bash
+curl -X GET "http://localhost:3000/api/admin/coupons/list" \
+  -H "Cookie: adminToken=YOUR_TOKEN"
+```
+
+**Request - Filter by Status & Sport with Pagination**:
+```bash
+curl -X GET "http://localhost:3000/api/admin/coupons/list?isActive=true&sport=Cricket&page=1&limit=10" \
+  -H "Cookie: adminToken=YOUR_TOKEN"
+```
+
+**Response (200 OK)**:
+```json
+{
+  "coupons": [
+    {
+      "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+      "code": "SUMMER20",
+      "discountType": "percent",
+      "discountValue": 20,
+      "sport": ["Cricket", "Football"],
+      "bookingType": "match",
+      "usedCount": 15,
+      "usageLimit": 100,
+      "isActive": true,
+      "expiryDate": "2024-12-31T00:00:00.000Z"
+    },
+    {
+      "_id": "65a1b2c3d4e5f6g7h8i9j0k2",
+      "code": "WINTER30",
+      "discountType": "flat",
+      "discountValue": 300,
+      "sport": ["Cricket"],
+      "bookingType": "practice",
+      "usedCount": 5,
+      "usageLimit": 50,
+      "isActive": true,
+      "expiryDate": "2025-01-31T00:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "current": 1,
+    "limit": 10,
+    "total": 2,
+    "pages": 1
+  }
+}
+```
+
+### 3. Update Coupon
+
+**Request**:
+```bash
+curl -X PUT http://localhost:3000/api/admin/coupons/update \
+  -H "Content-Type: application/json" \
+  -H "Cookie: adminToken=YOUR_TOKEN" \
+  -d '{
+    "id": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "discountValue": 25,
+    "usageLimit": 150,
+    "expiryDate": "2025-01-31"
+  }'
+```
+
+**Response (200 OK)**:
+```json
+{
+  "message": "Coupon updated successfully",
+  "coupon": {
+    "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "code": "SUMMER20",
+    "discountValue": 25,
+    "usageLimit": 150,
+    "expiryDate": "2025-01-31T00:00:00.000Z",
+    "updatedAt": "2024-01-15T11:00:00.000Z"
+  }
+}
+```
+
+### 4. Delete Coupon
+
+**Request**:
+```bash
+curl -X DELETE http://localhost:3000/api/admin/coupons/delete \
+  -H "Content-Type: application/json" \
+  -H "Cookie: adminToken=YOUR_TOKEN" \
+  -d '{
+    "id": "65a1b2c3d4e5f6g7h8i9j0k1"
+  }'
+```
+
+**Response (200 OK)**:
+```json
+{
+  "message": "Coupon deleted successfully"
+}
+```
+
+### 5. Toggle Coupon Active Status
+
+**Request - Deactivate**:
+```bash
+curl -X PATCH http://localhost:3000/api/admin/coupons/toggle \
+  -H "Content-Type: application/json" \
+  -H "Cookie: adminToken=YOUR_TOKEN" \
+  -d '{
+    "id": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "isActive": false
+  }'
+```
+
+**Response (200 OK)**:
+```json
+{
+  "message": "Coupon deactivated successfully",
+  "coupon": {
+    "_id": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "code": "SUMMER20",
+    "isActive": false,
+    "updatedAt": "2024-01-15T11:15:00.000Z"
+  }
+}
+```
+
+## User APIs
+
+### 1. Validate Coupon
+
+**Request - Basic Validation**:
+```bash
+curl -X POST http://localhost:3000/api/coupons/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "SUMMER20",
+    "bookingType": "match",
+    "sport": "Cricket",
+    "date": "2024-01-20",
+    "slot": "18:00-19:30",
+    "basePrice": 1200,
+    "userEmail": "user@example.com"
+  }'
+```
+
+**Response (200 OK - Valid)**:
+```json
+{
+  "isValid": true,
+  "message": "Coupon applied successfully",
+  "discount": 240,
+  "finalPrice": 960,
+  "couponData": {
+    "code": "SUMMER20",
+    "discountType": "percent",
+    "discountValue": 20,
+    "discountAmount": 240
+  }
+}
+```
+
+**Response (400 Bad Request - Expired)**:
+```json
+{
+  "isValid": false,
+  "message": "This coupon has expired"
+}
+```
+
+**Response (400 Bad Request - Not Assigned)**:
+```json
+{
+  "isValid": false,
+  "message": "This coupon is not assigned to you"
+}
+```
+
+**Response (400 Bad Request - Below Minimum)**:
+```json
+{
+  "isValid": false,
+  "message": "Minimum booking amount of ₹500 required for this coupon"
+}
+```
+
+### 2. Get Available Coupons
+
+**Request - All Coupons for User**:
+```bash
+curl -X GET "http://localhost:3000/api/coupons/list?userEmail=user@example.com"
+```
+
+**Request - Coupons for Specific Slot**:
+```bash
+curl -X GET "http://localhost:3000/api/coupons/list?userEmail=user@example.com&date=2024-01-20&slot=18:00-19:30&sport=Cricket&bookingType=match"
+```
+
+**Response (200 OK)**:
+```json
+{
+  "coupons": [
+    {
+      "code": "SUMMER20",
+      "discountType": "percent",
+      "discountValue": 20
+    },
+    {
+      "code": "WELCOME10",
+      "discountType": "flat",
+      "discountValue": 100
+    }
+  ],
+  "count": 2
+}
+```
+
+## Error Responses
+
+### 400 Bad Request - Missing Fields
+```json
+{
+  "error": "Missing required fields: code, bookingType, sport, date, basePrice, userEmail"
+}
+```
+
+### 400 Bad Request - Invalid Discount Type
+```json
+{
+  "error": "discountType must be \"flat\" or \"percent\""
+}
+```
+
+### 400 Bad Request - Discount Exceeds 100%
+```json
+{
+  "error": "discountValue cannot exceed 100 for percent discount"
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "error": "Unauthorized"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "error": "Coupon not found"
+}
+```
+
+### 409 Conflict - Duplicate Code
+```json
+{
+  "error": "Coupon code already exists"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "error": "Failed to create coupon"
+}
+```
+
+## JavaScript/TypeScript Examples
+
+### Create Coupon from Admin Dashboard
+```typescript
+async function createCoupon(couponData: {
+  code: string;
+  discountType: 'flat' | 'percent';
+  discountValue: number;
+  expiryDate: string;
+  sport?: string[];
+  bookingType?: string;
+  assignedUsers?: string[];
+  minAmount?: number;
+  usageLimit?: number;
+  perUserLimit?: number;
+}) {
+  try {
+    const response = await fetch('/api/admin/coupons/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(couponData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error);
+    }
+
+    const { coupon } = await response.json();
+    return coupon;
+  } catch (error) {
+    console.error('Failed to create coupon:', error);
+    throw error;
+  }
+}
+
+// Usage
+const newCoupon = await createCoupon({
+  code: 'NEWYEAR50',
+  discountType: 'percent',
+  discountValue: 50,
+  expiryDate: '2024-12-31',
+  sport: ['Cricket'],
+  bookingType: 'match',
+});
+```
+
+### Validate Coupon from Booking Form
+```typescript
+async function applyCoupon(
+  code: string,
+  bookingDetails: {
+    bookingType: 'match' | 'practice';
+    sport: string;
+    date: string;
+    slot: string;
+    basePrice: number;
+    userEmail: string;
+  }
+) {
+  try {
+    const response = await fetch('/api/coupons/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        ...bookingDetails,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        message: result.message,
+      };
+    }
+
+    return {
+      success: true,
+      message: result.message,
+      discount: result.discount,
+      finalPrice: result.finalPrice,
+      coupon: result.couponData,
+    };
+  } catch (error) {
+    console.error('Error applying coupon:', error);
+    return {
+      success: false,
+      message: 'Error validating coupon',
+    };
+  }
+}
+
+// Usage
+const result = await applyCoupon('SUMMER20', {
+  bookingType: 'match',
+  sport: 'Cricket',
+  date: '2024-01-20',
+  slot: '18:00-19:30',
+  basePrice: 1200,
+  userEmail: 'user@example.com',
+});
+
+if (result.success) {
+  console.log(`Discount: ₹${result.discount}`);
+  console.log(`Final Price: ₹${result.finalPrice}`);
+} else {
+  console.log(`Error: ${result.message}`);
+}
+```
+
+### Get Available Coupons
+```typescript
+async function getAvailableCoupons(
+  userEmail: string,
+  slot?: { date: string; slot: string; sport: string; bookingType: string }
+) {
+  try {
+    let url = `/api/coupons/list?userEmail=${userEmail}`;
+
+    if (slot) {
+      url += `&date=${slot.date}&slot=${slot.slot}&sport=${slot.sport}&bookingType=${slot.bookingType}`;
+    }
+
+    const response = await fetch(url);
+    const { coupons } = await response.json();
+
+    return coupons;
+  } catch (error) {
+    console.error('Failed to fetch coupons:', error);
+    return [];
+  }
+}
+
+// Usage
+const coupons = await getAvailableCoupons('user@example.com', {
+  date: '2024-01-20',
+  slot: '18:00-19:30',
+  sport: 'Cricket',
+  bookingType: 'match',
+});
+
+coupons.forEach((coupon) => {
+  console.log(`${coupon.code}: ${coupon.discountValue}${
+    coupon.discountType === 'percent' ? '%' : '₹'
+  } off`);
+});
+```
+
+## Testing with Postman
+
+### 1. Create Coupon Collection
+- Create new collection: "Coupon System"
+- Add requests for each API
+
+### 2. Set Environment Variables
+```
+{{base_url}} = http://localhost:3000
+{{admin_token}} = YOUR_ADMIN_TOKEN_HERE
+{{user_email}} = user@example.com
+```
+
+### 3. Test Sequence
+1. Create Coupon (Admin)
+2. List Coupons (Admin)
+3. Validate Coupon (User)
+4. Get Available Coupons (User)
+5. Update Coupon (Admin)
+6. Toggle Coupon (Admin)
+
+## Sample Coupon Configurations
+
+### Flash Sale (Limited Time)
+```json
+{
+  "code": "FLASH50",
+  "discountType": "percent",
+  "discountValue": 50,
+  "expiryDate": "2024-01-16",
+  "usageLimit": 50,
+  "bookingType": "both"
+}
+```
+
+### Loyalty (Per-user Limit)
+```json
+{
+  "code": "LOYAL20",
+  "discountType": "percent",
+  "discountValue": 20,
+  "expiryDate": "2024-12-31",
+  "perUserLimit": 4,
+  "minAmount": 800
+}
+```
+
+### Sport-Specific
+```json
+{
+  "code": "CRICKET30",
+  "discountType": "percent",
+  "discountValue": 30,
+  "expiryDate": "2024-12-31",
+  "sport": ["Cricket"],
+  "bookingType": "match"
+}
+```
+
+### User-Specific (Referral)
+```json
+{
+  "code": "REFER100",
+  "discountType": "flat",
+  "discountValue": 100,
+  "expiryDate": "2024-12-31",
+  "assignedUsers": ["referred@example.com"],
+  "minAmount": 0
+}
+```
+

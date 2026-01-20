@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake } from 'lucide-react';
 import AdminBookingForm from '@/components/AdminBookingForm';
 import AdminTable from '@/components/AdminTable';
 import NotificationSystem, {
@@ -344,6 +344,14 @@ export default function AdminDashboard() {
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Offline Booking
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push('/admin/slots')}
+            className="flex items-center bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+          >
+            <Snowflake className="w-4 h-4 mr-2" />
+            Manage Frozen Slots
           </Button>
         </motion.div>
 

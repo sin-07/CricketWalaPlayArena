@@ -7,7 +7,9 @@ import { verifyAdminAuth } from '@/lib/authUtils';
 // GET - Fetch all bookings or filter by query params
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 GET /api/bookings - Starting request');
     await dbConnect();
+    console.log('✅ Database connected');
 
     const searchParams = request.nextUrl.searchParams;
     const boxId = searchParams.get('boxId');
@@ -20,12 +22,17 @@ export async function GET(request: NextRequest) {
     if (date) query.date = date;
     if (email) query.email = email;
 
+    console.log('📊 Query parameters:', query);
+
     // Get current date and hour in local timezone
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const currentHour = now.getHours();
 
+    console.log('📅 Current date:', today, 'Hour:', currentHour);
+
     // Mark past date bookings as completed
+    console.log('🔄 Updating past bookings...');
     await Booking.updateMany(
       { date: { $lt: today }, status: { $in: ['active', 'confirmed'] } },
       { $set: { status: 'completed' } }
@@ -34,7 +41,9 @@ export async function GET(request: NextRequest) {
     // Mark today's bookings as completed if all time slots have passed
     // Time slots are stored as hour numbers (e.g., 6 = 06:00-07:00, 7 = 07:00-08:00)
     // A slot is considered completed when the current hour is greater than the slot end time
+    console.log('🔄 Checking today\'s bookings...');
     const todayActiveBookings = await Booking.find({ date: today, status: { $in: ['active', 'confirmed'] } });
+    console.log(`📋 Found ${todayActiveBookings.length} active bookings for today`);
     
     for (const booking of todayActiveBookings) {
       // Get the latest (highest) time slot from the booking
@@ -55,7 +64,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log('🔍 Fetching bookings with query:', query);
     const bookings = await Booking.find(query).sort({ date: 1, timeSlotId: 1 });
+    console.log(`✅ Found ${bookings.length} bookings`);
 
     return NextResponse.json({
       success: true,
@@ -63,21 +74,17 @@ export async function GET(request: NextRequest) {
       data: bookings,
     });
   } catch (error: any) {
+    console.error('❌ Error in GET /api/bookings:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message, details: error.toString() },
       { status: 500 }
     );
   }
 }
 
-// POST - Create a new booking (Admin only - creates offline/pre-paid bookings)
+// POST - Create a new booking (creates offline/pre-paid bookings)
 export async function POST(request: NextRequest) {
-  // Verify admin authentication for direct booking creation
-  const authResult = await verifyAdminAuth();
-  if (!authResult.authenticated && authResult.response) {
-    return authResult.response;
-  }
-
   try {
     await dbConnect();
 

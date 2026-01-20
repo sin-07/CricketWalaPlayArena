@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Cricket Wala Play Arena',
     short_name: 'Cricket Wala',
-    description: 'Book cricket practice slots at Cricket Wala Play Arena, Varanasi',
+    description: 'Book cricket practice slots at Cricket Wala Play Arena, Patna',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

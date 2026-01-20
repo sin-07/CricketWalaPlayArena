@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Sora } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
-import Footer from '@/components/Footer'
+import FooterSection from '@/components/FooterSection'
 
 const sora = Sora({ 
   subsets: ['latin'],
@@ -13,19 +13,19 @@ const sora = Sora({
 // SEO Metadata
 export const metadata: Metadata = {
   title: {
-    default: 'Cricket Wala Play Arena - Book Cricket Box in Varanasi',
+    default: 'Cricket Wala Play Arena - Book Cricket Box in Patna',
     template: '%s | Cricket Wala Play Arena'
   },
-  description: 'Book your cricket practice session at Cricket Wala Play Arena in Varanasi. Premium indoor cricket box with professional equipment. Easy online booking, affordable rates ₹10/hour. Open 6 AM - 12 AM.',
+  description: 'Book your cricket practice session at Cricket Wala Play Arena in Patna. Premium indoor cricket box with professional equipment. Easy online booking, affordable rates ₹10/hour. Open 6 AM - 12 AM.',
   keywords: [
-    'cricket box varanasi',
-    'cricket practice varanasi',
-    'indoor cricket varanasi',
+    'cricket box patna',
+    'cricket practice patna',
+    'indoor cricket patna',
     'cricket wala play arena',
     'book cricket slot',
     'cricket net practice',
-    'sports booking varanasi',
-    'cricket training varanasi'
+    'sports booking patna',
+    'cricket training patna'
   ],
   authors: [{ name: 'Cricket Wala Play Arena' }],
   creator: 'Cricket Wala Play Arena',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     locale: 'en_IN',
     url: 'https://www.cricketwalaplayarena.in',
     siteName: 'Cricket Wala Play Arena',
-    title: 'Cricket Wala Play Arena - Book Cricket Box in Varanasi',
+    title: 'Cricket Wala Play Arena - Book Cricket Box in Patna',
     description: 'Book your cricket practice session at Cricket Wala Play Arena. Premium indoor cricket box, easy online booking, ₹10/hour.',
     images: [
       {
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cricket Wala Play Arena - Book Cricket Box in Varanasi',
+    title: 'Cricket Wala Play Arena - Book Cricket Box in Patna',
     description: 'Book your cricket practice session. Premium indoor cricket box, easy online booking.',
     images: ['/og-image.jpg'],
   },
@@ -100,15 +100,15 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "SportsActivityLocation",
               "name": "Cricket Wala Play Arena",
-              "description": "Premium indoor cricket box for practice sessions in Varanasi",
+              "description": "Premium indoor cricket box for practice sessions in Patna",
               "url": "https://www.cricketwalaplayarena.in",
-              "telephone": "+91-9473236395",
+              "telephone": "+91-8340296635",
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "Near Varanasi",
-                "addressLocality": "Varanasi",
-                "addressRegion": "Uttar Pradesh",
-                "postalCode": "221001",
+                "streetAddress": "Kanti Factory",
+                "addressLocality": "Patna",
+                "addressRegion": "Bihar",
+                "postalCode": "800007",
                 "addressCountry": "IN"
               },
               "geo": {
@@ -135,7 +135,7 @@ export default function RootLayout({
           <main className="flex-1 pt-16 md:pt-20">
             {children}
           </main>
-          <Footer />
+          <FooterSection />
         </div>
       </body>
     </html>

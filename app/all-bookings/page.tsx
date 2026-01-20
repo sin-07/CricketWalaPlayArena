@@ -85,10 +85,21 @@ const AllBookingsPage: React.FC = () => {
     });
   };
 
-  const formatTime = (slotId: number) => {
-    const startTime = `${slotId.toString().padStart(2, '0')}:00`;
-    const endTime = `${(slotId + 1).toString().padStart(2, '0')}:00`;
-    return `${startTime} - ${endTime}`;
+  const formatTime = (slotId: number | string | undefined) => {
+    // Handle turf booking format (string like "06:00-07:00")
+    if (typeof slotId === 'string') {
+      return slotId;
+    }
+    
+    // Handle old booking format (numeric ID)
+    if (typeof slotId === 'number') {
+      const startTime = `${slotId.toString().padStart(2, '0')}:00`;
+      const endTime = `${(slotId + 1).toString().padStart(2, '0')}:00`;
+      return `${startTime} - ${endTime}`;
+    }
+    
+    // Default fallback
+    return 'N/A';
   };
 
   return (
@@ -279,7 +290,9 @@ const AllBookingsPage: React.FC = () => {
                             <p className="text-sm font-semibold text-gray-800">{booking.boxName}</p>
                             <p className="text-xs text-gray-600">📅 {formatDate(booking.date)}</p>
                             <p className="text-xs text-gray-600">
-                              ⏰ {booking.timeSlotIds && booking.timeSlotIds.length > 0
+                              ⏰ {(booking as any).slot 
+                                ? (booking as any).slot
+                                : booking.timeSlotIds && booking.timeSlotIds.length > 0
                                 ? `${booking.timeSlotIds.length} slot${booking.timeSlotIds.length > 1 ? 's' : ''}: ${booking.timeSlotIds.sort((a, b) => a - b).map(id => formatTime(id)).join(', ')}`
                                 : formatTime(booking.timeSlotId)}
                             </p>

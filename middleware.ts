@@ -61,6 +61,11 @@ export function middleware(request: NextRequest) {
                          pathname.startsWith('/api/bookings');
   const isWriteOperation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method);
   
+  // Allow public booking endpoints (no auth required)
+  if ((pathname === '/api/bookings/direct' || pathname === '/api/bookings') && request.method === 'POST') {
+    return NextResponse.next();
+  }
+  
   // For API routes, only protect write operations (except admin APIs which are always protected)
   if (isProtectedApi && !isWriteOperation) {
     return NextResponse.next();

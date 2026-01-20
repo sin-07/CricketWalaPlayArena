@@ -1,542 +1,198 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { CricketBox, CustomerData, Booking } from '@/types';
-import { CRICKET_BOXES } from '@/utils/dummyData';
-import BookingForm from '@/components/BookingForm';
-import SlotPicker from '@/components/SlotPicker';
-import NotificationBanner from '@/components/NotificationBanner';
-import Gallery from '@/components/Gallery';
-import useBookings from '@/hooks/useBookings';
-import useNotifications from '@/hooks/useNotifications';
-import { FaBolt, FaMoneyBillWave, FaClock } from 'react-icons/fa';
+import React from 'react';
+import Link from 'next/link';
 import { GiCricketBat } from 'react-icons/gi';
-import { Calendar, Clock, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  getMinDate,
-  generateBookingRef,
-  calculateTotalPrice,
-} from '@/utils/helpers';
+import { ArrowRight, Zap, Trophy, Users, Calendar, Clock, Shield, MapPin, ChevronRight } from 'lucide-react';
 
 export default function Home() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<string>(getMinDate());
-  const [selectedBox, setSelectedBox] = useState<CricketBox | null>(CRICKET_BOXES[0]); // Auto-select first box
-  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
-  const [currentBooking, setCurrentBooking] = useState<Booking | null>(null);
-  const [showSuccessPopup, setShowSuccessPopup] = useState<boolean>(false);
-  const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
-
-  const { bookings, addBooking, loading, refreshBookings } = useBookings();
-  const { notifications, addNotification, removeNotification } = useNotifications();
-
-  // Check if admin is logged in via API
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/admin/check-auth', {
-          method: 'GET',
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setIsAdmin(data.authenticated);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (error) {
-        setIsAdmin(false);
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  const getUnavailableSlots = (): string[] => {
-    if (!selectedBox) return [];
-
-    const unavailable: string[] = [];
-    bookings
-      .filter(
-        (booking) =>
-          booking.boxId === selectedBox.id && booking.date === selectedDate
-      )
-      .forEach((booking) => {
-        // Add all slots from timeSlotIds array
-        if (booking.timeSlotIds && booking.timeSlotIds.length > 0) {
-          booking.timeSlotIds.forEach(slotId => {
-            unavailable.push(`slot-${slotId}`);
-          });
-        } else if (booking.timeSlotId) {
-          // Fallback for legacy single slot bookings
-          unavailable.push(`slot-${booking.timeSlotId}`);
-        }
-      });
-    return unavailable;
-  };
-
-  const getBookedSlotsDetails = () => {
-    if (!selectedBox) return [];
-    
-    return bookings
-      .filter((booking) => 
-        booking.boxId === selectedBox.id && 
-        booking.date === selectedDate
-      )
-      .map((booking) => ({
-        timeSlotId: booking.timeSlotId,
-        customerName: booking.customerName,
-        email: booking.email,
-        phone: booking.phone,
-        bookingRef: booking.bookingRef,
-        timeSlotIds: booking.timeSlotIds || [booking.timeSlotId]
-      }));
-  };
-
-  const handleSlotToggle = (slotId: string): void => {
-    if (selectedSlots.includes(slotId)) {
-      setSelectedSlots(selectedSlots.filter((id) => id !== slotId));
-    } else {
-      setSelectedSlots([...selectedSlots, slotId]);
-    }
-  };
-
-  const handleDateChange = (date: string): void => {
-    setSelectedDate(date);
-    setSelectedSlots([]);
-  };
-
-  const handleBoxChange = (box: CricketBox | null): void => {
-    setSelectedBox(box);
-    setSelectedSlots([]);
-  };
-
-  const handleBookingSubmit = async (customerData: CustomerData): Promise<void> => {
-    if (!selectedBox) return;
-
-    try {
-      const slotIds = selectedSlots.map(slot => parseInt(slot.replace('slot-', '')));
-      const totalAmount = calculateTotalPrice(selectedBox.pricePerHour, selectedSlots.length);
-      const bookingRef = generateBookingRef();
-
-      const booking: Booking = {
-        boxId: selectedBox.id,
-        boxName: selectedBox.name,
-        date: selectedDate,
-        timeSlotId: slotIds[0],
-        timeSlotIds: slotIds,
-        customerName: customerData.customerName,
-        email: customerData.email,
-        phone: customerData.phone,
-        pricePerHour: selectedBox.pricePerHour,
-        totalAmount,
-        bookingRef,
-        createdAt: new Date().toISOString(),
-        status: 'confirmed',
-        paymentStatus: 'success',
-      };
-
-      // Store the current user's email for showing their bookings
-      setCurrentUserEmail(customerData.email);
-
-      // Direct booking without payment
-      const response = await fetch('/api/bookings/direct', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          boxId: booking.boxId,
-          boxName: booking.boxName,
-          date: booking.date,
-          timeSlotIds: booking.timeSlotIds,
-          customerName: booking.customerName,
-          email: booking.email,
-          phone: booking.phone,
-          pricePerHour: booking.pricePerHour,
-          totalAmount: booking.totalAmount,
-          bookingRef: booking.bookingRef,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create booking');
-      }
-
-      // Show success popup
-      setCurrentBooking({
-        ...booking,
-        bookingRef: data.data.bookingRef,
-      });
-      setShowSuccessPopup(true);
-      setSelectedSlots([]);
-      addNotification('Booking confirmed successfully! Check your email for details.', 'success');
-      
-      // Refresh bookings to show the new booking
-      await refreshBookings();
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create booking. Please try again.';
-      addNotification(errorMessage, 'error');
-      
-      // If specific slots are booked, update the UI
-      await refreshBookings();
-    }
-  };
-
-  const handleCloseSuccessPopup = (): void => {
-    setShowSuccessPopup(false);
-    setCurrentBooking(null);
-  };
-
   return (
-    <>
-      <NotificationBanner notifications={notifications} onRemove={removeNotification} />
-      
-      {/* Success Popup Modal */}
-      <AnimatePresence>
-        {showSuccessPopup && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+    <div className="min-h-screen bg-white overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-2000"></div>
+        </div>
+
+        <div className="relative max-w-6xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-green-500/20 backdrop-blur-sm px-4 py-2 rounded-full border border-green-400/30 mb-6">
+            <Zap className="w-4 h-4" />
+            <span className="text-sm font-semibold">Book your cricket slots instantly</span>
+          </div>
+
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            Premium Cricket <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Turf Booking</span>
+          </h1>
+
+          <p className="text-xl sm:text-2xl text-gray-300 mb-10 max-w-3xl mx-auto leading-relaxed">
+            Reserve your perfect cricket turf for matches and practice sessions. Real-time availability, instant confirmation, and seamless booking experience.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link
+              href="/booking"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg"
             >
-              {/* Success Icon */}
-              <div className="bg-green-500 py-8 flex justify-center">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                >
-                  <div className="bg-white rounded-full p-4">
-                    <CheckCircle2 className="w-16 h-16 text-green-500" />
-                  </div>
-                </motion.div>
-              </div>
+              Get Started Now
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <button className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition-all border border-white/20 backdrop-blur-sm">
+              Learn More
+            </button>
+          </div>
 
-              {/* Content */}
-              <div className="p-6 text-center">
-                <motion.h2
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-2xl font-bold text-gray-800 mb-2"
-                >
-                  Booking Confirmed!
-                </motion.h2>
-                <motion.p
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-gray-600 mb-4"
-                >
-                  Your slot has been booked successfully!
-                </motion.p>
-                {currentBooking && (
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.45 }}
-                    className="bg-gray-50 rounded-lg p-4 mb-4 text-left"
-                  >
-                    <p className="text-sm text-gray-600"><strong>Arena:</strong> {currentBooking.boxName}</p>
-                    <p className="text-sm text-gray-600"><strong>Date:</strong> {currentBooking.date}</p>
-                    <p className="text-sm text-gray-600"><strong>Ref:</strong> {currentBooking.bookingRef}</p>
-                  </motion.div>
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-16 pt-12 border-t border-white/10">
+            <div>
+              <div className="text-3xl sm:text-4xl font-bold text-green-400">1000+</div>
+              <div className="text-sm text-gray-400">Happy Players</div>
+            </div>
+            <div>
+              <div className="text-3xl sm:text-4xl font-bold text-cyan-400">24</div>
+              <div className="text-sm text-gray-400">Hourly Slots</div>
+            </div>
+            <div>
+              <div className="text-3xl sm:text-4xl font-bold text-purple-400">24/7</div>
+              <div className="text-sm text-gray-400">Available</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Why Choose Us?</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">Experience the best cricket facilities with modern amenities and professional service</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { icon: Zap, title: "Instant Booking", desc: "Book your slot in seconds with real-time availability" },
+              { icon: Shield, title: "Secure Payment", desc: "Safe and secure payment methods for peace of mind" },
+              { icon: Calendar, title: "90 Days Advance", desc: "Book up to 90 days in advance for flexibility" },
+              { icon: Clock, title: "24/7 Availability", desc: "Access slots anytime, day or night, 365 days" },
+              { icon: Trophy, title: "Professional Setup", desc: "State-of-the-art equipment and premium facilities" },
+              { icon: Users, title: "Community", desc: "Join thousands of cricket enthusiasts" }
+            ].map((feature, idx) => (
+              <div key={idx} className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-all hover:-translate-y-2">
+                <feature.icon className="w-12 h-12 text-green-600 mb-4" />
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                <p className="text-gray-600">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-xl text-gray-600">Simple 3-step process to book your perfect slot</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { num: "01", title: "Select Date & Sport", desc: "Choose your preferred date and sport type - Match or Practice" },
+              { num: "02", title: "Pick Your Slot", desc: "Browse available time slots and select the one that suits you" },
+              { num: "03", title: "Confirm & Enjoy", desc: "Enter your details and get instant confirmation" }
+            ].map((step, idx) => (
+              <div key={idx} className="relative">
+                <div className="text-6xl font-bold text-gray-100 mb-4">{step.num}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                <p className="text-gray-600 mb-8">{step.desc}</p>
+                {idx < 2 && (
+                  <div className="hidden md:block absolute top-12 -right-4 text-gray-300">
+                    <ChevronRight className="w-8 h-8" />
+                  </div>
                 )}
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="bg-green-50 rounded-lg p-4 mb-6"
-                >
-                  <p className="text-sm text-green-700">
-                    📧 Confirmation details have been sent to your email.
-                  </p>
-                </motion.div>
-                <motion.button
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  onClick={handleCloseSuccessPopup}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
-                >
-                  Done
-                </motion.button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 -mt-16 md:-mt-20">
-        {/* Professional Hero Section */}
-        <div className="relative bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 text-white overflow-hidden pt-16 md:pt-20">
-          {/* Animated Background */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse delay-700"></div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Affordable Pricing</h2>
+            <p className="text-xl text-gray-600">Competitive rates for all types of bookings</p>
           </div>
 
-          <div className="relative container mx-auto px-0 sm:px-6 md:px-8 py-8 sm:py-12 md:py-16">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
-                <GiCricketBat className="text-2xl" />
-                <span className="text-sm font-semibold tracking-wide">
-                  PREMIUM CRICKET FACILITIES
-                </span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight">
-                Book Your Perfect
-                <span className="block text-primary-200">
-                  Cricket Practice Session
-                </span>
-              </h1>
-              <p className="text-lg md:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
-                State-of-the-art Cricket Wala Play Arena slots with professional equipment.
-                Available 24/7 for your convenience.
-              </p>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Match Booking</h3>
+              <div className="text-4xl font-bold text-green-600 mb-6">₹1,500<span className="text-lg text-gray-600">/hour</span></div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                  <span className="text-gray-700">Professional setup</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                  <span className="text-gray-700">Premium equipment</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                  <span className="text-gray-700">24/7 support</span>
+                </li>
+              </ul>
+              <Link
+                href="/booking"
+                className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors text-center"
+              >
+                Book Now
+              </Link>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-8 shadow-lg text-white transform scale-105">
+              <div className="inline-block bg-white/20 px-4 py-1 rounded-full text-sm font-semibold mb-4">Popular</div>
+              <h3 className="text-2xl font-bold mb-4">Practice Booking</h3>
+              <div className="text-4xl font-bold mb-6">₹1,200<span className="text-lg opacity-90">/hour</span></div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <span>Perfect for practice</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <span>Quality facilities</span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <span>Flexible slots</span>
+                </li>
+              </ul>
+              <Link
+                href="/booking"
+                className="w-full py-3 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100 transition-colors text-center block"
+              >
+                Book Now
+              </Link>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Main Booking Section */}
-        <div className="container mx-auto px-0 sm:px-4 py-6 sm:py-8 md:py-12">
-          <div className="max-w-7xl mx-auto">
-            {/* Show loading while checking auth, then Admin Message or Booking Form */}
-            {authLoading ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-              </div>
-            ) : isAdmin ? (
-              <div className="text-center py-12">
-                <Card className="max-w-2xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-300 shadow-xl">
-                  <CardContent className="p-8">
-                    <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mb-4">
-                        <GiCricketBat className="text-white text-4xl" />
-                      </div>
-                      <h2 className="text-3xl font-bold text-gray-800 mb-3">Admin Access</h2>
-                      <p className="text-lg text-gray-700 mb-4">
-                        You are logged in as an administrator.
-                      </p>
-                      <p className="text-xl font-semibold text-blue-700 mb-6">
-                        Please use the Admin Panel to create offline bookings.
-                      </p>
-                      <a
-                        href="/admin"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 inline-flex items-center"
-                      >
-                        <GiCricketBat className="mr-2" />
-                        Go to Admin Panel
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              <>
-                {/* Section Header */}
-                <div className="text-center mb-6 sm:mb-8 px-4 sm:px-0">
-                  <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                    Reserve Your Slot Now
-                  </h2>
-                  <p className="text-gray-600 text-lg">
-                    Choose your preferred date, box, and time slots in 3 easy steps
-                  </p>
-                </div>
-
-                {/* Booking Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-0 lg:gap-8">
-                  {/* Booking Form - Left Column */}
-                  <div className="w-full lg:col-span-2">
-                    <Card className="rounded-none sm:rounded-lg lg:sticky lg:top-4 shadow-none sm:shadow-xl w-full border-x-0 sm:border-x">
-                      <CardHeader className="bg-green-500">
-                        <CardTitle className="text-white flex items-center">
-                          <Calendar className="w-5 h-5 mr-2" />
-                          Booking Details
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <BookingForm
-                          onSubmit={handleBookingSubmit}
-                          selectedDate={selectedDate}
-                          selectedBox={selectedBox}
-                          selectedSlots={selectedSlots}
-                          onDateChange={handleDateChange}
-                          onBoxChange={handleBoxChange}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Right Content Area - Time Slots */}
-                  <div className="lg:col-span-3 mt-0 lg:mt-0">
-                    <Card className="rounded-none sm:rounded-lg shadow-none sm:shadow-xl border-x-0 sm:border-x border-t-0 sm:border-t">
-                      <CardHeader className="bg-green-500">
-                        <CardTitle className="text-white flex items-center">
-                          <Clock className="w-5 h-5 mr-2" />
-                          Available Time Slots
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-6">
-                        <SlotPicker
-                          selectedDate={selectedDate}
-                          selectedBox={selectedBox}
-                          selectedSlots={selectedSlots}
-                          onSlotToggle={handleSlotToggle}
-                          unavailableSlots={getUnavailableSlots()}
-                          bookedSlotsDetails={getBookedSlotsDetails()}
-                          currentUserEmail={currentUserEmail}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold mb-6">Ready to Book Your Slot?</h2>
+          <p className="text-lg text-green-100 mb-8">Join thousands of cricket enthusiasts and book your perfect slot today</p>
+          <Link
+            href="/booking"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Book Your Slot Now
+            <ArrowRight className="w-5 h-5" />
+          </Link>
         </div>
-
-        {/* Features Section */}
-        <section className="py-8 sm:py-12 md:py-20 bg-white">
-          <div className="container mx-auto px-0 sm:px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
-                Why Choose Us?
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Experience the best cricket practice facilities with modern
-                amenities
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 sm:gap-4 md:gap-6 lg:gap-8 max-w-6xl mx-auto">
-              <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-b sm:border-0">
-                <div className="text-5xl mb-4"><FaBolt className="text-yellow-500" /></div>
-                <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
-                  Instant Booking
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Book your slot in seconds with real-time availability updates
-                  and instant confirmation.
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 border-b sm:border-0">
-                <div className="text-5xl mb-4"><GiCricketBat className="text-green-600" /></div>
-                <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
-                  Professional Setup
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  State-of-the-art Cricket Wala Play Arena slots with bowling machines and premium
-                  equipment.
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-primary-50 to-white p-4 sm:p-6 md:p-8 rounded-none sm:rounded-2xl shadow-none sm:shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 sm:col-span-2 lg:col-span-1 border-b sm:border-0">
-                <div className="text-5xl mb-4"><FaMoneyBillWave className="text-green-600" /></div>
-                <h3 className="text-xl md:text-2xl font-bold mb-3 text-gray-800">
-                  Affordable Rates
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Competitive pricing starting from ₹1,500/hour with no hidden
-                  charges.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Gallery Section */}
-        <section className="py-8 sm:py-12 md:py-20 bg-gradient-to-b from-gray-50 to-white">
-          <div className="container mx-auto px-0 sm:px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
-                Our Cricket Facilities
-              </h2>
-              <p className="text-gray-600">
-                Explore our state-of-the-art Cricket Wala Play Arena slots and facilities
-              </p>
-            </div>
-
-            <Gallery />
-          </div>
-        </section>
-
-        {/* How It Works Section */}
-        <section className="py-8 sm:py-12 md:py-20 bg-white">
-          <div className="container mx-auto px-0 sm:px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
-                How It Works
-              </h2>
-              <p className="text-gray-600">Book your session in 3 simple steps</p>
-            </div>
-
-            <div className="max-w-5xl mx-auto">
-              <div className="grid md:grid-cols-3 gap-8">
-                <div className="relative">
-                  <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-8 rounded-2xl shadow-xl text-center">
-                    <div className="w-16 h-16 bg-white text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-lg">
-                      1
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">Select Date & Box</h3>
-                    <p className="text-primary-100">
-                      Choose your preferred date, time slots, and Cricket Wala Play Arena slot from
-                      available options
-                    </p>
-                  </div>
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <div className="text-4xl text-primary-600">→</div>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-8 rounded-2xl shadow-xl text-center">
-                    <div className="w-16 h-16 bg-white text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-lg">
-                      2
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">Enter Details</h3>
-                    <p className="text-primary-100">
-                      Fill in your contact information and review your booking
-                      details
-                    </p>
-                  </div>
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <div className="text-4xl text-primary-600">→</div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-8 rounded-2xl shadow-xl text-center">
-                    <div className="w-16 h-16 bg-white text-primary-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4 shadow-lg">
-                      3
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">Start Playing!</h3>
-                    <p className="text-primary-100">
-                      Get instant confirmation and arrive at the venue to enjoy
-                      your session
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }
