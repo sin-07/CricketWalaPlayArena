@@ -34,7 +34,7 @@ export default function TurfBookingForm({
     bookingType,
     sport: '',
     date: getMinDate(),
-    slot: '',
+    slot: [], // Changed to array for multiple slots
     name: '',
     mobile: '',
     email: '',
@@ -138,7 +138,7 @@ export default function TurfBookingForm({
     setFormData((prev) => ({
       ...prev,
       sport,
-      slot: '', // Reset slot when sport changes
+      slot: [], // Reset slot to empty array when sport changes
     }));
     // Reset coupon when sport changes
     setAppliedCoupon(null);
@@ -157,7 +157,7 @@ export default function TurfBookingForm({
     setFormData((prev) => ({
       ...prev,
       date,
-      slot: '', // Reset slot when date changes
+      slot: [], // Reset slot to empty array when date changes
     }));
     // Reset coupon when date changes
     setAppliedCoupon(null);
@@ -172,10 +172,10 @@ export default function TurfBookingForm({
     }
   };
 
-  const handleSlotChange = (slot: string) => {
+  const handleSlotChange = (slots: string[]) => {
     setFormData((prev) => ({
       ...prev,
-      slot,
+      slot: slots,
     }));
     // Reset coupon when slot changes
     setAppliedCoupon(null);
@@ -197,8 +197,8 @@ export default function TurfBookingForm({
       return;
     }
 
-    if (!formData.sport || !formData.date || !formData.slot || !formData.email || !formData.mobile) {
-      setCouponError('Please fill in sport, date, slot, email, and mobile first');
+    if (!formData.sport || !formData.date || !formData.slot || (Array.isArray(formData.slot) && formData.slot.length === 0) || !formData.email || !formData.mobile) {
+      setCouponError('Please fill in sport, date, slot(s), email, and mobile first');
       return;
     }
 
@@ -207,7 +207,8 @@ export default function TurfBookingForm({
 
     try {
       // Calculate price after weekly discount first
-      const pricing = calculateFinalPrice(formData.bookingType, formData.date);
+      const numSlots = Array.isArray(formData.slot) ? formData.slot.length : (formData.slot ? 1 : 0);
+      const pricing = calculateFinalPrice(formData.bookingType, formData.date, numSlots);
       const priceAfterWeeklyDiscount = pricing.finalPrice;
 
       const response = await fetch('/api/coupons/validate', {
@@ -258,7 +259,10 @@ export default function TurfBookingForm({
   const calculateTotalWithCoupon = () => {
     if (!formData.date || !formData.bookingType) return null;
     
-    const pricing = calculateFinalPrice(formData.bookingType, formData.date);
+    const numSlots = Array.isArray(formData.slot) ? formData.slot.length : (formData.slot ? 1 : 0);
+    if (numSlots === 0) return null;
+    
+    const pricing = calculateFinalPrice(formData.bookingType, formData.date, numSlots);
     let finalPriceAfterAllDiscounts = pricing.finalPrice;
     
     if (appliedCoupon) {
@@ -279,6 +283,7 @@ export default function TurfBookingForm({
       finalPrice: finalPriceAfterAllDiscounts,
       bookingCharge: effectiveBookingCharge,
       totalPrice: finalPriceAfterAllDiscounts + effectiveBookingCharge,
+      numSlots,
     };
   };
 
@@ -373,7 +378,7 @@ export default function TurfBookingForm({
         bookingType,
         sport: '',
         date: getMinDate(),
-        slot: '',
+        slot: [], // Reset to empty array for multiple slot selection
         name: '',
         mobile: '',
         email: '',
@@ -642,8 +647,14 @@ export default function TurfBookingForm({
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-500">Time Slot</p>
-                      <p className="font-medium text-gray-800">{formData.slot || '-'}</p>
+                      <p className="text-gray-500">Time Slot{Array.isArray(formData.slot) && formData.slot.length > 1 ? 's' : ''}</p>
+                      <p className="font-medium text-gray-800">
+                        {Array.isArray(formData.slot) 
+                          ? formData.slot.length > 0 
+                            ? formData.slot.join(', ') 
+                            : '-'
+                          : formData.slot || '-'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -791,7 +802,7 @@ export default function TurfBookingForm({
             date={formData.date}
             sport={formData.sport}
             bookingType={formData.bookingType}
-            selectedSlot={formData.slot}
+            selectedSlots={Array.isArray(formData.slot) ? formData.slot : (formData.slot ? [formData.slot] : [])}
             onSlotChange={handleSlotChange}
             loading={loading}
           />
@@ -821,6 +832,14 @@ export default function TurfBookingForm({
                   
                   return (
                     <div className="space-y-2">
+                      {/* Slot Count Indicator */}
+                      {totalPricing.numSlots > 0 && (
+                        <div className="flex justify-between items-center text-sm bg-blue-50 px-3 py-1.5 border border-blue-200">
+                          <span className="text-blue-700 font-medium">Selected Slots:</span>
+                          <span className="font-semibold text-blue-800">{totalPricing.numSlots} slot{totalPricing.numSlots > 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                      
                       {/* Base Price */}
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">Original Price:</span>

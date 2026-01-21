@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
-import AdminBookingForm from '@/components/AdminBookingForm';
+import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
 import AdminTable from '@/components/AdminTable';
 import AdminCouponManager from '@/components/AdminCouponManager';
 import AdminNewsletterManager from '@/components/AdminNewsletterManager';
@@ -33,6 +33,8 @@ interface TurfBooking {
   basePrice: number;
   finalPrice: number;
   discountPercentage: number;
+  totalPrice?: number;
+  source?: 'online' | 'offline';
   status: 'confirmed' | 'cancelled' | 'completed';
   createdAt: string;
   updatedAt: string;
@@ -440,8 +442,8 @@ export default function AdminDashboard() {
           {activeTab === 'bookings' ? (
             <AdminTable turfBookings={turfBookings} loading={loading} />
           ) : activeTab === 'create' ? (
-            <div className="max-w-3xl mx-auto">
-              <AdminBookingForm
+            <div className="max-w-3xl mx-auto px-4 sm:px-0">
+              <AdminOfflineBookingForm
                 onBookingComplete={handleBookingComplete}
               />
             </div>

@@ -22,70 +22,88 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { bookingType, sport, date, slot, name, mobile, email, couponCode } = body;
 
-    // Frontend validation should catch most errors, but validate on backend too
-    const validationErrors = validateBookingForm({
-      bookingType,
-      sport,
-      date,
-      slot,
-      name,
-      mobile,
-      email,
-    });
+    // Convert slot to array if it's a string (backward compatibility)
+    const slotsArray = Array.isArray(slot) ? slot : [slot];
+    
+    // Validate each slot
+    for (const singleSlot of slotsArray) {
+      const validationErrors = validateBookingForm({
+        bookingType,
+        sport,
+        date,
+        slot: singleSlot,
+        name,
+        mobile,
+        email,
+      });
 
-    if (validationErrors.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'Validation failed',
-          errors: validationErrors,
-        },
-        { status: 400 }
-      );
+      if (validationErrors.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Validation failed',
+            errors: validationErrors,
+          },
+          { status: 400 }
+        );
+      }
     }
 
-    // Check if slot is frozen
-    const frozenSlotCheck = await Slot.findOne({
-      bookingType,
-      sport,
-      date,
-      slot,
-      isFrozen: true,
-    });
+    // Check if any slot is frozen
+    for (const singleSlot of slotsArray) {
+      const frozenSlotCheck = await Slot.findOne({
+        bookingType,
+        sport,
+        date,
+        slot: singleSlot,
+        isFrozen: true,
+      });
 
-    if (frozenSlotCheck) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `This slot (${slot}) for ${sport} on ${date} is currently frozen and unavailable for booking.`,
-          field: 'slot',
-        },
-        { status: 403 }
-      );
+      if (frozenSlotCheck) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Slot ${singleSlot} for ${sport} on ${date} is frozen and unavailable.`,
+            field: 'slot',
+          },
+          { status: 403 }
+        );
+      }
     }
 
-    // Check for existing booking (prevent double booking)
-    const existingBooking = await TurfBooking.findOne({
-      date,
-      slot,
-      sport,
-      bookingType,
-      status: 'confirmed',
-    });
+    // Check for existing bookings on any of the selected slots
+    for (const singleSlot of slotsArray) {
+      // Check if this exact slot is already booked
+      // Handle both single slot format and comma-separated format
+      console.log(`Checking slot: ${singleSlot} for ${sport} on ${date} (${bookingType})`);
+      
+      const existingBooking = await TurfBooking.findOne({
+        date,
+        $or: [
+          { slot: singleSlot }, // Exact match for single slot bookings
+          { slot: { $regex: new RegExp(`(^|,\\s*)${singleSlot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*,|$)`) } } // Match in comma-separated list
+        ],
+        sport,
+        bookingType,
+        status: 'confirmed',
+      });
 
-    if (existingBooking) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `This slot is already booked for ${sport} on ${date}`,
-          field: 'slot',
-        },
-        { status: 409 }
-      );
+      if (existingBooking) {
+        console.log(`Found existing booking:`, existingBooking.slot, existingBooking._id);
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Slot ${singleSlot} is already booked for ${sport} on ${date}`,
+            field: 'slot',
+          },
+          { status: 409 }
+        );
+      }
     }
 
     // Create new booking with coupon support
-    const pricing = calculateFinalPrice(bookingType, date);
+    const numSlots = slotsArray.length;
+    const pricing = calculateFinalPrice(bookingType, date, numSlots);
     
     // Price calculation flow:
     // 1. Start with base price
@@ -103,7 +121,7 @@ export async function POST(request: NextRequest) {
         bookingType,
         sport,
         date,
-        slot,
+        slotsArray[0], // Pass first slot for coupon validation (coupons are per booking, not per slot)
         priceAfterWeeklyDiscount, // Validate against price after weekly discount
         email,
         mobile // Pass mobile for duplicate usage check
@@ -139,7 +157,7 @@ export async function POST(request: NextRequest) {
       bookingType,
       sport,
       date,
-      slot,
+      slot: slotsArray.join(', '), // Store as comma-separated string
       name,
       mobile,
       email,
@@ -152,10 +170,16 @@ export async function POST(request: NextRequest) {
       totalPrice: totalPrice,
       advancePayment: advancePayment,
       remainingPayment: remainingPayment,
+      source: 'online', // Mark as online booking
       status: 'confirmed',
     });
 
     await newBooking.save();
+
+    // Generate booking reference in CWPAXXXX format
+    const bookingIdStr = newBooking._id.toString();
+    const numericPart = parseInt(bookingIdStr.slice(-8), 16).toString().slice(-4).padStart(4, '0');
+    const bookingRef = `CWPA${numericPart}`;
 
     // Increment coupon usage AFTER booking is saved successfully
     if (appliedCouponCode) {
@@ -193,7 +217,7 @@ export async function POST(request: NextRequest) {
       await sendBookingConfirmation(
         email,
         {
-          bookingId: newBooking._id.toString(),
+          bookingId: bookingRef, // Use CWPAXXXX format instead of MongoDB ObjectId
           name: newBooking.name,
           bookingType: newBooking.bookingType,
           sport: newBooking.sport,
@@ -217,6 +241,7 @@ export async function POST(request: NextRequest) {
         message: 'Booking confirmed successfully!',
         data: {
           bookingId: newBooking._id,
+          bookingRef: bookingRef, // Add booking reference in CWPAXXXX format
           bookingType: newBooking.bookingType,
           sport: newBooking.sport,
           date: newBooking.date,

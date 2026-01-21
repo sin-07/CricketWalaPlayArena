@@ -74,11 +74,13 @@ export function getDiscountPercentage(dateStr: string): number {
  * Calculate final price for a booking after applying discount
  * @param bookingType - Type of booking ('match' or 'practice')
  * @param dateStr - Date in YYYY-MM-DD format
+ * @param numSlots - Number of slots selected (defaults to 1)
  * @returns Final price after discount
  */
 export function calculateFinalPrice(
   bookingType: 'match' | 'practice',
-  dateStr: string
+  dateStr: string,
+  numSlots: number = 1
 ): {
   basePrice: number;
   discountPercentage: number;
@@ -87,8 +89,10 @@ export function calculateFinalPrice(
   bookingCharge: number;
   totalPrice: number;
   dayName: string;
+  numSlots: number;
 } {
-  const basePrice = BASE_PRICES[bookingType];
+  const basePricePerSlot = BASE_PRICES[bookingType];
+  const basePrice = basePricePerSlot * numSlots;
   const discountPercentage = getDiscountPercentage(dateStr);
   const discountAmount = (basePrice * discountPercentage) / 100;
   const finalPrice = basePrice - discountAmount;
@@ -104,6 +108,7 @@ export function calculateFinalPrice(
     bookingCharge: BOOKING_CHARGE,
     totalPrice,
     dayName,
+    numSlots,
   };
 }
 

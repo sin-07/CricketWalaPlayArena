@@ -15,8 +15,8 @@ interface SlotSelectorProps {
   date: string;
   sport: string;
   bookingType?: 'match' | 'practice';
-  selectedSlot: string;
-  onSlotChange: (slot: string) => void;
+  selectedSlots: string[];
+  onSlotChange: (slots: string[]) => void;
   loading?: boolean;
 }
 
@@ -24,7 +24,7 @@ export default function SlotSelector({
   date,
   sport,
   bookingType = 'practice',
-  selectedSlot,
+  selectedSlots,
   onSlotChange,
   loading = false,
 }: SlotSelectorProps) {
@@ -91,9 +91,15 @@ export default function SlotSelector({
 
   const availableSlots = slots.filter((s) => s.available);
 
-  const handleSlotSelect = (slot: string) => {
-    onSlotChange(slot);
-    setIsOpen(false);
+  const handleSlotToggle = (slot: string) => {
+    const isSelected = selectedSlots.includes(slot);
+    if (isSelected) {
+      // Remove slot from selection
+      onSlotChange(selectedSlots.filter(s => s !== slot));
+    } else {
+      // Add slot to selection
+      onSlotChange([...selectedSlots, slot]);
+    }
   };
 
   return (
@@ -113,10 +119,12 @@ export default function SlotSelector({
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition disabled:bg-gray-100 disabled:cursor-not-allowed bg-white text-left flex items-center justify-between"
           whileTap={{ scale: 0.98 }}
         >
-          <span className={selectedSlot ? 'text-gray-900' : 'text-gray-500'}>
+          <span className={selectedSlots.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
             {isLoading 
               ? 'Loading slots...' 
-              : selectedSlot || 'Choose a time slot'}
+              : selectedSlots.length > 0 
+                ? `${selectedSlots.length} slot${selectedSlots.length > 1 ? 's' : ''} selected: ${selectedSlots.join(', ')}`
+                : 'Choose time slots'}
           </span>
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
@@ -149,33 +157,36 @@ export default function SlotSelector({
                 }}
                 className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
               >
-                {availableSlots.map((slot, index) => (
-                  <motion.button
-                    key={slot.slot}
-                    type="button"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, delay: index * 0.04, ease: "easeOut" }}
-                    onClick={() => handleSlotSelect(slot.slot)}
-                    className={`w-full px-4 py-3 text-left hover:bg-green-50 transition-colors flex items-center justify-between group ${
-                      selectedSlot === slot.slot ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-gray-400 group-hover:text-green-500" />
-                      {slot.slot}
-                    </span>
-                    {selectedSlot === slot.slot && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                      >
-                        <Check className="w-5 h-5 text-green-600" />
-                      </motion.div>
-                    )}
-                  </motion.button>
-                ))}
+                {availableSlots.map((slot, index) => {
+                  const isSelected = selectedSlots.includes(slot.slot);
+                  return (
+                    <motion.button
+                      key={slot.slot}
+                      type="button"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.04, ease: "easeOut" }}
+                      onClick={() => handleSlotToggle(slot.slot)}
+                      className={`w-full px-4 py-3 text-left hover:bg-green-50 transition-colors flex items-center justify-between group ${
+                        isSelected ? 'bg-green-100 text-green-700 border-l-4 border-green-600' : 'text-gray-700'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-400 group-hover:text-green-500" />
+                        {slot.slot}
+                      </span>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        >
+                          <Check className="w-5 h-5 text-green-600" />
+                        </motion.div>
+                      )}
+                    </motion.button>
+                  );
+                })}
               </motion.div>
             </>
           )}

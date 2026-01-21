@@ -35,21 +35,13 @@ export default function Home() {
           </p>
 
           <div className="flex justify-center mb-8 sm:mb-12">
-            <div className="flex flex-col gap-2 sm:gap-3 items-center">
-              <Link
-                href="/booking"
-                className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 md:px-8 py-3 sm:py-4 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base"
-              >
-                Get Started Now
-                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Link>
-              <Link
-                href="/booking"
-                className="inline-flex items-center justify-center px-4 sm:px-6 py-1.5 sm:py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 hover:text-green-200 font-semibold rounded-lg transition-all border border-green-500/40 backdrop-blur-sm text-xs sm:text-sm"
-              >
-                Booking Charge: <span className="text-green-400 ml-1">₹200</span>
-              </Link>
-            </div>
+            <Link
+              href="/booking"
+              className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 py-4 sm:py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-xl shadow-green-500/30 text-base sm:text-lg transition-colors"
+            >
+              Click Me to Prove Your Skill at ₹200
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </Link>
           </div>
         </div>
       </section>

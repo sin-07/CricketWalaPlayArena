@@ -35,6 +35,8 @@ interface TurfBooking {
   basePrice: number;
   finalPrice: number;
   discountPercentage: number;
+  totalPrice?: number;
+  source?: 'online' | 'offline';
   status: 'confirmed' | 'cancelled' | 'completed';
   createdAt: string;
   updatedAt: string;
@@ -152,9 +154,48 @@ const AdminTable: React.FC<AdminTableProps> = ({
     await fetchUserHistory(booking);
   }, [fetchUserHistory]);
 
-  const getStatusBadge = useCallback((status?: string) => {
-    // Treat 'confirmed' as 'active' for display
-    const displayStatus = (status === 'confirmed' || status === 'active') ? 'active' : status;
+  // Calculate dynamic status based on booking time
+  const getCalculatedStatus = useCallback((booking: TurfBooking) => {
+    if (booking.status === 'cancelled') return 'cancelled';
+    
+    // Get the last slot end time
+    const slots = booking.slot.split(',').map(s => s.trim());
+    const lastSlot = slots[slots.length - 1];
+    const endTime = lastSlot.split('-')[1]; // e.g., "00:00" from "23:00-00:00"
+    
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    
+    // Create booking end datetime
+    const bookingDate = new Date(booking.date);
+    
+    // Handle midnight case (00:00 means next day)
+    if (endHour === 0 && endMinute === 0) {
+      bookingDate.setDate(bookingDate.getDate() + 1);
+      bookingDate.setHours(0, 0, 0, 0);
+    } else {
+      bookingDate.setHours(endHour, endMinute, 0, 0);
+    }
+    
+    const now = new Date();
+    
+    // If current time is past the booking end time, it's completed
+    if (now > bookingDate) {
+      return 'completed';
+    }
+    
+    return 'active';
+  }, []);
+
+  const getStatusBadge = useCallback((status?: string, booking?: TurfBooking) => {
+    // If it's a TurfBooking, calculate the actual status based on time
+    let displayStatus = status;
+    
+    if (booking) {
+      displayStatus = getCalculatedStatus(booking);
+    } else {
+      // Legacy: Treat 'confirmed' as 'active' for display
+      displayStatus = (status === 'confirmed' || status === 'active') ? 'active' : status;
+    }
     
     const statusClass =
       displayStatus === 'active'
@@ -163,12 +204,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
         ? 'bg-blue-100 text-blue-700 border-blue-300'
         : 'bg-red-100 text-red-700 border-red-300';
 
-    // Display text: confirmed/active -> ACTIVE
-    const displayText = (status === 'confirmed' || status === 'active') 
+    // Display text
+    const displayText = displayStatus === 'active' 
       ? 'ACTIVE' 
-      : status === 'completed' 
+      : displayStatus === 'completed' 
       ? 'COMPLETED' 
-      : status?.toUpperCase() || 'ACTIVE';
+      : displayStatus?.toUpperCase() || 'ACTIVE';
 
     return (
       <span
@@ -177,7 +218,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
         {displayText}
       </span>
     );
-  }, []);
+  }, [getCalculatedStatus]);
 
   if (loading) {
     return (
@@ -234,6 +275,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 <TableHead className="font-semibold text-xs sm:text-sm hidden lg:table-cell">Date</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm hidden xl:table-cell">Time Slot</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm">Amount</TableHead>
+                <TableHead className="font-semibold text-xs sm:text-sm hidden md:table-cell">Source</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm hidden sm:table-cell">Status</TableHead>
                 <TableHead className="font-semibold text-xs sm:text-sm text-center">Action</TableHead>
               </TableRow>
@@ -252,7 +294,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     className="cursor-pointer hover:bg-gray-50 transition-colors"
                   >
                     <TableCell className="font-mono text-xs">
-                      {booking._id.slice(-8).toUpperCase()}
+                      CWPA{parseInt(booking._id.slice(-8), 16).toString().slice(-4).padStart(4, '0')}
                     </TableCell>
                     <TableCell className="font-medium text-xs sm:text-sm">
                       {booking.name}
@@ -275,12 +317,21 @@ const AdminTable: React.FC<AdminTableProps> = ({
                       </span>
                     </TableCell>
                     <TableCell className="font-semibold text-primary-600 text-xs sm:text-sm">
-                      <div>₹{booking.finalPrice}</div>
-                      {booking.discountPercentage > 0 && (
+                      <div>₹{booking.totalPrice || booking.finalPrice || 'N/A'}</div>
+                      {booking.discountPercentage > 0 && booking.basePrice && (
                         <div className="text-[10px] text-gray-400 line-through">₹{booking.basePrice}</div>
                       )}
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">{getStatusBadge(booking.status)}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        booking.source === 'offline' 
+                          ? 'bg-orange-50 text-orange-700' 
+                          : 'bg-green-50 text-green-700'
+                      }`}>
+                        {booking.source === 'offline' ? 'Offline' : 'Online'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{getStatusBadge(booking.status, booking)}</TableCell>
                     <TableCell className="text-center">
                       <Button
                         variant="ghost"
@@ -327,6 +378,15 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     </TableCell>
                     <TableCell className="font-semibold text-primary-600 text-xs sm:text-sm">
                       ₹{booking.totalAmount}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        (booking as any).bookingType === 'offline' 
+                          ? 'bg-orange-50 text-orange-700' 
+                          : 'bg-green-50 text-green-700'
+                      }`}>
+                        {(booking as any).bookingType === 'offline' ? 'Offline' : 'Online'}
+                      </span>
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{getStatusBadge(booking.status)}</TableCell>
                     <TableCell className="text-center">
@@ -416,8 +476,8 @@ const AdminTable: React.FC<AdminTableProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center">
                     <Hash className="w-4 h-4 mr-2 text-gray-600" />
-                    <span className="font-medium">ID:</span>
-                    <span className="ml-2 font-mono">{selectedTurfBooking._id.slice(-8).toUpperCase()}</span>
+                    <span className="font-medium">Ref:</span>
+                    <span className="ml-2 font-mono">CWPA{parseInt(selectedTurfBooking._id.slice(-8), 16).toString().slice(-4).padStart(4, '0')}</span>
                   </div>
                   <div className="flex items-center">
                     <MapPin className="w-4 h-4 mr-2 text-gray-600" />
@@ -446,25 +506,44 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     <span className="ml-2 capitalize">{selectedTurfBooking.bookingType}</span>
                   </div>
                   <div className="flex items-center">
+                    <span className="font-medium">Source:</span>
+                    <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
+                      selectedTurfBooking.source === 'offline' 
+                        ? 'bg-orange-50 text-orange-700' 
+                        : 'bg-green-50 text-green-700'
+                    }`}>
+                      {selectedTurfBooking.source === 'offline' ? 'Offline (Walk-in)' : 'Online'}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
                     <span className="font-medium">Status:</span>
-                    <span className="ml-2">{getStatusBadge(selectedTurfBooking.status)}</span>
+                    <span className="ml-2">{getStatusBadge(selectedTurfBooking.status, selectedTurfBooking)}</span>
                   </div>
                   <div className="flex items-center col-span-2 pt-3 border-t">
                     <div className="w-full">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-gray-600">Original Price:</span>
-                        <span className="text-gray-600">₹{selectedTurfBooking.basePrice}</span>
-                      </div>
-                      {selectedTurfBooking.discountPercentage > 0 && (
-                        <div className="flex justify-between items-center mb-1 text-green-600">
-                          <span>Discount ({selectedTurfBooking.discountPercentage}%):</span>
-                          <span>-₹{selectedTurfBooking.basePrice - selectedTurfBooking.finalPrice}</span>
+                      {selectedTurfBooking.basePrice ? (
+                        <>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-gray-600">Original Price:</span>
+                            <span className="text-gray-600">₹{selectedTurfBooking.basePrice}</span>
+                          </div>
+                          {selectedTurfBooking.discountPercentage > 0 && (
+                            <div className="flex justify-between items-center mb-1 text-green-600">
+                              <span>Discount ({selectedTurfBooking.discountPercentage}%):</span>
+                              <span>-₹{selectedTurfBooking.basePrice - (selectedTurfBooking.finalPrice || 0)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center pt-2 border-t">
+                            <span className="text-lg font-semibold">Final Amount:</span>
+                            <span className="text-2xl font-bold text-primary-600">₹{selectedTurfBooking.totalPrice || selectedTurfBooking.finalPrice || 'N/A'}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex justify-between items-center">
+                          <span className="text-lg font-semibold">Amount:</span>
+                          <span className="text-xl font-bold text-gray-500">Price not available</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-center pt-2 border-t">
-                        <span className="text-lg font-semibold">Final Amount:</span>
-                        <span className="text-2xl font-bold text-primary-600">₹{selectedTurfBooking.finalPrice}</span>
-                      </div>
                     </div>
                   </div>
                 </div>

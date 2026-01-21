@@ -34,15 +34,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    console.log(`Fetching slots for: ${sport} - ${bookingType} on ${date}`);
+
     // Fetch booked slots for the given date and sport
+    // Include both 'confirmed' and 'completed' status as slots are still occupied
+    // Only 'cancelled' bookings should free up slots
     const bookedSlots = await TurfBooking.find({
       date,
       sport,
       bookingType,
-      status: 'confirmed',
+      status: { $in: ['confirmed', 'completed'] },
     }).select('slot -_id');
 
-    const bookedSlotsList = bookedSlots.map((booking) => booking.slot);
+    // Handle both single slots and comma-separated multi-slot bookings
+    const bookedSlotsList: string[] = [];
+    bookedSlots.forEach((booking) => {
+      // Split comma-separated slots and trim whitespace
+      const slots = booking.slot.split(',').map((s: string) => s.trim());
+      bookedSlotsList.push(...slots);
+    });
+
+    console.log(`Found ${bookedSlots.length} bookings with ${bookedSlotsList.length} total slots booked:`, bookedSlotsList);
 
     // Fetch frozen slots for the given date and sport
     const frozenSlots = await Slot.find({

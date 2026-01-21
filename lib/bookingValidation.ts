@@ -33,7 +33,7 @@ export interface BookingFormData {
   bookingType: 'match' | 'practice';
   sport: string;
   date: string;
-  slot: string;
+  slot: string | string[]; // Support both single and multiple slots
   name: string;
   mobile: string;
   email: string;
@@ -143,12 +143,21 @@ export const validateBookingForm = (
   }
 
   // Validate slot
-  if (!data.slot) {
+  if (!data.slot || (Array.isArray(data.slot) && data.slot.length === 0)) {
     errors.push({
       field: 'slot',
-      message: 'Please select a time slot',
+      message: 'Please select at least one time slot',
     });
-  } else if (!AVAILABLE_SLOTS.includes(data.slot)) {
+  } else if (Array.isArray(data.slot)) {
+    // Validate each slot in the array
+    const invalidSlots = data.slot.filter(s => !AVAILABLE_SLOTS.includes(s));
+    if (invalidSlots.length > 0) {
+      errors.push({
+        field: 'slot',
+        message: 'One or more invalid time slots selected',
+      });
+    }
+  } else if (typeof data.slot === 'string' && !AVAILABLE_SLOTS.includes(data.slot)) {
     errors.push({
       field: 'slot',
       message: 'Invalid time slot selected',

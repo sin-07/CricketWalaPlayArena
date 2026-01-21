@@ -36,7 +36,6 @@ const CouponSchema = new Schema<ICoupon>(
       minlength: [3, 'Code must be at least 3 characters'],
       maxlength: [20, 'Code must not exceed 20 characters'],
       match: [/^[A-Z0-9]+$/, 'Code must contain only uppercase letters and numbers'],
-      index: true,
     },
     discountType: {
       type: String,
@@ -141,8 +140,7 @@ const CouponSchema = new Schema<ICoupon>(
   }
 );
 
-// Index for faster queries
-CouponSchema.index({ code: 1 });
+// Index for faster queries (code index not needed - unique:true already creates it)
 CouponSchema.index({ isActive: 1, expiryDate: 1 });
 CouponSchema.index({ assignedUsers: 1 });
 CouponSchema.index({ createdAt: -1 });

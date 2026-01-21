@@ -17,6 +17,7 @@ export interface ITurfBooking extends Document {
   totalPrice?: number; // Final total: finalPrice + bookingCharge
   advancePayment?: number; // Amount paid online (for match bookings)
   remainingPayment?: number; // Amount to be paid offline at turf
+  source: 'online' | 'offline'; // Booking source - online or admin offline booking
   status: 'confirmed' | 'cancelled' | 'completed';
   createdAt: Date;
   updatedAt: Date;
@@ -109,6 +110,11 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
       type: Number,
       default: 0,
       min: 0,
+    },
+    source: {
+      type: String,
+      enum: ['online', 'offline'],
+      default: 'online',
     },
     status: {
       type: String,
