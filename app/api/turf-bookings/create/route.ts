@@ -120,7 +120,12 @@ export async function POST(request: NextRequest) {
 
     // Calculate final price: price after weekly discount - coupon discount
     const finalPriceAfterAllDiscounts = Math.max(0, priceAfterWeeklyDiscount - couponDiscount);
-    const totalPrice = finalPriceAfterAllDiscounts + pricing.bookingCharge;
+    
+    // For match bookings: NO additional booking charge (base price ₹1200 already includes it)
+    // For practice bookings: ADD booking charge separately
+    const totalPrice = bookingType === 'match' 
+      ? finalPriceAfterAllDiscounts 
+      : finalPriceAfterAllDiscounts + pricing.bookingCharge;
 
     // Calculate advance and remaining payments for match bookings
     const advancePayment = bookingType === 'match' 

@@ -45,6 +45,7 @@ export default function TurfBookingForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
   const [bookingPrice, setBookingPrice] = useState<{ basePrice: number; finalPrice: number; bookingCharge: number; totalPrice: number; discountPercentage: number; couponDiscount?: number; couponCode?: string } | null>(null);
+  const [confirmedBookingDetails, setConfirmedBookingDetails] = useState<{ sport: string; date: string; slot: string; bookingType: string; email: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -74,6 +75,33 @@ export default function TurfBookingForm({
       return () => clearTimeout(timer);
     }
   }, [serverError]);
+
+  // Freeze background scrolling when modal is open
+  React.useEffect(() => {
+    if (showSuccessModal || showConfirmModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showSuccessModal, showConfirmModal]);
+
+  // Freeze background scrolling when modal is open
+  React.useEffect(() => {
+    if (showSuccessModal || showConfirmModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [showSuccessModal, showConfirmModal]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -237,6 +265,11 @@ export default function TurfBookingForm({
       finalPriceAfterAllDiscounts = Math.max(0, pricing.finalPrice - appliedCoupon.discount);
     }
     
+    // For match bookings, booking charge is already included in base price (₹1200)
+    // So total = finalPrice (no additional charge)
+    // For practice bookings, add booking charge separately
+    const effectiveBookingCharge = formData.bookingType === 'match' ? 0 : pricing.bookingCharge;
+    
     return {
       basePrice: pricing.basePrice,
       weeklyDiscount: pricing.discountAmount,
@@ -244,8 +277,8 @@ export default function TurfBookingForm({
       priceAfterWeeklyDiscount: pricing.finalPrice,
       couponDiscount: appliedCoupon?.discount || 0,
       finalPrice: finalPriceAfterAllDiscounts,
-      bookingCharge: pricing.bookingCharge,
-      totalPrice: finalPriceAfterAllDiscounts + pricing.bookingCharge,
+      bookingCharge: effectiveBookingCharge,
+      totalPrice: finalPriceAfterAllDiscounts + effectiveBookingCharge,
     };
   };
 
@@ -309,7 +342,15 @@ export default function TurfBookingForm({
         return;
       }
 
-      // Success
+      // Success - Store booking data from response
+      const bookingData = {
+        sport: data.data?.sport || formData.sport,
+        date: data.data?.date || formData.date,
+        slot: data.data?.slot || formData.slot,
+        bookingType: data.data?.bookingType || formData.bookingType,
+        email: formData.email,
+      };
+      
       setSuccessMessage('Booking confirmed! Check your email for details.');
       setBookingRef(data.data?.bookingRef || 'N/A');
       setBookingPrice({
@@ -321,7 +362,12 @@ export default function TurfBookingForm({
         couponDiscount: data.data?.couponDiscount || 0,
         couponCode: data.data?.couponCode || undefined,
       });
+      
+      // Store confirmed booking details separately
+      setConfirmedBookingDetails(bookingData);
+      
       setShowSuccessModal(true);
+      
       // Reset form including coupon
       setFormData({
         bookingType,
@@ -374,205 +420,151 @@ export default function TurfBookingForm({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="bg-white shadow-2xl w-full max-w-sm sm:max-w-md max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-white shadow-2xl w-full max-w-sm sm:max-w-lg max-h-[92vh] overflow-hidden flex flex-col border border-gray-200"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Green Header */}
-              <div className="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 py-6 sm:py-8 flex justify-center relative overflow-hidden flex-shrink-0">
-                {/* Animated Background Circles */}
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                  className="absolute top-0 right-0 w-32 sm:w-40 h-32 sm:h-40 bg-white -translate-y-1/2 translate-x-1/2"
-                />
-                <motion.div
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.15, 0.1] }}
-                  transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
-                  className="absolute bottom-0 left-0 w-24 sm:w-32 h-24 sm:h-32 bg-white translate-y-1/2 -translate-x-1/2"
-                />
-                
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                  className="relative"
-                >
-                  <div className="bg-white rounded-full p-3 sm:p-4 shadow-xl">
-                    <motion.div
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{ delay: 0.4, duration: 0.5 }}
-                    >
-                      <CheckCircle2 className="w-12 h-12 sm:w-16 sm:h-16 text-green-600" />
-                    </motion.div>
+              {/* Professional Header */}
+              <div className="bg-white border-b border-gray-200 px-5 py-4 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 rounded-full p-2">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
                   </div>
-                  {/* Celebration Particles */}
-                  {[...Array(6)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ scale: 0, x: 0, y: 0 }}
-                      animate={{
-                        scale: [0, 1, 0],
-                        x: [0, (i % 2 === 0 ? 1 : -1) * (30 + i * 10)],
-                        y: [0, -20 - i * 8],
-                      }}
-                      transition={{ delay: 0.5 + i * 0.1, duration: 0.8 }}
-                      className="absolute top-1/2 left-1/2 w-2 h-2 rounded-full"
-                      style={{
-                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'][i],
-                      }}
-                    />
-                  ))}
-                </motion.div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Booking Confirmed</h2>
+                    <p className="text-xs text-gray-500">Ref: <span className="font-mono font-semibold text-green-600">{bookingRef}</span></p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSuccessModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 text-center">
-                  Booking Confirmed!
-                </h2>
-
-                <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-5 text-center">
-                  Your turf booking has been confirmed successfully.
-                </p>
-
+              <div className="flex-1 overflow-y-auto overscroll-contain p-5 bg-gray-50">
                 {/* Booking Details Card */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 sm:p-5 mb-4 border border-green-200 shadow-sm">
-                  <div className="space-y-3 text-left">
-                    <div className="flex justify-between items-center pb-2 border-b border-green-200">
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">Booking Type</p>
-                      <p className="text-sm sm:text-base text-gray-900 capitalize font-bold bg-green-100 px-2 sm:px-3 py-1 rounded-full flex items-center gap-1">
-                        {formData.bookingType === 'match' ? <Trophy className="w-4 h-4" /> : <Target className="w-4 h-4" />}
-                        {formData.bookingType === 'match' ? 'Match' : 'Practice'}
+                <div className="bg-white border border-gray-200 shadow-sm mb-4">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Booking Details</h3>
+                  </div>
+                  <div className="p-4 space-y-2.5">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-gray-600">Booking Type</p>
+                      <p className="text-sm text-gray-900 font-semibold capitalize bg-green-50 px-2.5 py-1 flex items-center gap-1.5">
+                        {confirmedBookingDetails?.bookingType === 'match' ? <Trophy className="w-3.5 h-3.5 text-green-600" /> : <Target className="w-3.5 h-3.5 text-green-600" />}
+                        {confirmedBookingDetails?.bookingType === 'match' ? 'Match' : 'Practice'}
                       </p>
                     </div>
                     <div className="flex justify-between items-center">
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">Sport</p>
-                      <p className="text-sm sm:text-base text-gray-900 font-bold">{formData.sport || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">Sport</p>
+                      <p className="text-sm text-gray-900 font-semibold capitalize">{confirmedBookingDetails?.sport || 'N/A'}</p>
                     </div>
                     <div className="flex justify-between items-center">
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">Date & Time</p>
-                      <p className="text-sm sm:text-base text-gray-900 font-bold">{formData.date} • {formData.slot || 'N/A'}</p>
+                      <p className="text-sm text-gray-600">Date & Time</p>
+                      <p className="text-sm text-gray-900 font-semibold">{confirmedBookingDetails?.date} • {confirmedBookingDetails?.slot || 'N/A'}</p>
                     </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-green-200">
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">Booking Reference</p>
-                      <p className="text-sm sm:text-base text-green-600 font-mono font-bold">{bookingRef}</p>
+                  </div>
+                </div>
+
+                {/* Pricing Section */}
+                {bookingPrice && (
+                  <div className="bg-white border border-gray-200 shadow-sm mb-4">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Payment Summary</h3>
                     </div>
-                    
-                    {/* Pricing Section */}
-                    {bookingPrice && (
-                      <div className="mt-3 pt-3 border-t border-green-200 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs sm:text-sm text-gray-600">Original Price</p>
-                          <p className={`text-sm sm:text-base font-semibold ${bookingPrice.discountPercentage > 0 ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                    <div className="p-4 space-y-2.5">\n                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">Original Price</p>
+                          <p className={`text-sm font-semibold ${bookingPrice.discountPercentage > 0 ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                             ₹{bookingPrice.basePrice}
                           </p>
                         </div>
                         
                         {bookingPrice.discountPercentage > 0 && (
-                          <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="flex justify-between items-center bg-green-100 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg"
-                          >
-                            <p className="text-xs sm:text-sm text-green-700 font-medium">
+                          <div className="flex justify-between items-center bg-green-50 px-3 py-1.5 border border-green-100">
+                            <p className="text-xs text-green-700 font-medium">
                               Weekly Offer ({bookingPrice.discountPercentage}%)
                             </p>
-                            <p className="text-sm sm:text-base font-bold text-green-700">
+                            <p className="text-sm font-bold text-green-700">
                               -₹{(bookingPrice.basePrice - bookingPrice.finalPrice - (bookingPrice.couponDiscount || 0)).toFixed(0)}
                             </p>
-                          </motion.div>
+                          </div>
                         )}
                         
                         {/* Coupon Discount */}
                         {bookingPrice.couponDiscount && bookingPrice.couponDiscount > 0 && (
-                          <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="flex justify-between items-center bg-purple-100 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg"
-                          >
-                            <p className="text-xs sm:text-sm text-purple-700 font-medium flex items-center gap-1">
+                          <div className="flex justify-between items-center bg-purple-50 px-3 py-1.5 border border-purple-100">
+                            <p className="text-xs text-purple-700 font-medium flex items-center gap-1">
                               <Tag className="w-3 h-3" />
                               Coupon {bookingPrice.couponCode && `(${bookingPrice.couponCode})`}
                             </p>
                             <p className="text-sm sm:text-base font-bold text-purple-700">
                               -₹{bookingPrice.couponDiscount}
                             </p>
-                          </motion.div>
+                          </div>
                         )}
                         
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs sm:text-sm text-gray-600">Discounted Price</p>
-                          <p className="text-base sm:text-lg font-bold text-green-600">₹{bookingPrice.finalPrice}</p>
+                        <div className="flex justify-between items-center pt-2 border-t border-gray-200 bg-green-50 px-3 py-2.5 border border-green-100">
+                          <p className="text-sm text-green-700 font-semibold">Discounted Price</p>
+                          <p className="text-base font-bold text-green-700">₹{bookingPrice.finalPrice}</p>
                         </div>
                         
-                        <div className="flex justify-between items-center">
-                          <p className="text-xs sm:text-sm text-gray-600">Booking Charge</p>
-                          <p className="text-sm sm:text-base font-semibold text-gray-900">₹{bookingPrice.bookingCharge}</p>
-                        </div>
+                        {/* Only show booking charge for practice bookings */}
+                        {confirmedBookingDetails?.bookingType === 'practice' && bookingPrice.bookingCharge > 0 && (
+                          <div className="flex justify-between items-center">
+                            <p className="text-sm text-gray-600">Booking Charge</p>
+                            <p className="text-sm font-semibold text-gray-900">₹{bookingPrice.bookingCharge}</p>
+                          </div>
+                        )}
                         
-                        <motion.div
-                          initial={{ scale: 0.95 }}
-                          animate={{ scale: 1 }}
-                          className="flex justify-between items-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl mt-2"
-                        >
-                          <p className="text-sm sm:text-base font-bold">Total Amount</p>
-                          <p className="text-lg sm:text-2xl font-bold">₹{bookingPrice.totalPrice}</p>
-                        </motion.div>
+                        <div className="flex justify-between items-center bg-gray-900 text-white px-4 py-3.5 mt-3">
+                          <p className="text-sm font-semibold">Total Amount</p>
+                          <p className="text-xl font-bold">₹{bookingPrice.totalPrice}</p>
+                        </div>
 
                         {/* Advance Payment Info for Match Bookings */}
-                        {bookingType === 'match' && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="mt-3 space-y-2 p-3 bg-green-50 border border-green-200"
-                          >
-                            <div className="flex justify-between items-center">
+                        {confirmedBookingDetails?.bookingType === 'match' && (
+                          <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                            <div className="flex justify-between items-center bg-green-50 px-3 py-2.5 border border-green-100">
                               <p className="text-sm font-semibold text-green-800">Pay Now (Online)</p>
-                              <p className="text-lg font-bold text-green-700">₹{process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200}</p>
+                              <p className="text-base font-bold text-green-700">₹{process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200}</p>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <p className="text-sm font-medium text-orange-700">Pay at Turf (Offline)</p>
-                              <p className="text-base font-bold text-orange-600">
+                            <div className="flex justify-between items-center bg-orange-50 px-3 py-2.5 border border-orange-100">
+                              <p className="text-sm font-semibold text-orange-800">Pay at Turf (Offline)</p>
+                              <p className="text-base font-bold text-orange-700">
                                 ₹{Math.max(0, bookingPrice.totalPrice - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))}
                               </p>
                             </div>
-                            <p className="text-xs text-gray-600 pt-2 border-t border-green-200">
-                              💡 Only advance payment is required now. Pay remaining amount when you visit the turf.
-                            </p>
-                          </motion.div>
+                            <div className="flex gap-2 text-xs text-gray-600 bg-blue-50 px-3 py-2.5 border border-blue-100">
+                              <span className="text-blue-600 flex-shrink-0">ℹ️</span>
+                              <p>Only advance payment is required now. Pay the remaining amount when you visit the turf.</p>
+                            </div>
+                          </div>
                         )}
-                      </div>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Email Notification */}
-                <div className="bg-blue-50 p-3 sm:p-4 mb-4 border border-blue-200 flex items-start gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white border border-gray-200 shadow-sm p-4 mb-4 flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <p className="text-xs sm:text-sm text-blue-700">
-                    Confirmation email sent to <strong className="break-all">{formData.email || 'your email'}</strong>
-                  </p>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700 mb-0.5">Confirmation Email Sent</p>
+                    <p className="text-xs text-gray-600">Check <strong className="text-gray-900">{confirmedBookingDetails?.email}</strong> for booking details</p>
+                  </div>
                 </div>
 
                 {/* Close Button */}
                 <button
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 sm:py-4 px-6 transition-colors duration-200 shadow-lg"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3.5 px-6 transition-colors duration-200"
                 >
-                  Done
-                </button>
-
-                {/* Close Button */}
-                <button
-                  onClick={() => setShowSuccessModal(false)}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 sm:py-4 px-6 transition-all duration-300 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40"
-                >
-                  Done
+                  Close
                 </button>
               </div>
             </motion.div>
@@ -839,7 +831,7 @@ export default function TurfBookingForm({
                       
                       {/* Weekly Discount */}
                       {totalPricing.weeklyDiscountPercentage > 0 && (
-                        <div className="flex justify-between items-center text-sm bg-green-100 px-3 py-1.5 rounded-lg">
+                        <div className="flex justify-between items-center text-sm bg-green-100 px-3 py-1.5">
                           <span className="text-green-700">Weekly Discount ({totalPricing.weeklyDiscountPercentage}%):</span>
                           <span className="font-semibold text-green-700">-₹{totalPricing.weeklyDiscount.toFixed(0)}</span>
                         </div>
@@ -855,17 +847,13 @@ export default function TurfBookingForm({
                       
                       {/* Coupon Discount (if applied) */}
                       {appliedCoupon && totalPricing.couponDiscount > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="flex justify-between items-center text-sm bg-purple-100 px-3 py-1.5 rounded-lg"
-                        >
+                        <div className="flex justify-between items-center text-sm bg-purple-100 px-3 py-1.5">
                           <span className="text-purple-700 flex items-center gap-1">
                             <Tag className="w-3 h-3" />
                             Coupon ({appliedCoupon.code}):
                           </span>
                           <span className="font-semibold text-purple-700">-₹{totalPricing.couponDiscount.toFixed(0)}</span>
-                        </motion.div>
+                        </div>
                       )}
                       
                       {/* Final Price */}
