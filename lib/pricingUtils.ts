@@ -92,7 +92,8 @@ export function calculateFinalPrice(
   const discountPercentage = getDiscountPercentage(dateStr);
   const discountAmount = (basePrice * discountPercentage) / 100;
   const finalPrice = basePrice - discountAmount;
-  const totalPrice = finalPrice + BOOKING_CHARGE;
+  // For match bookings, no additional booking charge - total is same as final price
+  const totalPrice = bookingType === 'match' ? finalPrice : finalPrice + BOOKING_CHARGE;
   const dayName = getDayName(dateStr);
 
   return {

@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, User, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
+import { GiCricketBat } from 'react-icons/gi';
 
 export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
@@ -12,6 +13,7 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,16 +31,53 @@ export default function AdminLoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        router.push('/admin');
+        setLoginSuccess(true);
+        // Small delay to show the success animation
+        setTimeout(() => {
+          router.push('/admin');
+        }, 800);
       } else {
         setError(data.error || 'Invalid credentials');
+        setLoading(false);
       }
     } catch (err) {
       setError('Login failed. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
+
+  // Show loader when login is successful
+  if (loginSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-emerald-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <motion.div
+            animate={{ rotate: [0, -20, 20, -20, 0] }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-xl shadow-green-500/30 flex items-center justify-center"
+          >
+            <GiCricketBat className="w-10 h-10 text-white" />
+          </motion.div>
+          <div className="flex items-center gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600"
+              />
+            ))}
+          </div>
+          <p className="text-green-700 font-medium">Welcome! Loading Dashboard...</p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-emerald-50 flex items-center justify-center px-4 py-8 relative overflow-hidden">

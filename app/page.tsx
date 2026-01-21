@@ -254,21 +254,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-green-600 to-green-700 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">Ready to Book Your Slot?</h2>
-          <p className="text-sm sm:text-base md:text-lg text-green-100 mb-5 sm:mb-8 px-4">Join thousands of cricket enthusiasts and book your perfect slot today</p>
-          <Link
-            href="/booking"
-            className="inline-flex items-center gap-2 px-5 sm:px-6 md:px-8 py-3 sm:py-4 bg-white text-green-600 font-bold rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base"
-          >
-            Book Your Slot Now
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Link>
-        </div>
-      </section>
-
       {/* Gallery Section */}
       <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-6xl mx-auto">

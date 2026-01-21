@@ -6,6 +6,8 @@ import { validateBookingForm } from '@/lib/bookingValidation';
 import { validateSlotNotFrozen } from '@/lib/frozenSlotValidation';
 import { calculateFinalPrice } from '@/lib/pricingUtils';
 import { validateCoupon, incrementCouponUsage } from '@/lib/couponValidation';
+import { generateBookingPDF } from '@/lib/pdfGenerator';
+import { sendBookingConfirmation } from '@/lib/emailService';
 
 /**
  * POST /api/turf-bookings/create
@@ -120,6 +122,14 @@ export async function POST(request: NextRequest) {
     const finalPriceAfterAllDiscounts = Math.max(0, priceAfterWeeklyDiscount - couponDiscount);
     const totalPrice = finalPriceAfterAllDiscounts + pricing.bookingCharge;
 
+    // Calculate advance and remaining payments for match bookings
+    const advancePayment = bookingType === 'match' 
+      ? Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200 
+      : totalPrice; // Practice bookings pay full amount
+    const remainingPayment = bookingType === 'match' 
+      ? Math.max(0, totalPrice - advancePayment)
+      : 0;
+
     const newBooking = new TurfBooking({
       bookingType,
       sport,
@@ -135,6 +145,8 @@ export async function POST(request: NextRequest) {
       couponDiscount: couponDiscount,
       bookingCharge: pricing.bookingCharge,
       totalPrice: totalPrice,
+      advancePayment: advancePayment,
+      remainingPayment: remainingPayment,
       status: 'confirmed',
     });
 
@@ -148,6 +160,49 @@ export async function POST(request: NextRequest) {
         mobile,
         newBooking._id.toString()
       );
+    }
+
+    // Generate PDF and send confirmation email with booking receipt
+    try {
+      const pdfBuffer = await generateBookingPDF({
+        bookingId: newBooking._id.toString(),
+        bookingType: newBooking.bookingType,
+        sport: newBooking.sport,
+        date: newBooking.date,
+        slot: newBooking.slot,
+        name: newBooking.name,
+        mobile: newBooking.mobile,
+        email: newBooking.email,
+        basePrice: newBooking.basePrice,
+        finalPrice: newBooking.finalPrice,
+        discountPercentage: newBooking.discountPercentage,
+        couponCode: newBooking.couponCode,
+        couponDiscount: newBooking.couponDiscount || 0,
+        bookingCharge: newBooking.bookingCharge || 0,
+        totalPrice: newBooking.totalPrice || 0,
+        advancePayment: newBooking.advancePayment || 0,
+        remainingPayment: newBooking.remainingPayment || 0,
+        createdAt: newBooking.createdAt,
+      });
+
+      await sendBookingConfirmation(
+        email,
+        {
+          bookingId: newBooking._id.toString(),
+          name: newBooking.name,
+          bookingType: newBooking.bookingType,
+          sport: newBooking.sport,
+          date: newBooking.date,
+          slot: newBooking.slot,
+          totalPrice: newBooking.totalPrice || 0,
+          advancePayment: newBooking.advancePayment || 0,
+          remainingPayment: newBooking.remainingPayment || 0,
+        },
+        pdfBuffer
+      );
+    } catch (emailError) {
+      console.error('Failed to send booking confirmation email:', emailError);
+      // Don't fail the booking if email fails
     }
 
     // Return confirmation
@@ -170,6 +225,8 @@ export async function POST(request: NextRequest) {
           couponDiscount: newBooking.couponDiscount,
           bookingCharge: newBooking.bookingCharge,
           totalPrice: newBooking.totalPrice,
+          advancePayment: newBooking.advancePayment,
+          remainingPayment: newBooking.remainingPayment,
           couponError: couponError, // Include any coupon validation error
           createdAt: newBooking.createdAt,
         },

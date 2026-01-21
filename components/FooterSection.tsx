@@ -4,10 +4,24 @@ import React from 'react';
 import Link from 'next/link';
 import { GiCricketBat } from 'react-icons/gi';
 import { Phone, MessageCircle, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import NewsletterSubscribe from './NewsletterSubscribe';
 
 export default function FooterSection() {
   return (
     <footer className="w-full bg-black text-gray-400 mt-auto border-t border-gray-800">
+      {/* Newsletter Section */}
+      <div className="w-full py-8 sm:py-12 bg-gradient-to-r from-gray-900 via-gray-900 to-gray-900 border-b border-gray-800">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-6">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Stay Updated! 📬</h3>
+            <p className="text-gray-400 text-sm sm:text-base">
+              Subscribe for exclusive offers, slot alerts & cricket updates
+            </p>
+          </div>
+          <NewsletterSubscribe variant="inline" />
+        </div>
+      </div>
+
       {/* Main Footer Content */}
       <div className="w-full py-8 sm:py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,7 +37,7 @@ export default function FooterSection() {
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-gray-400 leading-relaxed mb-4 sm:mb-6 max-w-md mx-auto sm:mx-0">
-                Premium cricket turf booking platform in Patna. Experience professional-grade facilities with easy online booking.
+                Premium cricket turf booking platform in Kanti Factory, Patna, Bihar. Experience professional-grade facilities with easy online booking.
               </p>
               {/* Social Media Links */}
               <div className="flex gap-2.5 sm:gap-3 justify-center sm:justify-start">

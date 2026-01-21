@@ -15,18 +15,18 @@ export default function BookingPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
+        staggerChildren: 0.05,
+        delayChildren: 0,
       },
     },
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 },
+      transition: { duration: 0.2 },
     },
   };
 
@@ -38,34 +38,11 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
+      {/* Static Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-          className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-green-200/40 to-emerald-300/40 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -80, 0],
-            y: [0, 60, 0],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
-          className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-teal-200/40 to-cyan-300/40 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, 50, 0],
-            y: [0, -30, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-lime-200/30 to-green-200/30 rounded-full blur-3xl"
-        />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-green-200/30 to-emerald-300/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-cyan-300/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-lime-200/20 to-green-200/20 rounded-full blur-3xl" />
       </div>
 
       <motion.div
@@ -78,9 +55,9 @@ export default function BookingPage() {
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center mb-6 sm:mb-8">
             <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-2"
             >
               <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-xl shadow-green-500/30 flex items-center justify-center">
@@ -100,18 +77,18 @@ export default function BookingPage() {
             <div className="relative bg-white/60 backdrop-blur-md p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-lg border border-white/50">
               {/* Sliding Background */}
               <motion.div
-                layoutId="activeTab"
-                className="absolute inset-y-1 sm:inset-y-1.5 w-[calc(50%-4px)] sm:w-[calc(50%-6px)] bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg sm:rounded-xl shadow-lg"
+                className="absolute inset-y-1 sm:inset-y-1.5 left-1 sm:left-1.5 w-[calc(50%-4px)] sm:w-[calc(50%-6px)] rounded-lg sm:rounded-xl shadow-lg bg-gradient-to-r from-green-500 to-emerald-600"
+                initial={false}
                 animate={{
-                  x: activeTab === 'match' ? 4 : 'calc(100% + 4px)',
+                  x: activeTab === 'match' ? 0 : '100%',
                 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
               />
               
               <div className="relative flex gap-1 sm:gap-1.5">
                 <button
                   onClick={() => setActiveTab('match')}
-                  className={`flex-1 py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 ${
+                  className={`flex-1 py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 ${
                     activeTab === 'match'
                       ? 'text-white'
                       : 'text-gray-600 hover:text-gray-900'
@@ -122,7 +99,7 @@ export default function BookingPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('practice')}
-                  className={`flex-1 py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 ${
+                  className={`flex-1 py-2.5 sm:py-3 md:py-4 px-3 sm:px-4 md:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-150 flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 ${
                     activeTab === 'practice'
                       ? 'text-white'
                       : 'text-gray-600 hover:text-gray-900'
@@ -143,7 +120,7 @@ export default function BookingPage() {
                 initial={{ rotateY: 90, opacity: 0 }}
                 animate={{ rotateY: 0, opacity: 1 }}
                 exit={{ rotateY: -90, opacity: 0 }}
-                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
                 style={{ transformStyle: 'preserve-3d', perspective: 1000 }}
                 className="bg-white/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl shadow-green-900/10 border border-white/50 overflow-hidden"
               >
@@ -180,8 +157,8 @@ export default function BookingPage() {
           {/* Info Cards */}
           <motion.div variants={itemVariants} className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <motion.div
-              whileHover={{ scale: 1.02, y: -2 }}
-              transition={{ type: 'spring', stiffness: 300 }}
+              whileHover={{ scale: 1.01, y: -1 }}
+              transition={{ duration: 0.15 }}
               className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 sm:p-6 border border-blue-100 shadow-lg shadow-blue-900/5"
             >
               <div className="flex items-start gap-3 sm:gap-4">
@@ -198,8 +175,8 @@ export default function BookingPage() {
             </motion.div>
 
             <motion.div
-              whileHover={{ scale: 1.02, y: -2 }}
-              transition={{ type: 'spring', stiffness: 300 }}
+              whileHover={{ scale: 1.01, y: -1 }}
+              transition={{ duration: 0.15 }}
               className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 sm:p-6 border border-purple-100 shadow-lg shadow-purple-900/5"
             >
               <div className="flex items-start gap-3 sm:gap-4">

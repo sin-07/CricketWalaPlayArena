@@ -3,6 +3,7 @@ import { Sora } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/Header'
 import FooterSection from '@/components/FooterSection'
+import PageLoaderWrapper from '@/components/PageLoaderWrapper'
 
 const sora = Sora({ 
   subsets: ['latin'],
@@ -13,10 +14,10 @@ const sora = Sora({
 // SEO Metadata
 export const metadata: Metadata = {
   title: {
-    default: 'Cricket Wala Play Arena - Book Cricket Box in Patna',
+    default: 'Cricket Wala Play Arena - Book Cricket Box in Kanti Factory, Patna, Bihar',
     template: '%s | Cricket Wala Play Arena'
   },
-  description: 'Book your cricket practice session at Cricket Wala Play Arena in Patna. Premium indoor cricket box with professional equipment. Easy online booking, affordable rates ₹10/hour. Open 6 AM - 12 AM.',
+  description: 'Book your cricket practice session at Cricket Wala Play Arena in Kanti Factory, Patna, Bihar. Premium indoor cricket box with professional equipment. Easy online booking, affordable rates ₹10/hour. Open 6 AM - 12 AM.',
   keywords: [
     'cricket box patna',
     'cricket practice patna',
@@ -25,7 +26,10 @@ export const metadata: Metadata = {
     'book cricket slot',
     'cricket net practice',
     'sports booking patna',
-    'cricket training patna'
+    'cricket training patna',
+    'kanti factory cricket',
+    'cricket box kanti factory',
+    'cricket box bihar'
   ],
   authors: [{ name: 'Cricket Wala Play Arena' }],
   creator: 'Cricket Wala Play Arena',
@@ -44,8 +48,8 @@ export const metadata: Metadata = {
     locale: 'en_IN',
     url: 'https://www.cricketwalaplayarena.in',
     siteName: 'Cricket Wala Play Arena',
-    title: 'Cricket Wala Play Arena - Book Cricket Box in Patna',
-    description: 'Book your cricket practice session at Cricket Wala Play Arena. Premium indoor cricket box, easy online booking, ₹10/hour.',
+    title: 'Cricket Wala Play Arena - Book Cricket Box in Kanti Factory, Patna, Bihar',
+    description: 'Book your cricket practice session at Cricket Wala Play Arena in Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking, ₹10/hour.',
     images: [
       {
         url: '/og-image.jpg',
@@ -57,8 +61,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cricket Wala Play Arena - Book Cricket Box in Patna',
-    description: 'Book your cricket practice session. Premium indoor cricket box, easy online booking.',
+    title: 'Cricket Wala Play Arena - Book Cricket Box in Kanti Factory, Patna, Bihar',
+    description: 'Book your cricket practice session at Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking.',
     images: ['/og-image.jpg'],
   },
   robots: {
@@ -100,7 +104,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "SportsActivityLocation",
               "name": "Cricket Wala Play Arena",
-              "description": "Premium indoor cricket box for practice sessions in Patna",
+              "description": "Premium indoor cricket box for practice sessions in Kanti Factory, Patna, Bihar",
               "url": "https://www.cricketwalaplayarena.in",
               "telephone": "+91-8340296635",
               "address": {
@@ -130,6 +134,7 @@ export default function RootLayout({
         />
       </head>
       <body className={sora.className}>
+        <PageLoaderWrapper />
         <div className="flex flex-col min-h-screen">
           <Header />
           <main className="flex-1 pt-24 md:pt-28">

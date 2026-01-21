@@ -87,7 +87,7 @@ export default function AdminSlotFreezeManager() {
   ];
 
   const sports = ['Cricket', 'Football', 'Badminton'];
-  const bookingTypes = ['match', 'practice'];
+  const bookingTypes = ['match']; // Only match bookings can be frozen
 
   // Get current hour to filter past slots for today
   const getCurrentHour = () => {
@@ -304,7 +304,7 @@ export default function AdminSlotFreezeManager() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -319,26 +319,13 @@ export default function AdminSlotFreezeManager() {
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500">Match Frozen</p>
+                <p className="text-sm font-medium text-gray-500">Match Slots</p>
                 <p className="text-3xl font-bold text-gray-900 mt-1">
                   {frozenSlots.filter(s => s.bookingType === 'match').length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                 <Trophy className="w-6 h-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Practice Frozen</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">
-                  {frozenSlots.filter(s => s.bookingType === 'practice').length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <Target className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
@@ -389,25 +376,12 @@ export default function AdminSlotFreezeManager() {
             </div>
 
             <form onSubmit={handleFreezeBulk} className="space-y-6">
-              {/* Booking Type */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Booking Type</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {bookingTypes.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setFreezeForm({ ...freezeForm, bookingType: type as 'match' | 'practice' })}
-                      className={`px-4 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                        freezeForm.bookingType === type
-                          ? 'bg-green-600 text-white shadow-lg shadow-green-200'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {type === 'match' ? <Trophy className="w-4 h-4" /> : <Target className="w-4 h-4" />}
-                      {type === 'match' ? 'Match' : 'Practice'}
-                    </button>
-                  ))}
+              {/* Booking Type - Hidden since only match is available */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                <Trophy className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-semibold text-green-900">Match Bookings Only</p>
+                  <p className="text-xs text-green-700">Only match slots can be frozen</p>
                 </div>
               </div>
 

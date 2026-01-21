@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail } from 'lucide-react';
+import { GiCricketBat } from 'react-icons/gi';
 import AdminBookingForm from '@/components/AdminBookingForm';
 import AdminTable from '@/components/AdminTable';
 import AdminCouponManager from '@/components/AdminCouponManager';
+import AdminNewsletterManager from '@/components/AdminNewsletterManager';
 import NotificationSystem, {
   Notification,
   NotificationType,
@@ -57,7 +59,7 @@ interface Booking {
 export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter'>('bookings');
   const [turfBookings, setTurfBookings] = useState<TurfBooking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -214,8 +216,37 @@ export default function AdminDashboard() {
     setActiveTab('bookings');
   };
 
+  // Show loading screen while checking authentication
   if (!isAuthenticated && !showSessionExpired) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-emerald-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <motion.div
+            animate={{ rotate: [0, -20, 20, -20, 0] }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+            className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-xl shadow-green-500/30 flex items-center justify-center"
+          >
+            <GiCricketBat className="w-8 h-8 text-white" />
+          </motion.div>
+          <div className="flex items-center gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-green-500 to-emerald-600"
+              />
+            ))}
+          </div>
+          <p className="text-green-700 font-medium">Loading Dashboard...</p>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -388,6 +419,14 @@ export default function AdminDashboard() {
             <Tag className="w-4 h-4 mr-2" />
             Manage Coupons
           </Button>
+          <Button
+            variant={activeTab === 'newsletter' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('newsletter')}
+            className="flex items-center bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Newsletter
+          </Button>
         </motion.div>
 
         {/* Content Area */}
@@ -406,9 +445,13 @@ export default function AdminDashboard() {
                 onBookingComplete={handleBookingComplete}
               />
             </div>
-          ) : (
+          ) : activeTab === 'coupons' ? (
             <div className="max-w-7xl mx-auto">
               <AdminCouponManager />
+            </div>
+          ) : (
+            <div className="max-w-7xl mx-auto">
+              <AdminNewsletterManager />
             </div>
           )}
         </motion.div>

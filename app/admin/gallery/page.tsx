@@ -218,7 +218,7 @@ export default function AdminGallery() {
       )}
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 shadow-xl">
+      <div className="bg-green-600 shadow-xl">
         <div className="container mx-auto px-4 sm:px-6 md:px-8 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="text-white">

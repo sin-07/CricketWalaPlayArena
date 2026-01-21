@@ -15,6 +15,8 @@ export interface ITurfBooking extends Document {
   couponDiscount?: number; // Discount amount from coupon
   bookingCharge?: number; // Booking processing charge
   totalPrice?: number; // Final total: finalPrice + bookingCharge
+  advancePayment?: number; // Amount paid online (for match bookings)
+  remainingPayment?: number; // Amount to be paid offline at turf
   status: 'confirmed' | 'cancelled' | 'completed';
   createdAt: Date;
   updatedAt: Date;
@@ -94,6 +96,16 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
       min: 0,
     },
     totalPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    advancePayment: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    remainingPayment: {
       type: Number,
       default: 0,
       min: 0,

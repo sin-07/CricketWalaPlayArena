@@ -33,6 +33,10 @@ export default function SlotSelector({
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Store onSlotChange in a ref to avoid triggering useEffect
+  const onSlotChangeRef = React.useRef(onSlotChange);
+  onSlotChangeRef.current = onSlotChange;
+
   useEffect(() => {
     if (!date || !sport) {
       setSlots([]);
@@ -71,10 +75,6 @@ export default function SlotSelector({
           }
 
           setSlots(availableSlots);
-          // Reset selected slot if it's no longer available
-          if (selectedSlot && !availableSlots.find((s: Slot) => s.slot === selectedSlot && s.available)) {
-            onSlotChange('');
-          }
         } else {
           setError(data.message);
         }
@@ -87,7 +87,7 @@ export default function SlotSelector({
     };
 
     fetchSlots();
-  }, [date, sport, bookingType, selectedSlot, onSlotChange]);
+  }, [date, sport, bookingType]); // Only depend on date, sport, bookingType - NOT selectedSlot or onSlotChange
 
   const availableSlots = slots.filter((s) => s.available);
 
@@ -137,19 +137,25 @@ export default function SlotSelector({
               
               {/* Dropdown Menu */}
               <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                initial={{ opacity: 0, y: -20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                transition={{ 
+                  duration: 0.3, 
+                  ease: [0.34, 1.56, 0.64, 1],
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 20
+                }}
                 className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
               >
                 {availableSlots.map((slot, index) => (
                   <motion.button
                     key={slot.slot}
                     type="button"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.2, delay: index * 0.03 }}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2, delay: index * 0.04, ease: "easeOut" }}
                     onClick={() => handleSlotSelect(slot.slot)}
                     className={`w-full px-4 py-3 text-left hover:bg-green-50 transition-colors flex items-center justify-between group ${
                       selectedSlot === slot.slot ? 'bg-green-50 text-green-700' : 'text-gray-700'
