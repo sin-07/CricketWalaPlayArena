@@ -14,10 +14,10 @@ const sora = Sora({
 // SEO Metadata
 export const metadata: Metadata = {
   title: {
-    default: 'Cricket Wala Play Arena - Book Cricket Box in Kanti Factory, Patna, Bihar',
-    template: '%s | Cricket Wala Play Arena'
+    default: 'Cricket Wala Play Arena Patna - Book Cricket Box in Kanti Factory, Patna Bihar',
+    template: '%s | Cricket Wala Play Arena Patna'
   },
-  description: 'Book your cricket practice session at Cricket Wala Play Arena in Kanti Factory, Patna, Bihar. Premium indoor cricket box with professional equipment. Easy online booking, affordable rates ₹10/hour. Open 6 AM - 12 AM.',
+  description: 'Book your cricket practice session at Cricket Wala Play Arena Patna, located in Kanti Factory, Patna, Bihar. Premium indoor cricket box with professional equipment. Easy online booking, affordable rates ₹10/hour. Open 6 AM - 12 AM.',
   keywords: [
     'cricket box patna',
     'cricket practice patna',
@@ -47,9 +47,9 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_IN',
     url: 'https://www.cricketwalaplayarena.in',
-    siteName: 'Cricket Wala Play Arena',
-    title: 'Cricket Wala Play Arena - Book Cricket Box in Kanti Factory, Patna, Bihar',
-    description: 'Book your cricket practice session at Cricket Wala Play Arena in Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking, ₹10/hour.',
+    siteName: 'Cricket Wala Play Arena Patna',
+    title: 'Cricket Wala Play Arena Patna - Book Cricket Box in Kanti Factory, Patna Bihar',
+    description: 'Book your cricket practice session at Cricket Wala Play Arena Patna, located in Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking, affordable rates ₹10/hour.',
     images: [
       {
         url: '/og-image.jpg',
@@ -61,8 +61,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cricket Wala Play Arena - Book Cricket Box in Kanti Factory, Patna, Bihar',
-    description: 'Book your cricket practice session at Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking.',
+    title: 'Cricket Wala Play Arena Patna - Book Cricket Box in Kanti Factory, Patna Bihar',
+    description: 'Book your cricket practice session at Cricket Wala Play Arena Patna, located in Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking.',
     images: ['/og-image.jpg'],
   },
   robots: {
@@ -103,8 +103,8 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SportsActivityLocation",
-              "name": "Cricket Wala Play Arena",
-              "description": "Premium indoor cricket box for practice sessions in Kanti Factory, Patna, Bihar",
+              "name": "Cricket Wala Play Arena Patna",
+              "description": "Premium indoor cricket box for practice sessions in Kanti Factory, Patna, Bihar. Not in Varanasi - Located in Patna only.",
               "url": "https://www.cricketwalaplayarena.in",
               "telephone": "+91-8340296635",
               "address": {

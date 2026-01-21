@@ -14,23 +14,29 @@ export default function Home() {
       <OfferMarquee />
       
       {/* Hero Section */}
-      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/3 right-1/4 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-2000"></div>
+      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-50 via-emerald-100 to-green-200 text-gray-900 overflow-hidden">
+        {/* Grass Texture Background */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(34, 197, 94, 0.15) 3px, rgba(34, 197, 94, 0.15) 6px),
+                            repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(34, 197, 94, 0.15) 3px, rgba(34, 197, 94, 0.15) 6px)`,
+            backgroundSize: '40px 40px'
+          }}></div>
+          <div className="absolute top-0 left-1/4 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-48 sm:w-72 md:w-96 h-48 sm:h-72 md:h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-2000"></div>
         </div>
 
         <div className="relative max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-green-500/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-green-400/30 mb-4 sm:mb-6">
-            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="text-xs sm:text-sm font-semibold">Book your cricket slots instantly</span>
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-green-600/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-green-600/30 mb-4 sm:mb-6">
+            <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-700" />
+            <span className="text-xs sm:text-sm font-semibold text-green-900">Book your cricket slots instantly</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2">
-            Premium Cricket <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">Turf Booking</span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2 text-gray-900">
+            Premium Cricket <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Turf Booking</span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-6 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mb-6 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
             Reserve your perfect cricket turf for matches and practice sessions. Real-time availability, instant confirmation, and seamless booking experience.
           </p>
 
