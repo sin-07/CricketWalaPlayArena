@@ -37,12 +37,12 @@ export default function Home() {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mb-6 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
-            Reserve your perfect cricket turf for matches and practice sessions. Real-time availability, instant confirmation, and seamless booking experience.
+            Reserve your perfect cricket turf in <strong className="text-green-700">Kanti Factory, Patna, Bihar</strong>. Real-time availability, instant confirmation, and seamless booking experience for matches and practice sessions.
           </p>
 
           <div className="flex justify-center mb-8 sm:mb-12">
             <Link
-              href="/booking"
+              href="/turf-booking"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 py-4 sm:py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-xl shadow-green-500/30 text-base sm:text-lg transition-colors"
             >
               Click Me to Prove Your Skill at ₹200
