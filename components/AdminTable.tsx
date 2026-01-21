@@ -20,27 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Booking } from '@/types';
-
-// TurfBooking interface matching the TurfBooking model
-interface TurfBooking {
-  _id: string;
-  bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football' | 'Badminton';
-  date: string;
-  slot: string;
-  name: string;
-  mobile: string;
-  email: string;
-  basePrice: number;
-  finalPrice: number;
-  discountPercentage: number;
-  totalPrice?: number;
-  source?: 'online' | 'offline';
-  status: 'confirmed' | 'cancelled' | 'completed';
-  createdAt: string;
-  updatedAt: string;
-}
+import { Booking, TurfBooking } from '@/types';
 
 // Helper function to convert slot ID to time range
 const getTimeRange = (slotId: number): string => {

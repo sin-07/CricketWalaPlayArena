@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
     // Generate PDF and send confirmation email with booking receipt
     try {
       const pdfBuffer = await generateBookingPDF({
-        bookingId: newBooking._id.toString(),
+        bookingId: bookingRef, // Use CWPAXXXX format instead of MongoDB ObjectId
         bookingType: newBooking.bookingType,
         sport: newBooking.sport,
         date: newBooking.date,

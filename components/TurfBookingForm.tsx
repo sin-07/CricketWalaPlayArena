@@ -11,6 +11,8 @@ import {
   normalizeMobileNumber,
   getMinDate,
   type BookingFormData,
+  MATCH_SPORTS,
+  PRACTICE_SPORTS,
 } from '@/lib/bookingValidation';
 import { CheckCircle2, AlertCircle, Tag, X, Trophy, Target, Lightbulb } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
@@ -102,6 +104,21 @@ export default function TurfBookingForm({
       document.body.style.paddingRight = '';
     };
   }, [showSuccessModal, showConfirmModal]);
+
+  // Validate sport when bookingType changes - clear if invalid
+  React.useEffect(() => {
+    const validSports = bookingType === 'match' ? MATCH_SPORTS : PRACTICE_SPORTS;
+    if (formData.sport && !validSports.includes(formData.sport)) {
+      setFormData((prev) => ({
+        ...prev,
+        sport: '',
+        slot: [], // Also reset slots
+      }));
+      setAppliedCoupon(null);
+      setCouponError(null);
+      setCouponCode('');
+    }
+  }, [bookingType, formData.sport]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -479,12 +496,13 @@ export default function TurfBookingForm({
                     <div className="px-4 py-3 border-b border-gray-100">
                       <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Payment Summary</h3>
                     </div>
-                    <div className="p-4 space-y-2.5">\n                        <div className="flex justify-between items-center">
-                          <p className="text-sm text-gray-600">Original Price</p>
-                          <p className={`text-sm font-semibold ${bookingPrice.discountPercentage > 0 ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-                            ₹{bookingPrice.basePrice}
-                          </p>
-                        </div>
+                    <div className="p-4 space-y-2.5">
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">Original Price</p>
+                        <p className={`text-sm font-semibold ${bookingPrice.discountPercentage > 0 ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                          ₹{bookingPrice.basePrice}
+                        </p>
+                      </div>
                         
                         {bookingPrice.discountPercentage > 0 && (
                           <div className="flex justify-between items-center bg-green-50 px-3 py-1.5 border border-green-100">
@@ -498,7 +516,7 @@ export default function TurfBookingForm({
                         )}
                         
                         {/* Coupon Discount */}
-                        {bookingPrice.couponDiscount && bookingPrice.couponDiscount > 0 && (
+                        {bookingPrice.couponDiscount !== undefined && bookingPrice.couponDiscount > 0 && (
                           <div className="flex justify-between items-center bg-purple-50 px-3 py-1.5 border border-purple-100">
                             <p className="text-xs text-purple-700 font-medium flex items-center gap-1">
                               <Tag className="w-3 h-3" />

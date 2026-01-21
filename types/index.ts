@@ -63,3 +63,27 @@ export interface Notification {
   message: string;
   type: NotificationType;
 }
+
+// TurfBooking interface matching the TurfBooking model
+export interface TurfBooking {
+  _id: string;
+  bookingType: 'match' | 'practice';
+  sport: 'Cricket' | 'Football' | 'Badminton';
+  date: string;
+  slot: string;
+  name: string;
+  mobile: string;
+  email: string;
+  basePrice: number;
+  finalPrice: number;
+  discountPercentage: number;
+  totalPrice?: number;
+  couponCode?: string;
+  couponDiscount?: number;
+  advancePayment?: number;
+  remainingPayment?: number;
+  source?: 'online' | 'offline';
+  status: 'confirmed' | 'cancelled' | 'completed';
+  createdAt: string;
+  updatedAt: string;
+}

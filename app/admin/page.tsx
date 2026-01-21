@@ -9,54 +9,14 @@ import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
 import AdminTable from '@/components/AdminTable';
 import AdminCouponManager from '@/components/AdminCouponManager';
 import AdminNewsletterManager from '@/components/AdminNewsletterManager';
-import NotificationSystem, {
-  Notification,
-  NotificationType,
-} from '@/components/NotificationSystem';
+import NotificationSystem from '@/components/NotificationSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TurfBooking, Notification, NotificationType } from '@/types';
 import axios from 'axios';
 
 // Session timeout: 2 hours in milliseconds
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
-
-// TurfBooking interface matching the TurfBooking model
-interface TurfBooking {
-  _id: string;
-  bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football' | 'Badminton';
-  date: string;
-  slot: string;
-  name: string;
-  mobile: string;
-  email: string;
-  basePrice: number;
-  finalPrice: number;
-  discountPercentage: number;
-  totalPrice?: number;
-  source?: 'online' | 'offline';
-  status: 'confirmed' | 'cancelled' | 'completed';
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Keep old Booking interface for backward compatibility
-interface Booking {
-  _id: string;
-  boxId: number;
-  boxName: string;
-  date: string;
-  timeSlotId: number;
-  timeSlotIds: number[];
-  customerName: string;
-  email: string;
-  phone: string;
-  pricePerHour: number;
-  totalAmount: number;
-  bookingRef: string;
-  status: 'active' | 'completed' | 'cancelled';
-  createdAt: string;
-}
 
 export default function AdminDashboard() {
   const router = useRouter();

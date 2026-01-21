@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Calendar, List, LayoutDashboard, Images, LogOut, Lock, LucideIcon, Phone, MessageCircle, MapPin } from 'lucide-react';
+import { Home, Calendar, Search, LayoutDashboard, Images, LogOut, Lock, LucideIcon, Phone, MessageCircle, MapPin } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 
 interface NavItem {
@@ -91,8 +91,8 @@ const Header: React.FC = () => {
 
   const navItems: NavItem[] = [
     { path: '/', label: 'Home', icon: Home },
-    { path: '/booking', label: 'Book Now', icon: Calendar },
-    { path: '/all-bookings', label: 'All Bookings', icon: List },
+    { path: '/turf-booking', label: 'Book Now', icon: Calendar },
+    { path: '/my-bookings', label: 'My Bookings', icon: Search },
   ];
 
   const adminNavItems: NavItem[] = [

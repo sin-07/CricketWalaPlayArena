@@ -1,4 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import fs from 'fs';
+import path from 'path';
 
 interface BookingDetails {
   bookingId: string;
@@ -50,17 +52,74 @@ export async function generateBookingPDF(
     color: green,
   });
   
-  // Title
+  // Add logo (after background so it's visible) - circular style
+  let logoLoaded = false;
+  const circleCenterX = 75;
+  const circleCenterY = height - 60;
+  const circleRadius = 40;
+  
+  try {
+    const logoPath = path.join(process.cwd(), 'public', 'cwpa.jpg');
+    if (fs.existsSync(logoPath)) {
+      const logoBytes = fs.readFileSync(logoPath);
+      const logoImage = await pdfDoc.embedJpg(logoBytes);
+      
+      // Draw white circular background
+      page.drawCircle({
+        x: circleCenterX,
+        y: circleCenterY,
+        size: circleRadius,
+        color: rgb(1, 1, 1),
+      });
+      
+      // Draw logo image (sized to fit mostly within circle)
+      const logoSize = circleRadius * 1.4;
+      page.drawImage(logoImage, {
+        x: circleCenterX - logoSize / 2,
+        y: circleCenterY - logoSize / 2,
+        width: logoSize,
+        height: logoSize,
+      });
+      
+      // Draw circular border on top to create rounded clipping effect
+      // This covers the square corners of the image
+      const borderWidth = 8;
+      page.drawCircle({
+        x: circleCenterX,
+        y: circleCenterY,
+        size: circleRadius + borderWidth / 2,
+        borderColor: rgb(1, 1, 1),
+        borderWidth: borderWidth,
+      });
+      
+      // Draw green outer ring for clean circular look
+      page.drawCircle({
+        x: circleCenterX,
+        y: circleCenterY,
+        size: circleRadius + borderWidth,
+        borderColor: green,
+        borderWidth: 3,
+      });
+      
+      logoLoaded = true;
+    }
+  } catch (error) {
+    console.error('Error loading logo:', error);
+  }
+  
+  // Title - position based on whether logo was loaded
+  const textStartX = logoLoaded ? 125 : 50;
+  
   page.drawText('Cricket Wala Play Arena', {
-    x: 50,
+    x: textStartX,
     y: height - 50,
-    size: 28,
+    size: 26,
     font: helveticaBold,
     color: rgb(1, 1, 1),
   });
   
   page.drawText('Booking Confirmation Receipt', {
-    x: 50,
+    x: textStartX,
     y: height - 80,
     size: 14,
     font: helvetica,
@@ -136,10 +195,58 @@ export async function generateBookingPDF(
   addRow('Customer Name:', bookingDetails.name, true);
   addRow('Mobile Number:', `+91 ${bookingDetails.mobile}`);
   addRow('Email Address:', bookingDetails.email);
-  addRow('Booking Type:', bookingDetails.bookingType.toUpperCase(), true);
+  addRow('Booking Type:', bookingDetails.bookingType === 'match' ? 'Main Turf' : 'Practice Turf', true);
   addRow('Sport:', bookingDetails.sport);
   addRow('Date:', bookingDetails.date);
-  addRow('Time Slot:', bookingDetails.slot);
+  
+  // Handle time slots with text wrapping
+  yPos -= 25;
+  page.drawText('Time Slot:', {
+    x: 50,
+    y: yPos,
+    size: 11,
+    font: helvetica,
+    color: gray,
+  });
+  
+  // Split slots into multiple lines if too long
+  const maxWidth = 245; // Width available for slot text
+  const slotText = bookingDetails.slot;
+  const slots = slotText.split(', ');
+  let currentLine = '';
+  const lines: string[] = [];
+  
+  slots.forEach((slot, index) => {
+    const testLine = currentLine ? `${currentLine}, ${slot}` : slot;
+    const testWidth = helvetica.widthOfTextAtSize(testLine, 11);
+    
+    if (testWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = slot;
+    } else {
+      currentLine = testLine;
+    }
+  });
+  
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  
+  // Draw each line
+  lines.forEach((line, index) => {
+    page.drawText(line, {
+      x: 300,
+      y: yPos - (index * 15),
+      size: 11,
+      font: helvetica,
+      color: darkGray,
+    });
+  });
+  
+  // Adjust yPos based on number of lines (subtract extra space for additional lines)
+  if (lines.length > 1) {
+    yPos -= (lines.length - 1) * 15;
+  }
   
   // Payment Details Section
   yPos -= 40;

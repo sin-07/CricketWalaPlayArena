@@ -25,7 +25,7 @@ const getBaseUrl = () => {
 export const emailTemplates = {
   // Welcome email for new subscribers
   welcome: (email: string, unsubscribeToken: string) => ({
-    subject: '🏏 Welcome to Cricket Wala Play Arena Newsletter!',
+    subject: 'Welcome to Cricket Wala Play Arena Newsletter!',
     html: `
       <!DOCTYPE html>
       <html>
@@ -37,7 +37,10 @@ export const emailTemplates = {
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #16a34a 0%, #059669 100%); padding: 40px 20px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🏏 Cricket Wala Play Arena</h1>
+            <div style="margin-bottom: 10px;">
+              <img src="https://www.cricketwalaplayarena.in/cwpa.jpg" alt="CWPA Logo" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white;" />
+            </div>
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Cricket Wala Play Arena</h1>
             <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Welcome to Our Newsletter!</p>
           </div>
           
@@ -85,7 +88,7 @@ export const emailTemplates = {
     content: string,
     unsubscribeToken: string
   ) => ({
-    subject: `🏏 ${title} - Cricket Wala Play Arena`,
+    subject: `${title} - Cricket Wala Play Arena`,
     html: `
       <!DOCTYPE html>
       <html>
@@ -97,7 +100,10 @@ export const emailTemplates = {
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #16a34a 0%, #059669 100%); padding: 40px 20px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🏏 Cricket Wala Play Arena</h1>
+            <div style="margin-bottom: 10px;">
+              <img src="https://www.cricketwalaplayarena.in/cwpa.jpg" alt="CWPA Logo" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white;" />
+            </div>
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Cricket Wala Play Arena</h1>
           </div>
           
           <!-- Content -->
@@ -186,7 +192,7 @@ export const sendBookingConfirmation = async (
   },
   pdfBuffer: Buffer
 ): Promise<{ success: boolean; error?: string }> => {
-  const subject = `🏏 Booking Confirmed - ${bookingDetails.bookingId}`;
+  const subject = `Booking Confirmed - ${bookingDetails.bookingId}`;
   
   const html = `
     <!DOCTYPE html>
@@ -199,7 +205,10 @@ export const sendBookingConfirmation = async (
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #16a34a 0%, #059669 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🏏 Booking Confirmed!</h1>
+          <div style="margin-bottom: 10px;">
+            <img src="https://www.cricketwalaplayarena.in/cwpa.jpg" alt="CWPA Logo" style="width: 60px; height: 60px; border-radius: 50%; border: 3px solid white;" />
+          </div>
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Booking Confirmed!</h1>
           <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Cricket Wala Play Arena</p>
         </div>
         
@@ -219,7 +228,7 @@ export const sendBookingConfirmation = async (
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #065f46;">Type:</td>
-                <td style="padding: 8px 0; color: #064e3b; text-align: right; font-weight: 600;">${bookingDetails.bookingType.toUpperCase()}</td>
+                <td style="padding: 8px 0; color: #064e3b; text-align: right; font-weight: 600;">${bookingDetails.bookingType === 'match' ? 'Main Turf' : 'Practice Turf'}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #065f46;">Sport:</td>
