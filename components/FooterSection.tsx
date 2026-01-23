@@ -29,8 +29,16 @@ export default function FooterSection() {
             {/* Brand Section */}
             <div className="lg:col-span-2 text-center sm:text-left">
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 justify-center sm:justify-start">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                  <GiCricketBat className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/cwpa.jpg"
+                    alt="Cricket Wala Play Arena Logo"
+                    width={40}
+                    height={40}
+                    className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-lg"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
                 <h2 className="text-lg sm:text-xl font-bold text-white">
                   Cricket Wala Play Arena
@@ -172,17 +180,22 @@ export default function FooterSection() {
 
                 {/* Address */}
                 <div className="group pt-1 sm:pt-2">
-                  <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start">
+                  <a 
+                    href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex gap-2 sm:gap-3 justify-center sm:justify-start"
+                  >
                     <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-900 group-hover:bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500 group-hover:text-white transition-colors" />
                     </div>
-                    <div className="text-[10px] sm:text-xs text-gray-400 text-left">
-                      <p className="font-semibold text-white mb-0.5 sm:mb-1">Mahatma Gandhi Nagar, Kanti</p>
-                      <p className="text-gray-500">Factory Road, Near- Atithi Banquet Hall</p>
-                      <p className="text-gray-500">Opposite of Laxmi Girls Hostel</p>
-                      <p className="text-gray-500">Pin- 800026</p>
+                    <div className="text-[10px] sm:text-xs text-gray-400 text-left group-hover:text-green-400 transition-colors">
+                      <p className="font-semibold text-white group-hover:text-green-400 mb-0.5 sm:mb-1">H5V9+V8F, Mahatma Gandhi nagar</p>
+                      <p className="text-gray-500 group-hover:text-green-400">Kanti Factory Rd, Kankarbagh</p>
+                      <p className="text-gray-500 group-hover:text-green-400">Near- Atithi Banquet Hall</p>
+                      <p className="text-gray-500 group-hover:text-green-400">Patna, Bihar 800026</p>
                     </div>
-                  </div>
+                  </a>
                 </div>
               </div>
             </div>

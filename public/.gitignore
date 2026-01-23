@@ -1,0 +1,28 @@
+# Ignore temporary files
+*.tmp
+*.log
+*.cache
+.ses
+
+# Ignore system files
+*.cpuprofile
+PSES-*
+scoped_dir*
+TCDA*
+appInsights-*
+Diagnostics/
+ListSync/
+Low/
+system-commandline-sentinel-files/
+vscode-*/
+WinGet/
+node-compile-cache/
+
+# Ignore Windows system files
+*.ico.bak
+NotifyIconGenerated*
+OptaneIconOverlay.ico
+PowerToysMSIInstaller*
+
+# Ignore installer logs
+*_installer.log

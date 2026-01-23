@@ -11,6 +11,7 @@ import {
   FaFacebook,
   FaTwitter,
   FaInstagram,
+  FaLinkedin,
 } from "react-icons/fa";
 
 const Footer: React.FC = () => {
@@ -63,110 +64,167 @@ const Footer: React.FC = () => {
       </button>
 
       <div className="container mx-auto px-4 py-8">
-        {" "}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Left Section - Logo & Description */}
           <div>
-            <h3 className="text-xl font-bold mb-4 flex items-center">
-              <div className="relative w-8 h-8 mr-2">
-                <Image
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {/* Fallback to native <img> to avoid Next/Image loader issues during dev/build */}
+                <img
                   src="/cwpa.jpg"
                   alt="CWPA Logo"
-                  fill
-                  className="object-contain"
+                  width={56}
+                  height={56}
+                  className="rounded-2xl object-cover"
+                  decoding="async"
+                  loading="lazy"
                 />
               </div>
-              Cricket Wala Play Arena
-            </h3>
-            <p className="text-gray-400">
-              Premium Cricket Wala Play Arena booking platform. Book your slot
-              and play your game!
+              <h3 className="text-xl font-bold leading-tight">
+                Cricket Wala Play Arena
+              </h3>
+            </div>
+            <p className="text-gray-400 mb-6">
+              Premium cricket turf booking platform in Kanti Factory, Patna, Bihar. Experience professional-grade facilities with easy online booking.
             </p>
+            {/* Social Media Icons */}
+            <div className="flex gap-4">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-gray-800 hover:bg-blue-600 rounded-lg flex items-center justify-center transition-colors"
+                aria-label="Facebook"
+              >
+                <FaFacebook className="w-5 h-5" />
+              </a>
+              <a
+                href="https://twitter.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-gray-800 hover:bg-sky-500 rounded-lg flex items-center justify-center transition-colors"
+                aria-label="Twitter"
+              >
+                <FaTwitter className="w-5 h-5" />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-gray-800 hover:bg-pink-600 rounded-lg flex items-center justify-center transition-colors"
+                aria-label="Instagram"
+              >
+                <FaInstagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://linkedin.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 h-12 bg-gray-800 hover:bg-blue-700 rounded-lg flex items-center justify-center transition-colors"
+                aria-label="LinkedIn"
+              >
+                <FaLinkedin className="w-5 h-5" />
+              </a>
+            </div>
           </div>
 
+          {/* Middle Section - Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2 text-gray-400">
+            <h4 className="text-lg font-semibold mb-4 border-b-2 border-green-500 inline-block pb-1">Quick Links</h4>
+            <ul className="space-y-3 text-gray-400 mt-6">
               <li>
                 <Link
                   href="/"
-                  className="hover:text-primary-400 transition-colors"
+                  className="hover:text-green-400 transition-colors flex items-center gap-2"
                 >
-                  Home
+                  <span>→</span> Home
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/booking"
-                  className="hover:text-primary-400 transition-colors"
+                  href="/turf-booking"
+                  className="hover:text-green-400 transition-colors flex items-center gap-2"
                 >
-                  Book Now
+                  <span>→</span> Book Now
                 </Link>
               </li>
               <li>
                 <Link
                   href="/my-bookings"
-                  className="hover:text-primary-400 transition-colors"
+                  className="hover:text-green-400 transition-colors flex items-center gap-2"
                 >
-                  My Bookings
+                  <span>→</span> My Bookings
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin/gallery"
+                  className="hover:text-green-400 transition-colors flex items-center gap-2"
+                >
+                  <span>→</span> Gallery
                 </Link>
               </li>
             </ul>
           </div>
 
+          {/* Right Section - Contact Us */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-3 text-gray-400">
-              <li className="flex items-start gap-2">
-                <FaPhone className="w-4 h-4 mt-1 text-primary-400 flex-shrink-0" />
-                <a
-                  href={`tel:${phoneNumber}`}
-                  className="hover:text-primary-400 transition-colors"
-                >
-                  {phoneNumber}
-                </a>
+            <h4 className="text-lg font-semibold mb-4 border-b-2 border-green-500 inline-block pb-1">Contact Us</h4>
+            <ul className="space-y-4 text-gray-400 mt-6">
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaPhone className="w-4 h-4 text-blue-400" />
+                </div>
+                <div>
+                  <a
+                    href={`tel:${phoneNumber}`}
+                    className="hover:text-blue-400 transition-colors"
+                  >
+                    +91 83402 96635
+                  </a>
+                </div>
               </li>
-              <li className="flex items-start gap-2">
-                <FaWhatsapp className="w-4 h-4 mt-1 text-green-400 flex-shrink-0" />
-                <button
-                  onClick={handleWhatsAppClick}
-                  className="text-left hover:text-green-400 transition-colors"
-                >
-                  WhatsApp: {whatsappNumber}
-                </button>
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaWhatsapp className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <button
+                    onClick={handleWhatsAppClick}
+                    className="text-left hover:text-green-400 transition-colors"
+                  >
+                    WhatsApp
+                  </button>
+                </div>
               </li>
-              <li className="flex items-start gap-2">
-                <FaEnvelope className="w-4 h-4 mt-1 text-primary-400 flex-shrink-0" />
-                <a
-                  href="mailto:info@cricketbox.com"
-                  className="hover:text-primary-400 transition-colors"
-                >
-                  info@cricketbox.com
-                </a>
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaEnvelope className="w-4 h-4 text-red-400" />
+                </div>
+                <div>
+                  <a
+                    href="mailto:info@cricketbox.com"
+                    className="hover:text-red-400 transition-colors"
+                  >
+                    info@cricketbox.com
+                  </a>
+                </div>
               </li>
-              {/* Embedded Google Map */}
-              <div className="mt-8 rounded-lg overflow-hidden shadow-lg">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3598.0!2d85.1376!3d25.5941!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjXCsDM1JzM4LjgiTiA4NcKwMDgnMTUuNCJF!5e0!3m2!1sen!2sin!4v1234567890"
-                  width="100%"
-                  height="300"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Cricket Wala Play Arena Location"
-                  className="w-full"
-                />
-              </div>
-
-              <li className="flex items-start gap-2">
-                <FaMapMarkerAlt className="w-4 h-4 mt-1 text-primary-400 flex-shrink-0" />
-                <button
-                  onClick={handleMapClick}
-                  className="text-left hover:text-primary-400 transition-colors"
-                >
-                  Mahatma Gandhi Nagar, Kanti Factory Road, Near- Atithi Banquet
-                  Hall, Opposite of Laxmi Girls Hostel, Pin- 800026
-                </button>
+              <li className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FaMapMarkerAlt className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white mb-1">Mahatma Gandhi Nagar, Kanti</p>
+                  <button
+                    onClick={handleMapClick}
+                    className="text-left hover:text-green-400 transition-colors text-sm"
+                  >
+                    Factory Road, Near- Atithi Banquet Hall<br />
+                    Opposite of Laxmi Girls Hostel<br />
+                    Pin- 800026
+                  </button>
+                </div>
               </li>
             </ul>
           </div>

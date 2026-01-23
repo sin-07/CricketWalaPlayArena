@@ -126,7 +126,7 @@ const Header: React.FC = () => {
           </a>
           <span className="text-white/40">|</span>
           <a 
-            href="https://maps.google.com/?q=Kanti+Factory,Patna,Bihar+800007" 
+            href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
@@ -176,9 +176,9 @@ const Header: React.FC = () => {
               <Phone className="w-4 h-4" />
               +91-8340296635
             </a>
-            <a href="https://maps.google.com/?q=Kanti+Factory,Patna,Bihar+800007" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-green-100 transition-colors">
+            <a href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-green-100 transition-colors">
               <MapPin className="w-4 h-4" />
-              Kanti Factory, Patna, Bihar 800007
+              Click for Cricket Wala location
             </a>
           </div>
           <div className="flex items-center gap-4">
