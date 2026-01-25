@@ -19,6 +19,10 @@ export interface ITurfBooking extends Document {
   remainingPayment?: number; // Amount to be paid offline at turf
   source: 'online' | 'offline'; // Booking source - online or admin offline booking
   status: 'confirmed' | 'cancelled' | 'completed';
+  razorpayOrderId?: string; // Razorpay order ID
+  razorpayPaymentId?: string; // Razorpay payment ID
+  razorpaySignature?: string; // Razorpay signature
+  paymentStatus?: 'pending' | 'success' | 'failed'; // Payment status
   createdAt: Date;
   updatedAt: Date;
 }
@@ -120,6 +124,23 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
       type: String,
       enum: ['confirmed', 'cancelled', 'completed'],
       default: 'confirmed',
+    },
+    razorpayOrderId: {
+      type: String,
+      default: null,
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: null,
+    },
+    razorpaySignature: {
+      type: String,
+      default: null,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'success', 'failed'],
+      default: 'pending',
     },
   },
   {

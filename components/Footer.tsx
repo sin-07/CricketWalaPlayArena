@@ -203,10 +203,10 @@ const Footer: React.FC = () => {
                 </div>
                 <div>
                   <a
-                    href="mailto:info@cricketbox.com"
+                    href="mailto:cricketwala1112025@gmail.com"
                     className="hover:text-red-400 transition-colors"
                   >
-                    info@cricketbox.com
+                    cricketwala1112025@gmail.com
                   </a>
                 </div>
               </li>

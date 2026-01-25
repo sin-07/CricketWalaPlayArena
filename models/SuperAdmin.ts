@@ -1,17 +1,16 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-export interface IAdmin extends Document {
+export interface ISuperAdmin extends Document {
   username: string;
   password: string;
-  role: 'admin' | 'superadmin';
-  isActive: boolean;
+  role: 'superadmin';
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
-const AdminSchema = new Schema(
+const SuperAdminSchema = new Schema(
   {
     username: {
       type: String,
@@ -27,12 +26,8 @@ const AdminSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ['admin', 'superadmin'],
-      default: 'admin',
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
+      default: 'superadmin',
+      immutable: true,
     },
   },
   {
@@ -41,7 +36,7 @@ const AdminSchema = new Schema(
 );
 
 // Hash password before saving
-AdminSchema.pre('save', async function () {
+SuperAdminSchema.pre('save', async function () {
   if (!this.isModified('password')) {
     return;
   }
@@ -51,7 +46,7 @@ AdminSchema.pre('save', async function () {
 });
 
 // Method to compare passwords
-AdminSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+SuperAdminSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
@@ -60,6 +55,6 @@ AdminSchema.methods.comparePassword = async function (candidatePassword: string)
 };
 
 // Prevent model recompilation in development
-const Admin = mongoose.models.Admin || mongoose.model<IAdmin>('Admin', AdminSchema);
+const SuperAdmin = mongoose.models.SuperAdmin || mongoose.model<ISuperAdmin>('SuperAdmin', SuperAdminSchema);
 
-export default Admin;
+export default SuperAdmin;

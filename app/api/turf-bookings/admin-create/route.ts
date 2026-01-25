@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       slot: slots.join(', '), // Store as comma-separated string
       name,
       mobile,
-      email: email || 'offline@cricketbox.com',
+      email: email || 'cricketwala1112025@gmail.com',
       basePrice: pricing.basePrice,
       finalPrice: pricing.finalPrice,
       discountPercentage: pricing.discountPercentage,

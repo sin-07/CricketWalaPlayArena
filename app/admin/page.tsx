@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
 import AdminTable from '@/components/AdminTable';
@@ -13,6 +13,7 @@ import NotificationSystem from '@/components/NotificationSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TurfBooking, Notification, NotificationType } from '@/types';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import axios from 'axios';
 
 // Session timeout: 2 hours in milliseconds
@@ -21,11 +22,13 @@ const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
 export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'superadmin' | null>(null);
   const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter'>('bookings');
   const [turfBookings, setTurfBookings] = useState<TurfBooking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
+  const { permissions, role, isLoading: permissionsLoading, isSuperAdmin, hasPermission } = useAdminPermissions();
   const [stats, setStats] = useState({
     totalBookings: 0,
     activeBookings: 0,
@@ -53,6 +56,9 @@ export default function AdminDashboard() {
           router.push('/admin/login');
           return;
         }
+
+        // Set user role
+        setUserRole(data.role || 'admin');
 
         // Check if session has expired based on login time
         if (data.loginTime) {
@@ -263,11 +269,27 @@ export default function AdminDashboard() {
           animate={{ y: 0, opacity: 1 }}
           className="mb-6 sm:mb-8 px-4 sm:px-0"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage bookings and customer data</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage bookings and customer data</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {isSuperAdmin && (
+                <Button
+                  onClick={() => router.push('/superadmin')}
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Super Admin
+                </Button>
+              )}
+            </div>
+          </div>
         </motion.div>
 
         {/* Stats Cards */}
+        {hasPermission('canViewStats') && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -341,6 +363,7 @@ export default function AdminDashboard() {
             </Card>
           </motion.div>
         </div>
+        )}
 
         {/* Tab Navigation */}
         <motion.div
@@ -349,46 +372,56 @@ export default function AdminDashboard() {
           transition={{ delay: 0.3 }}
           className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-4 sm:mb-6 px-4 sm:px-0"
         >
-          <Button
-            variant={activeTab === 'bookings' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('bookings')}
-            className="flex items-center"
-          >
-            <TableIcon className="w-4 h-4 mr-2" />
-            All Bookings
-          </Button>
-          <Button
-            variant={activeTab === 'create' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('create')}
-            className="flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Offline Booking
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => router.push('/admin/slots')}
-            className="flex items-center bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
-          >
-            <Snowflake className="w-4 h-4 mr-2" />
-            Manage Frozen Slots
-          </Button>
-          <Button
-            variant={activeTab === 'coupons' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('coupons')}
-            className="flex items-center bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700"
-          >
-            <Tag className="w-4 h-4 mr-2" />
-            Manage Coupons
-          </Button>
-          <Button
-            variant={activeTab === 'newsletter' ? 'default' : 'outline'}
-            onClick={() => setActiveTab('newsletter')}
-            className="flex items-center bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Newsletter
-          </Button>
+          {hasPermission('canViewBookings') && (
+            <Button
+              variant={activeTab === 'bookings' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('bookings')}
+              className="flex items-center"
+            >
+              <TableIcon className="w-4 h-4 mr-2" />
+              All Bookings
+            </Button>
+          )}
+          {hasPermission('canCreateBooking') && (
+            <Button
+              variant={activeTab === 'create' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('create')}
+              className="flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Offline Booking
+            </Button>
+          )}
+          {hasPermission('canViewSlots') && (
+            <Button
+              variant="outline"
+              onClick={() => router.push('/admin/slots')}
+              className="flex items-center bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+            >
+              <Snowflake className="w-4 h-4 mr-2" />
+              Manage Frozen Slots
+            </Button>
+          )}
+          {hasPermission('canViewCoupons') && (
+            <Button
+              variant={activeTab === 'coupons' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('coupons')}
+              className="flex items-center bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700"
+            >
+              <Tag className="w-4 h-4 mr-2" />
+              Manage Coupons
+            </Button>
+          )}
+          {hasPermission('canViewNewsletter') && (
+            <Button
+              variant={activeTab === 'newsletter' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('newsletter')}
+              className="flex items-center bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Newsletter
+            </Button>
+          )}
         </motion.div>
 
         {/* Content Area */}
@@ -399,21 +432,30 @@ export default function AdminDashboard() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {activeTab === 'bookings' ? (
+          {activeTab === 'bookings' && hasPermission('canViewBookings') ? (
             <AdminTable turfBookings={turfBookings} loading={loading} />
-          ) : activeTab === 'create' ? (
+          ) : activeTab === 'create' && hasPermission('canCreateBooking') ? (
             <div className="max-w-3xl mx-auto px-4 sm:px-0">
               <AdminOfflineBookingForm
                 onBookingComplete={handleBookingComplete}
               />
             </div>
-          ) : activeTab === 'coupons' ? (
+          ) : activeTab === 'coupons' && hasPermission('canViewCoupons') ? (
             <div className="max-w-7xl mx-auto">
               <AdminCouponManager />
             </div>
-          ) : (
+          ) : activeTab === 'newsletter' && hasPermission('canViewNewsletter') ? (
             <div className="max-w-7xl mx-auto">
               <AdminNewsletterManager />
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h3>
+              <p className="text-gray-600">You don&apos;t have permission to access this section.</p>
+              <p className="text-gray-500 text-sm mt-2">Please contact your Super Admin to request access.</p>
             </div>
           )}
         </motion.div>

@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Trash2, Edit2, Check, X } from 'lucide-react';
+import { Trash2, Edit2, Check, X, Shield } from 'lucide-react';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 
 interface Coupon {
   _id: string;
@@ -41,6 +42,7 @@ export default function AdminCouponManager() {
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const { hasPermission, isSuperAdmin } = useAdminPermissions();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -86,6 +88,17 @@ export default function AdminCouponManager() {
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check permissions
+    if (editingId && !hasPermission('canEditCoupon')) {
+      setMessage('You do not have permission to edit coupons');
+      return;
+    }
+    if (!editingId && !hasPermission('canCreateCoupon')) {
+      setMessage('You do not have permission to create coupons');
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -136,6 +149,11 @@ export default function AdminCouponManager() {
 
   // Handle delete
   const handleDelete = async (id: string) => {
+    if (!hasPermission('canDeleteCoupon')) {
+      setMessage('You do not have permission to delete coupons');
+      return;
+    }
+    
     if (!confirm('Are you sure you want to delete this coupon?')) return;
 
     try {
@@ -158,6 +176,11 @@ export default function AdminCouponManager() {
 
   // Handle toggle active
   const handleToggle = async (id: string, isActive: boolean) => {
+    if (!hasPermission('canEditCoupon')) {
+      setMessage('You do not have permission to modify coupons');
+      return;
+    }
+    
     try {
       const response = await fetch('/api/admin/coupons/toggle', {
         method: 'PATCH',
@@ -177,6 +200,11 @@ export default function AdminCouponManager() {
 
   // Handle edit
   const handleEdit = (coupon: Coupon) => {
+    if (!hasPermission('canEditCoupon')) {
+      setMessage('You do not have permission to edit coupons');
+      return;
+    }
+    
     setFormData({
       code: coupon.code,
       discountType: coupon.discountType,
@@ -221,13 +249,20 @@ export default function AdminCouponManager() {
     <div className="space-y-6 p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Coupon Management</h1>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : 'Create Coupon'}
-        </Button>
+        {hasPermission('canCreateCoupon') ? (
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Cancel' : 'Create Coupon'}
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
+            <Shield className="w-4 h-4" />
+            <span className="text-sm">Create permission disabled</span>
+          </div>
+        )}
       </div>
 
       {message && (
-        <div className="p-4 bg-blue-100 text-blue-800 rounded-lg">
+        <div className={`p-4 rounded-lg ${message.includes('permission') ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}`}>
           {message}
         </div>
       )}
@@ -546,31 +581,37 @@ export default function AdminCouponManager() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(coupon)}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleToggle(coupon._id, coupon.isActive)}
-                  >
-                    {coupon.isActive ? (
-                      <X className="w-4 h-4" />
-                    ) : (
-                      <Check className="w-4 h-4" />
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(coupon._id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {hasPermission('canEditCoupon') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(coupon)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {hasPermission('canEditCoupon') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleToggle(coupon._id, coupon.isActive)}
+                    >
+                      {coupon.isActive ? (
+                        <X className="w-4 h-4" />
+                      ) : (
+                        <Check className="w-4 h-4" />
+                      )}
+                    </Button>
+                  )}
+                  {hasPermission('canDeleteCoupon') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(coupon._id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>

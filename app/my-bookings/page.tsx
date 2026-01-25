@@ -306,6 +306,10 @@ export default function MyBookingsPage() {
                         <Phone className="w-4 h-4 text-green-600" />
                         <span>{booking.mobile}</span>
                       </div>
+                      <div className="flex items-center gap-2 text-gray-700 sm:col-span-2">
+                        <Mail className="w-4 h-4 text-green-600" />
+                        <span className="break-all">{booking.email || 'NA'}</span>
+                      </div>
                     </div>
 
                     {/* Price Section */}

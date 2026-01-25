@@ -17,6 +17,7 @@ import {
 import { CheckCircle2, AlertCircle, Tag, X, Trophy, Target, Lightbulb } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import { calculateFinalPrice, getDiscountInfo } from '@/lib/pricingUtils';
+import { createPaymentOrder, loadRazorpayScript, openRazorpayCheckout } from '@/lib/paymentFlow';
 
 interface TurfBookingFormProps {
   bookingType: 'match' | 'practice';
@@ -50,7 +51,10 @@ export default function TurfBookingForm({
   const [confirmedBookingDetails, setConfirmedBookingDetails] = useState<{ sport: string; date: string; slot: string; bookingType: string; email: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showPaymentFailedModal, setShowPaymentFailedModal] = useState(false);
+  const [paymentFailedMessage, setPaymentFailedMessage] = useState<string>('');
   const [serverError, setServerError] = useState<string | null>(null);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('');
@@ -78,9 +82,14 @@ export default function TurfBookingForm({
     }
   }, [serverError]);
 
+  // Load Razorpay script on mount
+  React.useEffect(() => {
+    loadRazorpayScript().then(setRazorpayLoaded);
+  }, []);
+
   // Freeze background scrolling when modal is open
   React.useEffect(() => {
-    if (showSuccessModal || showConfirmModal) {
+    if (showSuccessModal || showConfirmModal || showPaymentFailedModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -88,11 +97,11 @@ export default function TurfBookingForm({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [showSuccessModal, showConfirmModal]);
+  }, [showSuccessModal, showConfirmModal, showPaymentFailedModal]);
 
   // Freeze background scrolling when modal is open
   React.useEffect(() => {
-    if (showSuccessModal || showConfirmModal) {
+    if (showSuccessModal || showConfirmModal || showPaymentFailedModal) {
       document.body.style.overflow = 'hidden';
       document.body.style.paddingRight = '0px';
     } else {
@@ -103,7 +112,7 @@ export default function TurfBookingForm({
       document.body.style.overflow = '';
       document.body.style.paddingRight = '';
     };
-  }, [showSuccessModal, showConfirmModal]);
+  }, [showSuccessModal, showConfirmModal, showPaymentFailedModal]);
 
   // Validate sport when bookingType changes - clear if invalid
   React.useEffect(() => {
@@ -331,71 +340,153 @@ export default function TurfBookingForm({
 
   // Actual booking submission after confirmation
   const confirmBooking = async () => {
-    setShowConfirmModal(false);
+    if (!razorpayLoaded) {
+      setServerError('Payment system is loading. Please try again.');
+      return;
+    }
 
+    setShowConfirmModal(false);
     setLoading(true);
+    setServerError(null);
 
     try {
-      const response = await fetch('/api/turf-bookings/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          mobile: normalizeMobileNumber(formData.mobile),
-          couponCode: appliedCoupon?.code || null, // Include applied coupon
-        }),
+      // Calculate payment amount
+      const totalPricing = calculateTotalWithCoupon();
+      const totalPrice = totalPricing?.totalPrice || 0;
+      const paymentAmount = formData.bookingType === 'match' 
+        ? Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200
+        : totalPrice;
+
+      // Generate a temporary booking reference for payment
+      const tempBookingRef = 'TEMP' + Date.now();
+
+      // Step 1: Create payment order FIRST (no booking saved yet)
+      const orderResponse = await createPaymentOrder({
+        amount: paymentAmount,
+        bookingRef: tempBookingRef,
+        customerName: formData.name,
+        email: formData.email,
+        phone: normalizeMobileNumber(formData.mobile),
       });
 
-      const data: ApiResponse = await response.json();
-
-      if (!response.ok || !data.success) {
-        // Handle validation errors from server
-        if (data.errors) {
-          const errorMap: Record<string, string> = {};
-          data.errors.forEach((err) => {
-            errorMap[err.field] = err.message;
-          });
-          setErrors(errorMap);
-        } else {
-          setServerError(data.message || 'Failed to create booking');
-        }
-        return;
+      if (!orderResponse.success || !orderResponse.data) {
+        throw new Error(orderResponse.message || 'Failed to create payment order');
       }
 
-      // Success - Store booking data from response
-      const bookingData = {
-        sport: data.data?.sport || formData.sport,
-        date: data.data?.date || formData.date,
-        slot: data.data?.slot || formData.slot,
-        bookingType: data.data?.bookingType || formData.bookingType,
-        email: formData.email,
-      };
-      
-      setSuccessMessage('Booking confirmed! Check your email for details.');
-      setBookingRef(data.data?.bookingRef || 'N/A');
-      setBookingPrice({
-        basePrice: data.data?.basePrice || 0,
-        finalPrice: data.data?.finalPrice || 0,
-        bookingCharge: data.data?.bookingCharge || 200,
-        totalPrice: data.data?.totalPrice || 0,
-        discountPercentage: data.data?.discountPercentage || 0,
-        couponDiscount: data.data?.couponDiscount || 0,
-        couponCode: data.data?.couponCode || undefined,
-      });
-      
-      // Store confirmed booking details separately
-      setConfirmedBookingDetails(bookingData);
-      
-      setShowSuccessModal(true);
-      
-      // Reset form including coupon
+      // Step 2: Open Razorpay checkout
+      openRazorpayCheckout(
+        orderResponse.data.orderId,
+        orderResponse.data.amount,
+        orderResponse.data.keyId,
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: normalizeMobileNumber(formData.mobile),
+          bookingRef: tempBookingRef,
+        },
+        async (response: any) => {
+          // Step 3: Payment successful - NOW create booking in database
+          try {
+            const bookingResponse = await fetch('/api/turf-bookings/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                ...formData,
+                mobile: normalizeMobileNumber(formData.mobile),
+                couponCode: appliedCoupon?.code || null,
+                // Include payment details
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+
+            const data: ApiResponse = await bookingResponse.json();
+
+            if (!bookingResponse.ok || !data.success) {
+              throw new Error(data.message || 'Failed to save booking');
+            }
+
+            // Booking saved successfully after payment
+            const bookingRef = data.data?.bookingRef || 'N/A';
+            const bookingData = {
+              sport: data.data?.sport || formData.sport,
+              date: data.data?.date || formData.date,
+              slot: data.data?.slot || formData.slot,
+              bookingType: data.data?.bookingType || formData.bookingType,
+              email: formData.email,
+            };
+
+            // Show success
+            setSuccessMessage('Payment successful! Booking confirmed.');
+            setBookingRef(bookingRef);
+            setBookingPrice({
+              basePrice: data.data?.basePrice || 0,
+              finalPrice: data.data?.finalPrice || 0,
+              bookingCharge: data.data?.bookingCharge || 200,
+              totalPrice: data.data?.totalPrice || totalPrice,
+              discountPercentage: data.data?.discountPercentage || 0,
+              couponDiscount: data.data?.couponDiscount || 0,
+              couponCode: data.data?.couponCode || undefined,
+            });
+            setConfirmedBookingDetails(bookingData);
+            setShowSuccessModal(true);
+
+            // Reset form
+            setFormData({
+              bookingType,
+              sport: '',
+              date: getMinDate(),
+              slot: [],
+              name: '',
+              mobile: '',
+              email: '',
+            });
+            setErrors({});
+            setAppliedCoupon(null);
+            setCouponCode('');
+            setCouponError(null);
+          } catch (saveError: any) {
+            setServerError('Payment was successful but booking save failed. Please contact support with Payment ID: ' + response.razorpay_payment_id);
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error: string) => {
+          // Payment cancelled or failed (wrong PIN, insufficient balance, etc.)
+          // Show payment failed popup
+          setPaymentFailedMessage(error);
+          setShowPaymentFailedModal(true);
+          
+          // Reset form to make user refill
+          setFormData({
+            bookingType,
+            sport: '',
+            date: getMinDate(),
+            slot: [],
+            name: '',
+            mobile: '',
+            email: '',
+          });
+          setErrors({});
+          setAppliedCoupon(null);
+          setCouponCode('');
+          setCouponError(null);
+          setLoading(false);
+        }
+      );
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      setPaymentFailedMessage(error.message || 'An error occurred. Please fill the form again.');
+      setShowPaymentFailedModal(true);
+      // Reset form
       setFormData({
         bookingType,
         sport: '',
         date: getMinDate(),
-        slot: [], // Reset to empty array for multiple slot selection
+        slot: [],
         name: '',
         mobile: '',
         email: '',
@@ -404,12 +495,6 @@ export default function TurfBookingForm({
       setAppliedCoupon(null);
       setCouponCode('');
       setCouponError(null);
-    } catch (error: any) {
-      console.error('Booking error:', error);
-      setServerError(
-        error.message || 'An error occurred while creating your booking'
-      );
-    } finally {
       setLoading(false);
     }
   };
@@ -588,6 +673,95 @@ export default function TurfBookingForm({
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3.5 px-6 transition-colors duration-200"
                 >
                   Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* Payment Failed Modal Popup - Using Portal */}
+      {showPaymentFailedModal && typeof window !== 'undefined' && createPortal(
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center"
+            style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              width: '100vw', 
+              height: '100vh',
+              backgroundColor: 'rgba(0, 0, 0, 0.6)'
+            }}
+            onClick={() => setShowPaymentFailedModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="bg-white shadow-2xl w-[90%] max-w-[400px] relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center justify-between">
+                <h3 className="text-white font-bold text-base flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  Payment Failed
+                </h3>
+                <button
+                  onClick={() => setShowPaymentFailedModal(false)}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {/* Error Icon */}
+                <div className="flex justify-center">
+                  <div className="bg-red-100 rounded-full p-4">
+                    <AlertCircle className="w-12 h-12 text-red-600" />
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                <div className="text-center space-y-2">
+                  <h4 className="text-lg font-bold text-gray-900">Payment Unsuccessful</h4>
+                  <p className="text-sm text-gray-600">
+                    {paymentFailedMessage || 'Your payment could not be processed.'}
+                  </p>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex gap-3">
+                    <Lightbulb className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-amber-800">
+                      <p className="font-semibold mb-1">What to do?</p>
+                      <ul className="list-disc list-inside space-y-1 text-xs">
+                       
+                        <li>Try a different payment method</li>
+                        <li>Ensure sufficient balance in your account</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowPaymentFailedModal(false)}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Fill Form Again
                 </button>
               </div>
             </motion.div>

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     const body = await request.json();
-    const { bookingType, sport, date, slot, name, mobile, email, couponCode } = body;
+    const { bookingType, sport, date, slot, name, mobile, email, couponCode, razorpayOrderId, razorpayPaymentId, razorpaySignature } = body;
 
     // Convert slot to array if it's a string (backward compatibility)
     const slotsArray = Array.isArray(slot) ? slot : [slot];
@@ -172,6 +172,11 @@ export async function POST(request: NextRequest) {
       remainingPayment: remainingPayment,
       source: 'online', // Mark as online booking
       status: 'confirmed',
+      // Payment details (if provided - means payment already completed)
+      razorpayOrderId: razorpayOrderId || null,
+      razorpayPaymentId: razorpayPaymentId || null,
+      razorpaySignature: razorpaySignature || null,
+      paymentStatus: razorpayPaymentId ? 'success' : 'pending',
     });
 
     await newBooking.save();

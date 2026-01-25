@@ -6,6 +6,8 @@ interface AdminAuthState {
   isAdmin: boolean;
   isLoading: boolean;
   loginTime: number | null;
+  role: 'admin' | 'superadmin' | null;
+  username: string | null;
 }
 
 export function useAdminAuth() {
@@ -13,6 +15,8 @@ export function useAdminAuth() {
     isAdmin: false,
     isLoading: true,
     loginTime: null,
+    role: null,
+    username: null,
   });
 
   const checkAuth = useCallback(async () => {
@@ -28,12 +32,16 @@ export function useAdminAuth() {
           isAdmin: data.authenticated,
           isLoading: false,
           loginTime: data.loginTime || null,
+          role: data.role || null,
+          username: data.username || null,
         });
       } else {
         setAuthState({
           isAdmin: false,
           isLoading: false,
           loginTime: null,
+          role: null,
+          username: null,
         });
       }
     } catch (error) {
@@ -41,6 +49,8 @@ export function useAdminAuth() {
         isAdmin: false,
         isLoading: false,
         loginTime: null,
+        role: null,
+        username: null,
       });
     }
   }, []);
@@ -58,6 +68,8 @@ export function useAdminAuth() {
         isAdmin: false,
         isLoading: false,
         loginTime: null,
+        role: null,
+        username: null,
       });
     }
   }, []);
@@ -82,6 +94,9 @@ export function useAdminAuth() {
     isAdmin: authState.isAdmin,
     isLoading: authState.isLoading,
     loginTime: authState.loginTime,
+    role: authState.role,
+    username: authState.username,
+    isSuperAdmin: authState.role === 'superadmin',
     checkAuth,
     logout,
     refreshLoginTime,

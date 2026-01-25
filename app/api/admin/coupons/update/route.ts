@@ -1,26 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Coupon from '@/models/Coupon';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { checkPermission } from '@/lib/permissionUtils';
 
 export async function PUT(request: NextRequest) {
   try {
+    // Check permission to edit coupons
+    const permResult = await checkPermission('canEditCoupon');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { error: permResult.error || 'You do not have permission to edit coupons' },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
-
-    // Verify admin authentication
-    const cookieStore = cookies();
-    const token = cookieStore.get('adminToken')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    try {
-      jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    } catch (err) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
 
     const body = await request.json();
     const { id } = body;

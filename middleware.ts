@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000;
 
 // Routes that should be accessible without authentication
-const publicRoutes = ['/admin/login', '/', '/booking', '/all-bookings', '/my-bookings'];
+const publicRoutes = ['/admin/login', '/admin/direct-setup', '/', '/booking', '/all-bookings', '/my-bookings'];
 
 function verifyAdminToken(token: string | undefined): boolean {
   if (!token) return false;

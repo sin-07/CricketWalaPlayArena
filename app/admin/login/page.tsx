@@ -34,7 +34,11 @@ export default function AdminLoginPage() {
         setLoginSuccess(true);
         // Small delay to show the success animation
         setTimeout(() => {
-          router.push('/admin');
+          if (data.role === 'superadmin') {
+            router.push('/superadmin');
+          } else {
+            router.push('/admin');
+          }
         }, 800);
       } else {
         setError(data.error || 'Invalid credentials');

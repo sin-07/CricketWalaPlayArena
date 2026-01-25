@@ -376,18 +376,25 @@ export async function generateBookingPDF(
       color: orange,
     });
     
-    yPos -= 60;
-    page.drawText('Important: Please pay the remaining amount when you visit the turf.', {
-      x: 50,
+    yPos -= 50;
+    // Important note - centered and properly positioned
+    const importantText = 'Important: Please pay the remaining amount when you visit the turf.';
+    const importantTextWidth = helveticaBold.widthOfTextAtSize(importantText, 11);
+    const centeredX = (width - importantTextWidth) / 2;
+    
+    page.drawText(importantText, {
+      x: centeredX,
       y: yPos,
-      size: 10,
+      size: 11,
       font: helveticaBold,
-      color: rgb(0.49, 0.18, 0.07),
+      color: rgb(0.8, 0.3, 0.0),
     });
+    
+    yPos -= 30;
   }
   
   // Footer
-  const footerY = 80;
+  const footerY = 60;
   page.drawLine({
     start: { x: 50, y: footerY + 30 },
     end: { x: 545, y: footerY + 30 },
@@ -395,28 +402,27 @@ export async function generateBookingPDF(
     color: rgb(0.9, 0.9, 0.9),
   });
   
-  page.drawText('Cricket Wala Play Arena', {
-    x: 220,
-    y: footerY + 10,
-    size: 10,
-    font: helvetica,
-    color: gray,
-  });
+  // Footer text - centered
+  const footerTexts = [
+    'Cricket Wala Play Arena',
+    'Kanti Factory, Patna, Bihar - 800007',
+    'Phone: +91-8340296635'
+  ];
   
-  page.drawText('Kanti Factory, Patna, Bihar - 800007', {
-    x: 195,
-    y: footerY - 5,
-    size: 10,
-    font: helvetica,
-    color: gray,
-  });
-  
-  page.drawText('Phone: +91-8340296635', {
-    x: 230,
-    y: footerY - 20,
-    size: 10,
-    font: helvetica,
-    color: gray,
+  let footerYPos = footerY + 10;
+  footerTexts.forEach((text) => {
+    const textWidth = helvetica.widthOfTextAtSize(text, 10);
+    const centeredFooterX = (width - textWidth) / 2;
+    
+    page.drawText(text, {
+      x: centeredFooterX,
+      y: footerYPos,
+      size: 10,
+      font: helvetica,
+      color: gray,
+    });
+    
+    footerYPos -= 12;
   });
   
   const pdfBytes = await pdfDoc.save();

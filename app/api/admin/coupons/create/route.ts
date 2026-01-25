@@ -1,28 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Coupon from '@/models/Coupon';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { verifyAdminToken } from '@/lib/permissionUtils';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication and get admin info
+    const authResult = await verifyAdminToken();
+    
+    if (!authResult.authenticated) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Check permission to create coupons (basic check - super admin always allowed)
+    const adminId = authResult.adminId;
+
     await dbConnect();
-
-    // Verify admin authentication
-    const cookieStore = cookies();
-    const token = cookieStore.get('adminToken')?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    let adminId: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
-      adminId = decoded.adminId || decoded.id || 'admin';
-    } catch (err) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
 
     const body = await request.json();
     const {

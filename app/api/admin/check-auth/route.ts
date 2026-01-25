@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,29 +15,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Verify token format (basic validation)
+    // Verify JWT token and extract role
     try {
-      const decoded = Buffer.from(adminToken.value, 'base64').toString();
-      if (!decoded.includes(':')) {
-        return NextResponse.json(
-          { authenticated: false },
-          { status: 200 }
-        );
-      }
-    } catch {
+      const decoded = jwt.verify(adminToken.value, process.env.JWT_SECRET || 'secret') as {
+        username: string;
+        adminId: string;
+        role: string;
+      };
+      
+      return NextResponse.json(
+        { 
+          authenticated: true,
+          loginTime: loginTime ? parseInt(loginTime.value) : null,
+          username: decoded.username,
+          role: decoded.role || 'admin',
+        },
+        { status: 200 }
+      );
+    } catch (jwtError) {
+      // JWT verification failed
       return NextResponse.json(
         { authenticated: false },
         { status: 200 }
       );
     }
-
-    return NextResponse.json(
-      { 
-        authenticated: true,
-        loginTime: loginTime ? parseInt(loginTime.value) : null,
-      },
-      { status: 200 }
-    );
   } catch (error) {
     console.error('Check auth error:', error);
     return NextResponse.json(

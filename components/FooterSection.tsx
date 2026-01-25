@@ -170,10 +170,10 @@ export default function FooterSection() {
                       <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500 group-hover:text-white transition-colors" />
                     </div>
                     <a 
-                      href="mailto:info@cricketbox.com" 
+                      href="mailto:cricketwala1112025@gmail.com" 
                       className="text-xs sm:text-sm text-gray-400 hover:text-green-400 transition-colors break-all"
                     >
-                      info@cricketbox.com
+                      cricketwala1112025@gmail.com
                     </a>
                   </div>
                 </div>

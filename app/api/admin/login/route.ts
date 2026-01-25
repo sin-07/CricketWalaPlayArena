@@ -39,12 +39,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if admin account is active
+    if (admin.isActive === false) {
+      return NextResponse.json(
+        { success: false, error: 'This account has been deactivated' },
+        { status: 403 }
+      );
+    }
+
     // Generate a JWT token
     const token = jwt.sign(
       { 
         username: admin.username, 
         adminId: admin._id,
-        role: admin.role 
+        role: admin.role || 'admin'
       },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '2h' }
@@ -54,7 +62,8 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json(
       { 
         success: true, 
-        message: 'Login successful' 
+        message: 'Login successful',
+        role: admin.role || 'admin',
       },
       { status: 200 }
     );
