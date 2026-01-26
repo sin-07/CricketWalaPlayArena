@@ -35,33 +35,44 @@ export async function GET(request: NextRequest) {
     // Get permissions
     let permissions = await AdminPermissions.findOne();
     
+    console.log('[GET /api/admin/permissions] User:', decoded.username, 'Role:', decoded.role);
+    console.log('[GET /api/admin/permissions] Permissions document:', permissions ? 'EXISTS' : 'NOT FOUND');
+    
     if (!permissions) {
-      // Return default permissions (all enabled)
+      // Return default permissions (all DISABLED for security)
+      console.log('[GET /api/admin/permissions] WARNING: No permissions document, returning all FALSE');
       permissions = {
-        canCreateCoupon: true,
-        canEditCoupon: true,
-        canDeleteCoupon: true,
-        canViewCoupons: true,
-        canCreateBooking: true,
-        canEditBooking: true,
-        canDeleteBooking: true,
-        canViewBookings: true,
-        canFreezeSlots: true,
-        canUnfreezeSlots: true,
-        canViewSlots: true,
-        canSendNewsletter: true,
-        canManageSubscribers: true,
-        canViewNewsletter: true,
-        canUploadGallery: true,
-        canDeleteGallery: true,
-        canViewGallery: true,
-        canViewDashboard: true,
-        canViewStats: true,
+        canCreateCoupon: false,
+        canEditCoupon: false,
+        canDeleteCoupon: false,
+        canViewCoupons: false,
+        canCreateBooking: false,
+        canEditBooking: false,
+        canDeleteBooking: false,
+        canViewBookings: false,
+        canFreezeSlots: false,
+        canUnfreezeSlots: false,
+        canViewSlots: false,
+        canSendNewsletter: false,
+        canManageSubscribers: false,
+        canViewNewsletter: false,
+        canUploadGallery: false,
+        canDeleteGallery: false,
+        canViewGallery: false,
+        canViewDashboard: false,
+        canViewStats: false,
       };
+    } else {
+      console.log('[GET /api/admin/permissions] Permissions:', {
+        canSendNewsletter: permissions.canSendNewsletter,
+        canUploadGallery: permissions.canUploadGallery,
+        canDeleteGallery: permissions.canDeleteGallery,
+      });
     }
 
     // Super admin always has all permissions
     if (decoded.role === 'superadmin') {
+      console.log('[GET /api/admin/permissions] User is superadmin, returning all TRUE');
       return NextResponse.json({
         success: true,
         role: 'superadmin',
@@ -89,6 +100,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    console.log('[GET /api/admin/permissions] Returning admin permissions');
     return NextResponse.json({
       success: true,
       role: 'admin',

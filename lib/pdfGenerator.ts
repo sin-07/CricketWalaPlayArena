@@ -296,8 +296,6 @@ export async function generateBookingPDF(
     addPriceRow(`Coupon (${bookingDetails.couponCode}):`, `-Rs. ${bookingDetails.couponDiscount}`);
   }
   
-  addPriceRow('Booking Charge:', `Rs. ${bookingDetails.bookingCharge}`);
-  
   // Total
   yPos -= 10;
   page.drawLine({

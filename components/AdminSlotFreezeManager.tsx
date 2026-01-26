@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import Link from 'next/link';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import { 
   ArrowLeft, 
   Snowflake, 
@@ -43,6 +44,7 @@ export default function AdminSlotFreezeManager() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [frozenSlots, setFrozenSlots] = useState<FrozenSlot[]>([]);
+  const { hasPermission } = useAdminPermissions();
 
   // Form state for freezing slots
   const [freezeForm, setFreezeForm] = useState<SlotFilterParams>({
@@ -363,7 +365,8 @@ export default function AdminSlotFreezeManager() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Freeze Slots Section */}
+          {/* Freeze Slots Section - Only show if has permission */}
+          {hasPermission('canFreezeSlots') && (
           <Card className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
@@ -504,6 +507,7 @@ export default function AdminSlotFreezeManager() {
               </Button>
             </form>
           </Card>
+          )}
 
           {/* Filter and View Frozen Slots */}
           <Card className="p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-shadow">
@@ -662,6 +666,7 @@ export default function AdminSlotFreezeManager() {
                     </div>
                   )}
 
+                  {hasPermission('canUnfreezeSlots') && (
                   <Button
                     onClick={() => handleUnfreezeSlot(slot)}
                     disabled={loading}
@@ -672,6 +677,7 @@ export default function AdminSlotFreezeManager() {
                       Unfreeze
                     </span>
                   </Button>
+                  )}
                 </div>
               </Card>
             ))}

@@ -50,12 +50,15 @@ export async function checkPermission(
 ): Promise<PermissionResult> {
   const authResult = await verifyAdminToken();
   
+  console.log('[checkPermission] authResult:', authResult);
+  
   if (!authResult.authenticated) {
     return { allowed: false, error: authResult.error };
   }
 
   // Super admin always has all permissions
   if (authResult.role === 'superadmin') {
+    console.log('[checkPermission] Super admin - allowing all permissions');
     return { allowed: true, role: 'superadmin' };
   }
 
@@ -64,23 +67,32 @@ export async function checkPermission(
     await dbConnect();
     const permissions = await AdminPermissions.findOne();
     
+    console.log('[checkPermission] Permissions document:', permissions ? 'EXISTS' : 'NOT FOUND');
+    console.log('[checkPermission] Checking permission:', permissionKey);
+    console.log('[checkPermission] Permission value:', permissions?.[permissionKey as keyof typeof permissions]);
+    
     if (!permissions) {
-      // Default: allow if no permissions are configured
-      return { allowed: true, role: 'admin' };
+      // CRITICAL: Default should be FALSE (deny) when no permissions configured
+      console.log('[checkPermission] WARNING: No permissions document found, defaulting to DENY');
+      return { allowed: false, role: 'admin', error: 'No permissions configured' };
     }
 
     const hasPermission = permissions[permissionKey as keyof typeof permissions];
     
     if (hasPermission === undefined) {
-      // Permission key doesn't exist, default to allow
-      return { allowed: true, role: 'admin' };
+      // Permission key doesn't exist, default to deny for security
+      console.log('[checkPermission] WARNING: Permission key not found, defaulting to DENY');
+      return { allowed: false, role: 'admin', error: `Unknown permission: ${permissionKey}` };
     }
 
-    return { 
+    const result = { 
       allowed: Boolean(hasPermission), 
-      role: 'admin',
+      role: 'admin' as const,
       error: hasPermission ? undefined : `Permission denied: ${permissionKey}`,
     };
+    
+    console.log('[checkPermission] Result:', result);
+    return result;
   } catch (error) {
     console.error('Permission check error:', error);
     return { allowed: false, error: 'Failed to check permissions' };

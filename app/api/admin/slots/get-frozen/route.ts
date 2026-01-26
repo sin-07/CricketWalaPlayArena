@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Slot from '@/models/Slot';
 import { cleanupExpiredFrozenSlots } from '@/lib/frozenSlotValidation';
+import { checkPermission } from '@/lib/permissionUtils';
 
 /**
  * GET /api/admin/slots/get-frozen
@@ -11,6 +12,16 @@ import { cleanupExpiredFrozenSlots } from '@/lib/frozenSlotValidation';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Check permission to view slots
+    const permResult = await checkPermission('canViewSlots');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { success: false, message: permResult.error || 'You do not have permission to view slots' },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
 
     // Auto-cleanup expired frozen slots using utility function

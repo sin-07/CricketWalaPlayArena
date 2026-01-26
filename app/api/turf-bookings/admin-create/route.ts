@@ -4,6 +4,7 @@ import TurfBooking from '@/models/TurfBooking';
 import Slot from '@/models/Slot';
 import { AVAILABLE_SLOTS } from '@/lib/bookingValidation';
 import { calculateFinalPrice } from '@/lib/pricingUtils';
+import { checkPermission } from '@/lib/permissionUtils';
 
 /**
  * POST /api/turf-bookings/admin-create
@@ -13,6 +14,16 @@ import { calculateFinalPrice } from '@/lib/pricingUtils';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check permission to create bookings
+    const permResult = await checkPermission('canCreateBooking');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { success: false, message: permResult.error || 'You do not have permission to create bookings' },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
 
     const body = await request.json();
@@ -126,10 +137,8 @@ export async function POST(request: NextRequest) {
     const numSlots = slots.length;
     const pricing = calculateFinalPrice(bookingType, date, numSlots);
     
-    // For offline bookings, total price is straightforward
-    const totalPrice = bookingType === 'match' 
-      ? pricing.finalPrice 
-      : pricing.finalPrice + pricing.bookingCharge;
+    // Total price = final price after discounts (NO additional booking charges)
+    const totalPrice = pricing.totalPrice;
 
     // Create the offline booking
     const newBooking = new TurfBooking({
@@ -145,7 +154,7 @@ export async function POST(request: NextRequest) {
       discountPercentage: pricing.discountPercentage,
       couponCode: null,
       couponDiscount: 0,
-      bookingCharge: pricing.bookingCharge,
+      bookingCharge: 0, // No booking charge anymore
       totalPrice: totalPrice,
       advancePayment: paymentCollected || 0,
       remainingPayment: Math.max(0, totalPrice - (paymentCollected || 0)),

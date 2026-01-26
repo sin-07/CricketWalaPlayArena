@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { verifyAdminAuth } from '@/lib/authUtils';
+import { checkPermission } from '@/lib/permissionUtils';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -10,13 +10,16 @@ cloudinary.config({
 });
 
 export async function POST(request: NextRequest) {
-  // Verify admin authentication
-  const authResult = await verifyAdminAuth();
-  if (!authResult.authenticated && authResult.response) {
-    return authResult.response;
-  }
-
   try {
+    // Check permission to upload gallery images
+    const permResult = await checkPermission('canUploadGallery');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { error: permResult.error || 'You do not have permission to upload images' },
+        { status: 403 }
+      );
+    }
     const formData = await request.formData();
     const file = formData.get('file') as File;
 

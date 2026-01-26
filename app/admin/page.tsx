@@ -23,7 +23,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'superadmin' | null>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter' | 'none'>('none');
   const [turfBookings, setTurfBookings] = useState<TurfBooking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +35,21 @@ export default function AdminDashboard() {
     completedBookings: 0,
     totalRevenue: 0,
   });
+
+  // Set default active tab based on permissions
+  useEffect(() => {
+    if (!permissionsLoading && activeTab === 'none') {
+      if (hasPermission('canViewBookings')) {
+        setActiveTab('bookings');
+      } else if (hasPermission('canCreateBooking')) {
+        setActiveTab('create');
+      } else if (hasPermission('canViewCoupons')) {
+        setActiveTab('coupons');
+      } else if (hasPermission('canViewNewsletter')) {
+        setActiveTab('newsletter');
+      }
+    }
+  }, [permissionsLoading, hasPermission, activeTab]);
 
   // Check session and set up auto-logout
   useEffect(() => {
@@ -184,8 +199,8 @@ export default function AdminDashboard() {
     setActiveTab('bookings');
   };
 
-  // Show loading screen while checking authentication
-  if (!isAuthenticated && !showSessionExpired) {
+  // Show loading screen while checking authentication or permissions
+  if ((!isAuthenticated && !showSessionExpired) || permissionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-emerald-50 flex items-center justify-center">
         <motion.div

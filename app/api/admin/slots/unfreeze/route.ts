@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import dbConnect from '@/lib/mongodb';
 import Slot from '@/models/Slot';
+import { checkPermission } from '@/lib/permissionUtils';
 
 /**
  * POST /api/admin/slots/unfreeze
@@ -10,18 +10,17 @@ import Slot from '@/models/Slot';
  */
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
-
-    // Check admin authentication
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('adminToken');
-
-    if (!adminToken) {
+    // Check permission to unfreeze slots
+    const permResult = await checkPermission('canUnfreezeSlots');
+    
+    if (!permResult.allowed) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized: Admin token not found' },
-        { status: 401 }
+        { success: false, message: permResult.error || 'You do not have permission to unfreeze slots' },
+        { status: 403 }
       );
     }
+
+    await dbConnect();
 
     const { bookingType, sport, date, slot } = await request.json();
 

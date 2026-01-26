@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Settings, Users, Tag, Calendar, Mail, Image, 
-  BarChart3, Lock, Unlock, Save, RefreshCw, 
+  BarChart3, Lock, Unlock, RefreshCw, 
   Clock, CheckCircle, XCircle, AlertTriangle
 } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
@@ -203,14 +203,7 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handlePermissionChange = (key: string, value: boolean) => {
-    setPermissions(prev => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleSavePermissions = async () => {
+  const savePermissions = async (newPermissions: Permissions) => {
     setSaving(true);
     setMessage(null);
     
@@ -221,7 +214,7 @@ export default function SuperAdminDashboard() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ permissions }),
+        body: JSON.stringify({ permissions: newPermissions }),
       });
       
       const data = await response.json();
@@ -238,20 +231,32 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  const handleEnableAll = () => {
+  const handlePermissionChange = async (key: string, value: boolean) => {
+    const newPermissions = {
+      ...permissions,
+      [key]: value,
+    };
+    setPermissions(newPermissions);
+    // Auto-save when permission is toggled
+    await savePermissions(newPermissions);
+  };
+
+  const handleEnableAll = async () => {
     const allEnabled = Object.keys(permissions).reduce((acc, key) => {
       acc[key as keyof Permissions] = true;
       return acc;
     }, {} as Permissions);
     setPermissions(allEnabled);
+    await savePermissions(allEnabled);
   };
 
-  const handleDisableAll = () => {
+  const handleDisableAll = async () => {
     const allDisabled = Object.keys(permissions).reduce((acc, key) => {
       acc[key as keyof Permissions] = false;
       return acc;
     }, {} as Permissions);
     setPermissions(allDisabled);
+    await savePermissions(allDisabled);
   };
 
   const getColorClasses = (color: string) => {
@@ -411,31 +416,6 @@ export default function SuperAdminDashboard() {
             );
           })}
         </div>
-
-        {/* Save Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center"
-        >
-          <Button
-            onClick={handleSavePermissions}
-            disabled={saving}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-8 py-6 text-lg font-semibold rounded-xl shadow-lg shadow-purple-500/30"
-          >
-            {saving ? (
-              <>
-                <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="w-5 h-5 mr-2" />
-                Save All Permissions
-              </>
-            )}
-          </Button>
-        </motion.div>
 
         {/* Info Card */}
         <motion.div

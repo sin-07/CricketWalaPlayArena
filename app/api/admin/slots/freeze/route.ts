@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import dbConnect from '@/lib/mongodb';
 import Slot from '@/models/Slot';
+import { checkPermission } from '@/lib/permissionUtils';
 
 /**
  * POST /api/admin/slots/freeze
@@ -10,28 +10,17 @@ import Slot from '@/models/Slot';
  */
 export async function POST(request: NextRequest) {
   try {
-    await dbConnect();
-
-    // Check admin authentication
-    const cookieStore = await cookies();
-    const adminToken = cookieStore.get('adminToken');
-
-    if (!adminToken) {
+    // Check permission to freeze slots
+    const permResult = await checkPermission('canFreezeSlots');
+    
+    if (!permResult.allowed) {
       return NextResponse.json(
-        { success: false, message: 'Unauthorized: Admin token not found' },
-        { status: 401 }
+        { success: false, message: permResult.error || 'You do not have permission to freeze slots' },
+        { status: 403 }
       );
     }
 
-    // Decode admin token to get admin ID
-    let adminId = 'admin';
-    try {
-      const decoded = Buffer.from(adminToken.value, 'base64').toString();
-      const [username] = decoded.split(':');
-      adminId = username;
-    } catch (error) {
-      console.error('Token decode error:', error);
-    }
+    await dbConnect();
 
     const { bookingType, sport, date, slot } = await request.json();
 
@@ -85,12 +74,12 @@ export async function POST(request: NextRequest) {
         date,
         slot,
         isFrozen: true,
-        frozenBy: adminId,
+        frozenBy: 'admin',
         frozenAt: new Date(),
       });
     } else if (!frozenSlot.isFrozen) {
       frozenSlot.isFrozen = true;
-      frozenSlot.frozenBy = adminId;
+      frozenSlot.frozenBy = 'admin';
       frozenSlot.frozenAt = new Date();
       await frozenSlot.save();
     } else {

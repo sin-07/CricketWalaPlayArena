@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import axios from 'axios';
 import { FaUpload, FaEdit, FaTrash, FaEye, FaEyeSlash, FaImages, FaPlus, FaTimes, FaCheck } from 'react-icons/fa';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 
 interface GalleryImage {
   _id: string;
@@ -24,6 +25,7 @@ export default function AdminGallery() {
   const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const { hasPermission, isLoading: permissionsLoading } = useAdminPermissions();
   
   // Form state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -58,6 +60,13 @@ export default function AdminGallery() {
     };
     checkAuth();
   }, [router]);
+
+  // Redirect if no gallery permission
+  useEffect(() => {
+    if (!permissionsLoading && isAuthenticated && !hasPermission('canViewGallery')) {
+      router.push('/admin');
+    }
+  }, [permissionsLoading, isAuthenticated, hasPermission, router]);
 
   const fetchImages = async () => {
     try {
@@ -157,8 +166,12 @@ export default function AdminGallery() {
 
       fetchImages();
       resetForm();
-    } catch (error) {
-      showNotification('Failed to save image', 'error');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        showNotification('Permission denied: You don\'t have permission to manage gallery', 'error');
+      } else {
+        showNotification('Failed to save image', 'error');
+      }
     } finally {
       setUploading(false);
     }
@@ -180,8 +193,12 @@ export default function AdminGallery() {
       await axios.delete(`/api/gallery?id=${id}`);
       showNotification('Image deleted successfully', 'success');
       fetchImages();
-    } catch (error) {
-      showNotification('Failed to delete image', 'error');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        showNotification('Permission denied: You don\'t have permission to delete gallery images', 'error');
+      } else {
+        showNotification('Failed to delete image', 'error');
+      }
     }
   };
 
@@ -194,8 +211,12 @@ export default function AdminGallery() {
       });
       showNotification('Image status updated', 'success');
       fetchImages();
-    } catch (error) {
-      showNotification('Failed to update status', 'error');
+    } catch (error: any) {
+      if (error.response?.status === 403) {
+        showNotification('Permission denied: You don\'t have permission to edit gallery images', 'error');
+      } else {
+        showNotification('Failed to update image status', 'error');
+      }
     }
   };
 

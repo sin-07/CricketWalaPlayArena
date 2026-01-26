@@ -1,25 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import dbConnect from '@/lib/mongodb';
 import NewsletterSubscriber from '@/models/NewsletterSubscriber';
 import Newsletter from '@/models/Newsletter';
 import { sendNewsletterToSubscribers } from '@/lib/emailService';
-
-// Verify admin authentication
-async function verifyAdmin(): Promise<boolean> {
-  const cookieStore = await cookies();
-  const adminCookie = cookieStore.get('admin_session');
-  return !!adminCookie?.value;
-}
+import { checkPermission } from '@/lib/permissionUtils';
 
 // GET - Get all subscribers (admin only)
 export async function GET(request: NextRequest) {
   try {
-    const isAdmin = await verifyAdmin();
-    if (!isAdmin) {
+    // Check permission to view newsletter
+    const permResult = await checkPermission('canViewNewsletter');
+    
+    if (!permResult.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { success: false, error: permResult.error || 'You do not have permission to view newsletter' },
+        { status: 403 }
       );
     }
     
@@ -73,11 +68,13 @@ export async function GET(request: NextRequest) {
 // POST - Send newsletter to all active subscribers (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const isAdmin = await verifyAdmin();
-    if (!isAdmin) {
+    // Check permission to send newsletter
+    const permResult = await checkPermission('canSendNewsletter');
+    
+    if (!permResult.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { success: false, error: permResult.error || 'You do not have permission to send newsletters' },
+        { status: 403 }
       );
     }
     
@@ -151,11 +148,13 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove a subscriber (admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    const isAdmin = await verifyAdmin();
-    if (!isAdmin) {
+    // Check permission to manage subscribers
+    const permResult = await checkPermission('canManageSubscribers');
+    
+    if (!permResult.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { success: false, error: permResult.error || 'You do not have permission to manage subscribers' },
+        { status: 403 }
       );
     }
     

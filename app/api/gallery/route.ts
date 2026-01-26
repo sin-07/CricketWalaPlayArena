@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import GalleryImage from '@/models/GalleryImage';
-import { verifyAdminAuth } from '@/lib/authUtils';
+import { checkPermission } from '@/lib/permissionUtils';
 
 // GET - Fetch all gallery images
 export async function GET(request: NextRequest) {
@@ -26,13 +26,17 @@ export async function GET(request: NextRequest) {
 
 // POST - Add new gallery image (Admin only)
 export async function POST(request: NextRequest) {
-  // Verify admin authentication
-  const authResult = await verifyAdminAuth();
-  if (!authResult.authenticated && authResult.response) {
-    return authResult.response;
-  }
-
   try {
+    // Check permission to upload gallery images
+    const permResult = await checkPermission('canUploadGallery');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { error: permResult.error || 'You do not have permission to upload gallery images' },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
 
     const body = await request.json();
@@ -65,13 +69,17 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update gallery image (Admin only)
 export async function PUT(request: NextRequest) {
-  // Verify admin authentication
-  const authResult = await verifyAdminAuth();
-  if (!authResult.authenticated && authResult.response) {
-    return authResult.response;
-  }
-
   try {
+    // Check permission to upload/edit gallery images
+    const permResult = await checkPermission('canUploadGallery');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { error: permResult.error || 'You do not have permission to edit gallery images' },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
 
     const body = await request.json();
@@ -109,13 +117,17 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete gallery image (Admin only)
 export async function DELETE(request: NextRequest) {
-  // Verify admin authentication
-  const authResult = await verifyAdminAuth();
-  if (!authResult.authenticated && authResult.response) {
-    return authResult.response;
-  }
-
   try {
+    // Check permission to delete gallery images
+    const permResult = await checkPermission('canDeleteGallery');
+    
+    if (!permResult.allowed) {
+      return NextResponse.json(
+        { error: permResult.error || 'You do not have permission to delete gallery images' },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
 
     const { searchParams } = new URL(request.url);

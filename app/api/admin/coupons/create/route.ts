@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Coupon from '@/models/Coupon';
-import { verifyAdminToken } from '@/lib/permissionUtils';
+import { checkPermission } from '@/lib/permissionUtils';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication and get admin info
-    const authResult = await verifyAdminToken();
+    // Check permission to create coupons
+    const permResult = await checkPermission('canCreateCoupon');
     
-    if (!authResult.authenticated) {
+    if (!permResult.allowed) {
       return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
+        { error: permResult.error || 'You do not have permission to create coupons' },
+        { status: 403 }
       );
     }
-
-    // Check permission to create coupons (basic check - super admin always allowed)
-    const adminId = authResult.adminId;
 
     await dbConnect();
 
@@ -99,7 +96,6 @@ export async function POST(request: NextRequest) {
       isActive: true,
       showOnHomePage: showOnHomePage || false,
       offerTitle: offerTitle || '',
-      createdBy: adminId,
     });
 
     return NextResponse.json(

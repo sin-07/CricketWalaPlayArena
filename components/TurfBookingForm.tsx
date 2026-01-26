@@ -47,7 +47,17 @@ export default function TurfBookingForm({
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [bookingRef, setBookingRef] = useState<string | null>(null);
-  const [bookingPrice, setBookingPrice] = useState<{ basePrice: number; finalPrice: number; bookingCharge: number; totalPrice: number; discountPercentage: number; couponDiscount?: number; couponCode?: string } | null>(null);
+  const [bookingPrice, setBookingPrice] = useState<{ 
+    basePrice: number; 
+    finalPrice: number; 
+    bookingCharge: number; 
+    totalPrice: number; 
+    discountPercentage: number; 
+    couponDiscount?: number; 
+    couponCode?: string;
+    advancePayment: number;
+    remainingPayment: number;
+  } | null>(null);
   const [confirmedBookingDetails, setConfirmedBookingDetails] = useState<{ sport: string; date: string; slot: string; bookingType: string; email: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -295,10 +305,18 @@ export default function TurfBookingForm({
       finalPriceAfterAllDiscounts = Math.max(0, pricing.finalPrice - appliedCoupon.discount);
     }
     
-    // For match bookings, booking charge is already included in base price (₹1200)
-    // So total = finalPrice (no additional charge)
-    // For practice bookings, add booking charge separately
-    const effectiveBookingCharge = formData.bookingType === 'match' ? 0 : pricing.bookingCharge;
+    // Total price = final price after all discounts (NO additional charges)
+    const totalPrice = finalPriceAfterAllDiscounts;
+    
+    // Payment split:
+    // - Match (Main Turf): ₹200 online advance, rest offline
+    // - Practice: Full amount online
+    const advancePayment = formData.bookingType === 'match' 
+      ? Math.min(Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200, totalPrice)
+      : totalPrice;
+    const remainingPayment = formData.bookingType === 'match'
+      ? Math.max(0, totalPrice - advancePayment)
+      : 0;
     
     return {
       basePrice: pricing.basePrice,
@@ -307,8 +325,9 @@ export default function TurfBookingForm({
       priceAfterWeeklyDiscount: pricing.finalPrice,
       couponDiscount: appliedCoupon?.discount || 0,
       finalPrice: finalPriceAfterAllDiscounts,
-      bookingCharge: effectiveBookingCharge,
-      totalPrice: finalPriceAfterAllDiscounts + effectiveBookingCharge,
+      totalPrice,
+      advancePayment,
+      remainingPayment,
       numSlots,
     };
   };
@@ -350,12 +369,16 @@ export default function TurfBookingForm({
     setServerError(null);
 
     try {
-      // Calculate payment amount
+      // Calculate payment amount based on booking type
       const totalPricing = calculateTotalWithCoupon();
-      const totalPrice = totalPricing?.totalPrice || 0;
-      const paymentAmount = formData.bookingType === 'match' 
-        ? Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200
-        : totalPrice;
+      if (!totalPricing || totalPricing.totalPrice <= 0) {
+        throw new Error('Invalid price calculation');
+      }
+      
+      // Payment amount:
+      // - Match (Main Turf): Pay advance payment (₹200) online, rest offline
+      // - Practice: Pay full amount online
+      const paymentAmount = totalPricing.advancePayment;
 
       // Generate a temporary booking reference for payment
       const tempBookingRef = 'TEMP' + Date.now();
@@ -425,11 +448,13 @@ export default function TurfBookingForm({
             setBookingPrice({
               basePrice: data.data?.basePrice || 0,
               finalPrice: data.data?.finalPrice || 0,
-              bookingCharge: data.data?.bookingCharge || 200,
-              totalPrice: data.data?.totalPrice || totalPrice,
+              bookingCharge: 0, // No booking charge anymore
+              totalPrice: data.data?.totalPrice || totalPricing?.totalPrice || 0,
               discountPercentage: data.data?.discountPercentage || 0,
               couponDiscount: data.data?.couponDiscount || 0,
               couponCode: data.data?.couponCode || undefined,
+              advancePayment: data.data?.advancePayment || totalPricing?.advancePayment || 0,
+              remainingPayment: data.data?.remainingPayment || totalPricing?.remainingPayment || 0,
             });
             setConfirmedBookingDetails(bookingData);
             setShowSuccessModal(true);
@@ -614,17 +639,9 @@ export default function TurfBookingForm({
                         )}
                         
                         <div className="flex justify-between items-center pt-2 border-t border-gray-200 bg-green-50 px-3 py-2.5 border border-green-100">
-                          <p className="text-sm text-green-700 font-semibold">Discounted Price</p>
-                          <p className="text-base font-bold text-green-700">₹{bookingPrice.finalPrice}</p>
+                          <p className="text-sm text-green-700 font-semibold">Final Price</p>
+                          <p className="text-base font-bold text-green-700">₹{bookingPrice.totalPrice}</p>
                         </div>
-                        
-                        {/* Only show booking charge for practice bookings */}
-                        {confirmedBookingDetails?.bookingType === 'practice' && bookingPrice.bookingCharge > 0 && (
-                          <div className="flex justify-between items-center">
-                            <p className="text-sm text-gray-600">Booking Charge</p>
-                            <p className="text-sm font-semibold text-gray-900">₹{bookingPrice.bookingCharge}</p>
-                          </div>
-                        )}
                         
                         <div className="flex justify-between items-center bg-gray-900 text-white px-4 py-3.5 mt-3">
                           <p className="text-sm font-semibold">Total Amount</p>
@@ -635,18 +652,32 @@ export default function TurfBookingForm({
                         {confirmedBookingDetails?.bookingType === 'match' && (
                           <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
                             <div className="flex justify-between items-center bg-green-50 px-3 py-2.5 border border-green-100">
-                              <p className="text-sm font-semibold text-green-800">Pay Now (Online)</p>
-                              <p className="text-base font-bold text-green-700">₹{process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200}</p>
+                              <p className="text-sm font-semibold text-green-800">✅ Paid Online (Advance)</p>
+                              <p className="text-base font-bold text-green-700">₹{bookingPrice.advancePayment}</p>
                             </div>
                             <div className="flex justify-between items-center bg-orange-50 px-3 py-2.5 border border-orange-100">
-                              <p className="text-sm font-semibold text-orange-800">Pay at Turf (Offline)</p>
+                              <p className="text-sm font-semibold text-orange-800">⏳ Pay at Turf (Remaining)</p>
                               <p className="text-base font-bold text-orange-700">
-                                ₹{Math.max(0, bookingPrice.totalPrice - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))}
+                                ₹{bookingPrice.remainingPayment}
                               </p>
                             </div>
                             <div className="flex gap-2 text-xs text-gray-600 bg-blue-50 px-3 py-2.5 border border-blue-100">
                               <span className="text-blue-600 flex-shrink-0">ℹ️</span>
                               <p>Only advance payment is required now. Pay the remaining amount when you visit the turf.</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Full Payment Info for Practice Bookings */}
+                        {confirmedBookingDetails?.bookingType === 'practice' && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="flex justify-between items-center bg-green-50 px-3 py-2.5 border border-green-100">
+                              <p className="text-sm font-semibold text-green-800">✅ Paid Online (Full Payment)</p>
+                              <p className="text-base font-bold text-green-700">₹{bookingPrice.advancePayment}</p>
+                            </div>
+                            <div className="flex gap-2 text-xs text-gray-600 bg-blue-50 px-3 py-2.5 border border-blue-100 mt-2">
+                              <span className="text-blue-600 flex-shrink-0">✓</span>
+                              <p>Payment complete! No further payment required at the turf.</p>
                             </div>
                           </div>
                         )}
@@ -880,36 +911,32 @@ export default function TurfBookingForm({
                           <span>-₹{calculateTotalWithCoupon()?.weeklyDiscount.toFixed(0)}</span>
                         </div>
                       )}
+                      {appliedCoupon && (
+                        <div className="flex justify-between text-purple-600 text-xs">
+                          <span>Coupon: {appliedCoupon.code}</span>
+                          <span>-₹{calculateTotalWithCoupon()?.couponDiscount}</span>
+                        </div>
+                      )}
+                      
+                      {/* Payment Split for Main Turf */}
                       {formData.bookingType === 'match' && (
-                        <>
-                          <div className="flex justify-between text-green-700 font-medium pt-2 border-t border-green-300">
-                            <span>Pay Now (Online)</span>
-                            <span>₹{Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200}</span>
+                        <div className="pt-2 border-t border-green-300 space-y-1">
+                          <div className="flex justify-between text-green-700 font-medium">
+                            <span>💳 Pay Now (Online)</span>
+                            <span>₹{calculateTotalWithCoupon()?.advancePayment}</span>
                           </div>
                           <div className="flex justify-between text-orange-600">
-                            <span>Pay at Turf</span>
-                            <span>₹{Math.max(0, (calculateTotalWithCoupon()?.totalPrice || 0) - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))}</span>
+                            <span>🏟️ Pay at Turf</span>
+                            <span>₹{calculateTotalWithCoupon()?.remainingPayment}</span>
                           </div>
-                        </>
+                        </div>
                       )}
+                      
+                      {/* Full Payment for Practice */}
                       {formData.bookingType === 'practice' && (
-                        <>
-                          {(calculateTotalWithCoupon()?.bookingCharge || 0) > 0 && (
-                            <div className="flex justify-between text-orange-600 text-xs">
-                              <span>Booking Charge</span>
-                              <span>+₹{calculateTotalWithCoupon()?.bookingCharge}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between text-green-700 font-medium pt-1 border-t border-green-200">
-                            <span>Pay Now</span>
-                            <span>₹{calculateTotalWithCoupon()?.totalPrice.toFixed(0)}</span>
-                          </div>
-                        </>
-                      )}
-                      {appliedCoupon && (
-                        <div className="flex justify-between text-purple-600 text-xs pt-1 border-t border-green-200">
-                          <span>Coupon: {appliedCoupon.code}</span>
-                          <span>-₹{appliedCoupon.discount}</span>
+                        <div className="flex justify-between text-green-700 font-medium pt-2 border-t border-green-200">
+                          <span>💳 Pay Now (Full)</span>
+                          <span>₹{calculateTotalWithCoupon()?.totalPrice.toFixed(0)}</span>
                         </div>
                       )}
                     </div>
@@ -1082,19 +1109,25 @@ export default function TurfBookingForm({
                         </div>
                       )}
                       
-                      {/* Booking Charge for Practice */}
-                      {formData.bookingType === 'practice' && totalPricing.bookingCharge > 0 && (
-                        <div className="flex justify-between items-center text-sm bg-orange-50 px-3 py-1.5 border border-orange-200">
-                          <span className="text-orange-700">Booking Charge:</span>
-                          <span className="font-semibold text-orange-700">+₹{totalPricing.bookingCharge}</span>
-                        </div>
-                      )}
-                      
                       {/* Final Price */}
                       <div className="flex justify-between items-center pt-2 border-t border-green-200">
                         <span className="text-lg font-bold text-green-700">Final Price:</span>
                         <span className="text-lg font-bold text-green-700">₹{totalPricing.totalPrice.toFixed(0)}</span>
                       </div>
+                      
+                      {/* Payment Split Info for Main Turf */}
+                      {formData.bookingType === 'match' && totalPricing.totalPrice > 0 && (
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs space-y-1">
+                          <div className="flex justify-between text-blue-700">
+                            <span>💳 Pay Online (Advance):</span>
+                            <span className="font-semibold">₹{totalPricing.advancePayment}</span>
+                          </div>
+                          <div className="flex justify-between text-orange-600">
+                            <span>🏟️ Pay at Turf:</span>
+                            <span className="font-semibold">₹{totalPricing.remainingPayment}</span>
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Total Savings */}
                       {(totalPricing.weeklyDiscount > 0 || totalPricing.couponDiscount > 0) && (
@@ -1279,12 +1312,9 @@ export default function TurfBookingForm({
             ) : (
               <>
                 <GiCricketBat className="w-5 h-5" />
-                {formData.date && formData.bookingType ? (
+                {formData.date && formData.bookingType && calculateTotalWithCoupon() ? (
                   <span>
-                    Pay ₹{formData.bookingType === 'match' 
-                      ? (Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200)
-                      : (calculateTotalWithCoupon()?.totalPrice.toFixed(0) || 0)
-                    } & Book Now
+                    Pay ₹{calculateTotalWithCoupon()?.advancePayment || 0} & Book Now
                   </span>
                 ) : (
                   <span>Book Now</span>
@@ -1293,10 +1323,17 @@ export default function TurfBookingForm({
             )}
           </button>
           
-          {/* Payment Info Note */}
+          {/* Payment Info Note for Main Turf */}
           {formData.date && formData.bookingType === 'match' && calculateTotalWithCoupon() && (
             <p className="text-xs text-center mt-2 text-gray-600">
-              💡 Pay ₹{Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200} now, remaining ₹{Math.max(0, (calculateTotalWithCoupon()?.totalPrice || 0) - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))} at turf
+              💡 Pay ₹{calculateTotalWithCoupon()?.advancePayment} now, remaining ₹{calculateTotalWithCoupon()?.remainingPayment} at turf
+            </p>
+          )}
+          
+          {/* Payment Info Note for Practice */}
+          {formData.date && formData.bookingType === 'practice' && calculateTotalWithCoupon() && (
+            <p className="text-xs text-center mt-2 text-gray-600">
+              💳 Full payment online • No offline payment required
             </p>
           )}
         </div>

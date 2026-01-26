@@ -4,12 +4,12 @@
 
 // Base prices for different booking types
 const BASE_PRICES = {
-  match: 1200,     // ₹1200 for match bookings
-  practice: 250,   // ₹250 for practice bookings
+  match: 1200,     // ₹1200 for match bookings (Main Turf)
+  practice: 250,   // ₹250 for practice bookings (Practice Turf)
 } as const;
 
-// Booking platform charge (fixed)
-const BOOKING_CHARGE = 200; // ₹200 booking charge
+// Advance payment for match bookings (paid online, rest offline)
+const ADVANCE_PAYMENT_MATCH = 200; // ₹200 advance for main turf bookings
 
 /**
  * Get day of week from date string
@@ -86,8 +86,9 @@ export function calculateFinalPrice(
   discountPercentage: number;
   discountAmount: number;
   finalPrice: number;
-  bookingCharge: number;
   totalPrice: number;
+  advancePayment: number;
+  remainingPayment: number;
   dayName: string;
   numSlots: number;
 } {
@@ -96,8 +97,20 @@ export function calculateFinalPrice(
   const discountPercentage = getDiscountPercentage(dateStr);
   const discountAmount = (basePrice * discountPercentage) / 100;
   const finalPrice = basePrice - discountAmount;
-  // For match bookings, no additional booking charge - total is same as final price
-  const totalPrice = bookingType === 'match' ? finalPrice : finalPrice + BOOKING_CHARGE;
+  
+  // Total price = final price after discounts (NO additional charges for either booking type)
+  const totalPrice = finalPrice;
+  
+  // Payment split logic:
+  // - Match (Main Turf): Pay ₹200 online, rest offline at turf
+  // - Practice: Pay full amount online
+  const advancePayment = bookingType === 'match' 
+    ? Math.min(ADVANCE_PAYMENT_MATCH, totalPrice) // Don't exceed total price
+    : totalPrice; // Practice pays full amount online
+  const remainingPayment = bookingType === 'match' 
+    ? Math.max(0, totalPrice - advancePayment)
+    : 0; // Practice has no remaining payment
+  
   const dayName = getDayName(dateStr);
 
   return {
@@ -105,8 +118,9 @@ export function calculateFinalPrice(
     discountPercentage,
     discountAmount,
     finalPrice,
-    bookingCharge: BOOKING_CHARGE,
     totalPrice,
+    advancePayment,
+    remainingPayment,
     dayName,
     numSlots,
   };

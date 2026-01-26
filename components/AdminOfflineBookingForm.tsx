@@ -139,6 +139,15 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
 
       const result = await response.json();
 
+      if (!response.ok) {
+        if (response.status === 403) {
+          setError("Permission denied: You don't have permission to create bookings");
+        } else {
+          setError(result.message || "Failed to create booking");
+        }
+        return;
+      }
+
       if (result.success) {
         setSuccess(`Booking created successfully! Ref: ${result.data.bookingRef}`);
         // Reset form

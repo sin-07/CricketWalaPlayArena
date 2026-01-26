@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAdminPermissions } from '@/hooks/useAdminPermissions';
 import {
   Mail,
   Send,
@@ -17,6 +18,7 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
+  Shield,
 } from 'lucide-react';
 
 interface Subscriber {
@@ -52,6 +54,7 @@ export default function AdminNewsletterManager() {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { hasPermission } = useAdminPermissions();
 
   // Newsletter form state
   const [formData, setFormData] = useState({
@@ -105,6 +108,11 @@ export default function AdminNewsletterManager() {
   const handleSendNewsletter = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!hasPermission('canSendNewsletter')) {
+      setMessage({ type: 'error', text: 'You do not have permission to send newsletters' });
+      return;
+    }
+    
     if (!formData.title || !formData.subject || !formData.content) {
       setMessage({ type: 'error', text: 'Please fill in all fields' });
       return;
@@ -142,7 +150,11 @@ export default function AdminNewsletterManager() {
         setFormData({ title: '', subject: '', content: '' });
         fetchNewsletterHistory();
       } else {
-        setMessage({ type: 'error', text: data.error });
+        if (response.status === 403) {
+          setMessage({ type: 'error', text: 'Permission denied: You don\'t have permission to send newsletters' });
+        } else {
+          setMessage({ type: 'error', text: data.error });
+        }
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to send newsletter' });
@@ -152,6 +164,11 @@ export default function AdminNewsletterManager() {
   };
 
   const handleDeleteSubscriber = async (email: string) => {
+    if (!hasPermission('canManageSubscribers')) {
+      setMessage({ type: 'error', text: 'You do not have permission to manage subscribers' });
+      return;
+    }
+    
     const confirmed = window.confirm(`Remove ${email} from subscribers?`);
     if (!confirmed) return;
 
@@ -348,6 +365,7 @@ Don't miss out on this amazing offer. Book your slot now!"
               <p className="text-sm text-gray-500">
                 Will be sent to <span className="font-semibold text-green-600">{stats.active}</span> active subscribers
               </p>
+              {hasPermission('canSendNewsletter') ? (
               <button
                 type="submit"
                 disabled={sending || stats.active === 0}
@@ -365,6 +383,12 @@ Don't miss out on this amazing offer. Book your slot now!"
                   </>
                 )}
               </button>
+              ) : (
+                <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
+                  <Shield className="w-4 h-4" />
+                  <span className="text-sm">Send permission disabled</span>
+                </div>
+              )}
             </div>
           </form>
         </motion.div>
@@ -443,6 +467,7 @@ Don't miss out on this amazing offer. Book your slot now!"
                         {formatDate(subscriber.subscribedAt)}
                       </td>
                       <td className="px-4 py-3 text-right">
+                        {hasPermission('canManageSubscribers') && (
                         <button
                           onClick={() => handleDeleteSubscriber(subscriber.email)}
                           className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -450,6 +475,7 @@ Don't miss out on this amazing offer. Book your slot now!"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                        )}
                       </td>
                     </tr>
                   ))}

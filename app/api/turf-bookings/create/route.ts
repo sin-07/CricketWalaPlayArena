@@ -139,19 +139,18 @@ export async function POST(request: NextRequest) {
     // Calculate final price: price after weekly discount - coupon discount
     const finalPriceAfterAllDiscounts = Math.max(0, priceAfterWeeklyDiscount - couponDiscount);
     
-    // For match bookings: NO additional booking charge (base price ₹1200 already includes it)
-    // For practice bookings: ADD booking charge separately
-    const totalPrice = bookingType === 'match' 
-      ? finalPriceAfterAllDiscounts 
-      : finalPriceAfterAllDiscounts + pricing.bookingCharge;
+    // Total price = final price after all discounts (NO additional charges for either booking type)
+    const totalPrice = finalPriceAfterAllDiscounts;
 
-    // Calculate advance and remaining payments for match bookings
+    // Payment split logic:
+    // - Match (Main Turf): Pay ₹200 online as advance, rest offline at turf
+    // - Practice: Pay full amount online, no offline payment
     const advancePayment = bookingType === 'match' 
-      ? Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200 
-      : totalPrice; // Practice bookings pay full amount
+      ? Math.min(Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200, totalPrice)
+      : totalPrice; // Practice bookings pay full amount online
     const remainingPayment = bookingType === 'match' 
       ? Math.max(0, totalPrice - advancePayment)
-      : 0;
+      : 0; // Practice has no remaining payment
 
     const newBooking = new TurfBooking({
       bookingType,
@@ -166,7 +165,7 @@ export async function POST(request: NextRequest) {
       discountPercentage: pricing.discountPercentage,
       couponCode: appliedCouponCode,
       couponDiscount: couponDiscount,
-      bookingCharge: pricing.bookingCharge,
+      bookingCharge: 0, // No booking charge - kept for backward compatibility
       totalPrice: totalPrice,
       advancePayment: advancePayment,
       remainingPayment: remainingPayment,
