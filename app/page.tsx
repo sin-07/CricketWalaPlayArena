@@ -253,7 +253,7 @@ export default function Home() {
       </section>
 
       {/* Gallery Section */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
+      <section id="gallery" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-purple-100 text-purple-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
@@ -265,16 +265,6 @@ export default function Home() {
           </div>
           
           <Gallery />
-          
-          <div className="text-center mt-6 sm:mt-8">
-            <Link
-              href="/admin/gallery"
-              className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 font-semibold transition-colors text-sm sm:text-base"
-            >
-              View All Photos
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
         </div>
       </section>
 

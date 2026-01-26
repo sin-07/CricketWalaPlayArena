@@ -99,7 +99,7 @@ export default function FooterSection() {
                 </li>
                 <li>
                   <Link 
-                    href="/booking" 
+                    href="/turf-booking" 
                     className="text-xs sm:text-sm text-gray-400 hover:text-green-400 hover:translate-x-1 inline-block transition-all duration-200"
                   >
                     → Book Now
@@ -107,19 +107,19 @@ export default function FooterSection() {
                 </li>
                 <li>
                   <Link 
-                    href="/all-bookings" 
+                    href="/my-bookings" 
                     className="text-xs sm:text-sm text-gray-400 hover:text-green-400 hover:translate-x-1 inline-block transition-all duration-200"
                   >
                     → My Bookings
                   </Link>
                 </li>
                 <li>
-                  <Link 
-                    href="/admin/gallery" 
+                  <a 
+                    href="/#gallery" 
                     className="text-xs sm:text-sm text-gray-400 hover:text-green-400 hover:translate-x-1 inline-block transition-all duration-200"
                   >
                     → Gallery
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
