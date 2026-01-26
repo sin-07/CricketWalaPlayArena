@@ -871,8 +871,15 @@ export default function TurfBookingForm({
                     <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between font-bold text-sm">
                         <span className="text-gray-800">Total Amount</span>
-                        <span className="text-gray-900">₹{calculateTotalWithCoupon()?.finalPrice.toFixed(0)}</span>
+                        <span className="text-gray-900">₹{calculateTotalWithCoupon()?.totalPrice.toFixed(0)}</span>
                       </div>
+                      {/* Show discount breakdown */}
+                      {(calculateTotalWithCoupon()?.weeklyDiscount || 0) > 0 && (
+                        <div className="flex justify-between text-green-600 text-xs">
+                          <span>Weekly Discount ({calculateTotalWithCoupon()?.weeklyDiscountPercentage}%)</span>
+                          <span>-₹{calculateTotalWithCoupon()?.weeklyDiscount.toFixed(0)}</span>
+                        </div>
+                      )}
                       {formData.bookingType === 'match' && (
                         <>
                           <div className="flex justify-between text-green-700 font-medium pt-2 border-t border-green-300">
@@ -881,15 +888,23 @@ export default function TurfBookingForm({
                           </div>
                           <div className="flex justify-between text-orange-600">
                             <span>Pay at Turf</span>
-                            <span>₹{Math.max(0, (calculateTotalWithCoupon()?.finalPrice || 0) - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))}</span>
+                            <span>₹{Math.max(0, (calculateTotalWithCoupon()?.totalPrice || 0) - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))}</span>
                           </div>
                         </>
                       )}
                       {formData.bookingType === 'practice' && (
-                        <div className="flex justify-between text-green-700 font-medium">
-                          <span>Pay Now</span>
-                          <span>₹{calculateTotalWithCoupon()?.finalPrice.toFixed(0)}</span>
-                        </div>
+                        <>
+                          {(calculateTotalWithCoupon()?.bookingCharge || 0) > 0 && (
+                            <div className="flex justify-between text-orange-600 text-xs">
+                              <span>Booking Charge</span>
+                              <span>+₹{calculateTotalWithCoupon()?.bookingCharge}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-green-700 font-medium pt-1 border-t border-green-200">
+                            <span>Pay Now</span>
+                            <span>₹{calculateTotalWithCoupon()?.totalPrice.toFixed(0)}</span>
+                          </div>
+                        </>
                       )}
                       {appliedCoupon && (
                         <div className="flex justify-between text-purple-600 text-xs pt-1 border-t border-green-200">
@@ -1067,10 +1082,18 @@ export default function TurfBookingForm({
                         </div>
                       )}
                       
+                      {/* Booking Charge for Practice */}
+                      {formData.bookingType === 'practice' && totalPricing.bookingCharge > 0 && (
+                        <div className="flex justify-between items-center text-sm bg-orange-50 px-3 py-1.5 border border-orange-200">
+                          <span className="text-orange-700">Booking Charge:</span>
+                          <span className="font-semibold text-orange-700">+₹{totalPricing.bookingCharge}</span>
+                        </div>
+                      )}
+                      
                       {/* Final Price */}
                       <div className="flex justify-between items-center pt-2 border-t border-green-200">
                         <span className="text-lg font-bold text-green-700">Final Price:</span>
-                        <span className="text-lg font-bold text-green-700">₹{totalPricing.finalPrice.toFixed(0)}</span>
+                        <span className="text-lg font-bold text-green-700">₹{totalPricing.totalPrice.toFixed(0)}</span>
                       </div>
                       
                       {/* Total Savings */}
@@ -1260,7 +1283,7 @@ export default function TurfBookingForm({
                   <span>
                     Pay ₹{formData.bookingType === 'match' 
                       ? (Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200)
-                      : (calculateTotalWithCoupon()?.finalPrice.toFixed(0) || 0)
+                      : (calculateTotalWithCoupon()?.totalPrice.toFixed(0) || 0)
                     } & Book Now
                   </span>
                 ) : (
@@ -1273,7 +1296,7 @@ export default function TurfBookingForm({
           {/* Payment Info Note */}
           {formData.date && formData.bookingType === 'match' && calculateTotalWithCoupon() && (
             <p className="text-xs text-center mt-2 text-gray-600">
-              💡 Pay ₹{Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200} now, remaining ₹{Math.max(0, (calculateTotalWithCoupon()?.finalPrice || 0) - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))} at turf
+              💡 Pay ₹{Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT) || 200} now, remaining ₹{Math.max(0, (calculateTotalWithCoupon()?.totalPrice || 0) - Number(process.env.NEXT_PUBLIC_ADVANCE_PAYMENT || 200))} at turf
             </p>
           )}
         </div>

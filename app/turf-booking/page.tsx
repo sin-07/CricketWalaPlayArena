@@ -1,13 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import TurfBookingForm from '@/components/TurfBookingForm';
 import { GiCricketBat } from 'react-icons/gi';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function TurfBookingPage() {
-  const [activeTab, setActiveTab] = useState<'match' | 'practice'>('match');
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get('type');
+  const initialTab = (typeParam === 'practice' || typeParam === 'match') ? typeParam : 'match';
+  
+  const [activeTab, setActiveTab] = useState<'match' | 'practice'>(initialTab);
   const [formKey, setFormKey] = useState(0); // Key to force form reset
+  
+  // Update tab when query param changes
+  useEffect(() => {
+    if (typeParam === 'practice' || typeParam === 'match') {
+      if (typeParam !== activeTab) {
+        setActiveTab(typeParam);
+        setFormKey(prev => prev + 1);
+      }
+    }
+  }, [typeParam]);
 
   const handleTabChange = (tab: 'match' | 'practice') => {
     if (tab !== activeTab) {

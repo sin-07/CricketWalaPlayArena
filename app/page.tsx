@@ -186,7 +186,7 @@ export default function Home() {
                 </ul>
                 
                 <Link
-                  href="/booking"
+                  href="/turf-booking?type=match"
                   className="w-full py-3 sm:py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-all text-center block group-hover:bg-green-600 text-sm sm:text-base"
                 >
                   Book Match Slot
@@ -241,7 +241,7 @@ export default function Home() {
                 </ul>
                 
                 <Link
-                  href="/booking"
+                  href="/turf-booking?type=practice"
                   className="w-full py-3 sm:py-4 bg-white text-green-600 font-bold rounded-xl hover:bg-green-50 transition-all text-center block shadow-lg text-sm sm:text-base"
                 >
                   Book Practice Slot
