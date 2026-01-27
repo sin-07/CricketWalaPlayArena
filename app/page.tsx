@@ -6,6 +6,7 @@ import { GiCricketBat } from 'react-icons/gi';
 import { ArrowRight, Zap, Trophy, Users, Calendar, Clock, Shield, MapPin, ChevronRight, CalendarDays, MousePointerClick, CheckCircle2, Sparkles, Star, Images, Hammer, Target } from 'lucide-react';
 import OfferMarquee from '@/components/OfferMarquee';
 import Gallery from '@/components/Gallery';
+import ReviewsSection from '@/components/ReviewsSection';
 
 export default function Home() {
   return (
@@ -267,6 +268,9 @@ export default function Home() {
           <Gallery />
         </div>
       </section>
+
+      {/* Reviews Section */}
+      <ReviewsSection />
 
       {/* Turf Construction - Coming Soon */}
       <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 text-white relative overflow-hidden">

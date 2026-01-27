@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings, Star } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
 import AdminTable from '@/components/AdminTable';
 import AdminCouponManager from '@/components/AdminCouponManager';
 import AdminNewsletterManager from '@/components/AdminNewsletterManager';
 import AdminPaymentToggle from '@/components/AdminPaymentToggle';
+import AdminReviewManager from '@/components/AdminReviewManager';
 import NotificationSystem from '@/components/NotificationSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'superadmin' | null>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter' | 'settings' | 'none'>('none');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter' | 'reviews' | 'settings' | 'none'>('none');
   const [turfBookings, setTurfBookings] = useState<TurfBooking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -456,6 +457,20 @@ export default function AdminDashboard() {
           )}
           {hasPermission('canViewBookings') && (
             <Button
+              variant={activeTab === 'reviews' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('reviews')}
+              className={`flex items-center font-medium transition-all ${
+                activeTab === 'reviews'
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+              }`}
+            >
+              <Star className="w-4 h-4 mr-2" />
+              Reviews
+            </Button>
+          )}
+          {hasPermission('canViewBookings') && (
+            <Button
               variant={activeTab === 'settings' ? 'default' : 'outline'}
               onClick={() => setActiveTab('settings')}
               className={`flex items-center font-medium transition-all ${
@@ -493,6 +508,10 @@ export default function AdminDashboard() {
           ) : activeTab === 'newsletter' && hasPermission('canViewNewsletter') ? (
             <div className="max-w-7xl mx-auto">
               <AdminNewsletterManager />
+            </div>
+          ) : activeTab === 'reviews' && hasPermission('canViewBookings') ? (
+            <div className="max-w-7xl mx-auto">
+              <AdminReviewManager />
             </div>
           ) : activeTab === 'settings' && hasPermission('canViewBookings') ? (
             <div className="max-w-3xl mx-auto px-4 sm:px-0">
