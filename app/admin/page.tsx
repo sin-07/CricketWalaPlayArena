@@ -9,6 +9,7 @@ import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
 import AdminTable from '@/components/AdminTable';
 import AdminCouponManager from '@/components/AdminCouponManager';
 import AdminNewsletterManager from '@/components/AdminNewsletterManager';
+import AdminPaymentToggle from '@/components/AdminPaymentToggle';
 import NotificationSystem from '@/components/NotificationSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<'admin' | 'superadmin' | null>(null);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter' | 'none'>('none');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'create' | 'coupons' | 'newsletter' | 'settings' | 'none'>('none');
   const [turfBookings, setTurfBookings] = useState<TurfBooking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -391,7 +392,11 @@ export default function AdminDashboard() {
             <Button
               variant={activeTab === 'bookings' ? 'default' : 'outline'}
               onClick={() => setActiveTab('bookings')}
-              className="flex items-center"
+              className={`flex items-center font-medium transition-all ${
+                activeTab === 'bookings'
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+              }`}
             >
               <TableIcon className="w-4 h-4 mr-2" />
               All Bookings
@@ -401,7 +406,11 @@ export default function AdminDashboard() {
             <Button
               variant={activeTab === 'create' ? 'default' : 'outline'}
               onClick={() => setActiveTab('create')}
-              className="flex items-center"
+              className={`flex items-center font-medium transition-all ${
+                activeTab === 'create'
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+              }`}
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Offline Booking
@@ -409,9 +418,9 @@ export default function AdminDashboard() {
           )}
           {hasPermission('canViewSlots') && (
             <Button
-              variant="outline"
+              variant={activeTab === 'bookings' ? 'outline' : 'outline'}
               onClick={() => router.push('/admin/slots')}
-              className="flex items-center bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+              className="flex items-center bg-green-50 hover:bg-green-100 border-green-200 text-green-700 font-medium transition-all"
             >
               <Snowflake className="w-4 h-4 mr-2" />
               Manage Frozen Slots
@@ -421,7 +430,11 @@ export default function AdminDashboard() {
             <Button
               variant={activeTab === 'coupons' ? 'default' : 'outline'}
               onClick={() => setActiveTab('coupons')}
-              className="flex items-center bg-purple-50 hover:bg-purple-100 border-purple-200 text-purple-700"
+              className={`flex items-center font-medium transition-all ${
+                activeTab === 'coupons'
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+              }`}
             >
               <Tag className="w-4 h-4 mr-2" />
               Manage Coupons
@@ -431,10 +444,28 @@ export default function AdminDashboard() {
             <Button
               variant={activeTab === 'newsletter' ? 'default' : 'outline'}
               onClick={() => setActiveTab('newsletter')}
-              className="flex items-center bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-700"
+              className={`flex items-center font-medium transition-all ${
+                activeTab === 'newsletter'
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+              }`}
             >
               <Mail className="w-4 h-4 mr-2" />
               Newsletter
+            </Button>
+          )}
+          {hasPermission('canViewBookings') && (
+            <Button
+              variant={activeTab === 'settings' ? 'default' : 'outline'}
+              onClick={() => setActiveTab('settings')}
+              className={`flex items-center font-medium transition-all ${
+                activeTab === 'settings'
+                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                  : 'bg-green-50 hover:bg-green-100 border-green-200 text-green-700'
+              }`}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
             </Button>
           )}
         </motion.div>
@@ -462,6 +493,14 @@ export default function AdminDashboard() {
           ) : activeTab === 'newsletter' && hasPermission('canViewNewsletter') ? (
             <div className="max-w-7xl mx-auto">
               <AdminNewsletterManager />
+            </div>
+          ) : activeTab === 'settings' && hasPermission('canViewBookings') ? (
+            <div className="max-w-3xl mx-auto px-4 sm:px-0">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">System Settings</h2>
+                <p className="text-gray-600">Manage payment gateway and system configurations</p>
+              </div>
+              <AdminPaymentToggle />
             </div>
           ) : (
             <div className="text-center py-12">

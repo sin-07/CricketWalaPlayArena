@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
+import connectDB from '@/lib/mongodb';
+import PaymentSettings from '@/models/PaymentSettings';
 
 /**
  * POST /api/payment/create-order
@@ -8,6 +10,22 @@ import Razorpay from 'razorpay';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check if payments are enabled before processing
+    await connectDB();
+    const settings = await PaymentSettings.findOne();
+    
+    if (settings && !settings.paymentsEnabled) {
+      console.log('❌ Payment creation blocked - payments disabled by admin');
+      return NextResponse.json(
+        {
+          success: false,
+          paymentsDisabled: true,
+          message: 'Payment service is temporarily unavailable. Please try again later.',
+        },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     const { amount, bookingRef, customerName, email, phone } = body;
 

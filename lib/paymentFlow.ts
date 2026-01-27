@@ -21,6 +21,7 @@ export interface CreateOrderResponse {
   };
   message?: string;
   error?: string;
+  paymentsDisabled?: boolean;
 }
 
 export interface VerifyPaymentParams {
@@ -58,6 +59,15 @@ export async function createPaymentOrder(
     });
 
     const data = await response.json();
+
+    // Check if payments are disabled
+    if (data.paymentsDisabled) {
+      return {
+        success: false,
+        paymentsDisabled: true,
+        message: data.message || 'Payment service is temporarily unavailable',
+      };
+    }
 
     if (!response.ok) {
       throw new Error(data.message || 'Failed to create payment order');

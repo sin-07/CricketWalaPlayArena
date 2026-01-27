@@ -392,6 +392,13 @@ export default function TurfBookingForm({
         phone: normalizeMobileNumber(formData.mobile),
       });
 
+      // Check if payments are disabled by admin
+      if (orderResponse.paymentsDisabled) {
+        // Redirect to payment unavailable page
+        window.location.href = '/payment-unavailable';
+        return;
+      }
+
       if (!orderResponse.success || !orderResponse.data) {
         throw new Error(orderResponse.message || 'Failed to create payment order');
       }

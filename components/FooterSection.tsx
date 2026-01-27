@@ -178,23 +178,18 @@ export default function FooterSection() {
                   </div>
                 </div>
 
-                {/* Address */}
-                <div className="group pt-1 sm:pt-2">
+                {/* Location */}
+                <div className="group">
                   <a 
                     href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="flex gap-2 sm:gap-3 justify-center sm:justify-start"
+                    className="flex items-center gap-2 sm:gap-3 justify-center sm:justify-start"
                   >
                     <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-900 group-hover:bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500 group-hover:text-white transition-colors" />
                     </div>
-                    <div className="text-[10px] sm:text-xs text-gray-400 text-left group-hover:text-green-400 transition-colors">
-                      <p className="font-semibold text-white group-hover:text-green-400 mb-0.5 sm:mb-1">H5V9+V8F, Mahatma Gandhi nagar</p>
-                      <p className="text-gray-500 group-hover:text-green-400">Kanti Factory Rd, Kankarbagh</p>
-                      <p className="text-gray-500 group-hover:text-green-400">Near- Atithi Banquet Hall</p>
-                      <p className="text-gray-500 group-hover:text-green-400">Patna, Bihar 800026</p>
-                    </div>
+                    <span className="text-xs sm:text-sm text-gray-400 group-hover:text-green-400 transition-colors font-medium">Location</span>
                   </a>
                 </div>
               </div>
