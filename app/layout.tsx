@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     description: 'Book your cricket practice session at Cricket Wala Play Arena Patna, located in Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking, affordable rates ₹10/hour.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/cwpa.jpg',
         width: 1200,
         height: 630,
         alt: 'Cricket Wala Play Arena - Indoor Cricket Box',
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Cricket Wala Play Arena Patna - Book Cricket Box in Kanti Factory, Patna Bihar',
     description: 'Book your cricket practice session at Cricket Wala Play Arena Patna, located in Kanti Factory, Patna, Bihar. Premium indoor cricket box, easy online booking.',
-    images: ['/og-image.jpg'],
+    images: ['/cwpa.jpg'],
   },
   robots: {
     index: true,
@@ -103,31 +103,39 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SportsActivityLocation",
-              "name": "Cricket Wala Play Arena Patna",
-              "description": "Premium indoor cricket box for practice sessions in Kanti Factory, Patna, Bihar. Not in Varanasi - Located in Patna only.",
+              "name": "Cricket Wala Play Arena",
+              "alternateName": "Cricket Wala Play Arena Patna",
+              "description": "Premium indoor cricket box for practice sessions. Located at H5V9+V8F, Mahatma Gandhi Nagar, Kanti Factory Road, Kankarbagh, Patna, Bihar 800026. Book cricket slots online with affordable rates.",
               "url": "https://www.cricketwalaplayarena.in",
-              "telephone": "+91-8340296635",
+              "logo": "https://www.cricketwalaplayarena.in/cwpa.jpg",
+              "image": "https://www.cricketwalaplayarena.in/cwpa.jpg",
+              "telephone": "+918340296635",
+              "email": "cricketwala1112025@gmail.com",
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "Kanti Factory",
+                "streetAddress": "H5V9+V8F, Mahatma Gandhi Nagar, Kanti Factory Road, Kankarbagh",
                 "addressLocality": "Patna",
                 "addressRegion": "Bihar",
-                "postalCode": "800007",
+                "postalCode": "800026",
                 "addressCountry": "IN"
               },
               "geo": {
                 "@type": "GeoCoordinates",
-                "latitude": "25.3176",
-                "longitude": "82.9739"
+                "latitude": "25.594565",
+                "longitude": "85.168188"
               },
               "openingHoursSpecification": {
                 "@type": "OpeningHoursSpecification",
                 "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
                 "opens": "06:00",
-                "closes": "24:00"
+                "closes": "00:00"
               },
-              "priceRange": "₹10/hour",
-              "image": "https://www.cricketwalaplayarena.in/og-image.jpg",
+              "priceRange": "₹₹",
+              "image": "https://www.cricketwalaplayarena.in/cwpa.jpg",
+              "areaServed": {
+                "@type": "City",
+                "name": "Patna"
+              },
               "sameAs": []
             })
           }}

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.cricketwalaplayarena.in'
-  const currentDate = new Date('2026-01-21') // Force update to recrawl
+  const currentDate = new Date('2026-01-27') // Updated to force Google recrawl
   
   return [
     {
