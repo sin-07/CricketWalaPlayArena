@@ -131,7 +131,6 @@ export default function RootLayout({
                 "closes": "00:00"
               },
               "priceRange": "₹₹",
-              "image": "https://www.cricketwalaplayarena.in/cwpa.jpg",
               "areaServed": {
                 "@type": "City",
                 "name": "Patna"
