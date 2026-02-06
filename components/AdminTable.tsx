@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, Calendar, Clock, User, Mail, Phone, MapPin, Hash, Search, X } from 'lucide-react';
+import { Eye, Calendar, Clock, User, Mail, Phone, MapPin, Hash, Search, X, Ban, AlertTriangle, RefreshCw, IndianRupee } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Booking, TurfBooking } from '@/types';
+import AdminBookingCancelModal from '@/components/AdminBookingCancelModal';
 
 // Helper function to convert slot ID to time range
 const getTimeRange = (slotId: number): string => {
@@ -65,18 +66,22 @@ interface AdminTableProps {
   bookings?: Booking[];
   turfBookings?: TurfBooking[];
   loading?: boolean;
+  onBookingCancelled?: () => void;
 }
 
 const AdminTable: React.FC<AdminTableProps> = ({ 
   bookings = [],
   turfBookings = [],
-  loading = false 
+  loading = false,
+  onBookingCancelled,
 }) => {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedTurfBooking, setSelectedTurfBooking] = useState<TurfBooking | null>(null);
   const [userHistory, setUserHistory] = useState<Booking[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [cancelBooking, setCancelBooking] = useState<TurfBooking | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   // Filter turf bookings based on search term
   const filteredTurfBookings = useMemo(() => {
@@ -313,16 +318,33 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     </TableCell>
                     <TableCell className="hidden sm:table-cell">{getStatusBadge(booking.status, booking)}</TableCell>
                     <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTurfBookingClick(booking);
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTurfBookingClick(booking);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        {booking.status !== 'cancelled' && getCalculatedStatus(booking) !== 'completed' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCancelBooking(booking);
+                              setIsCancelModalOpen(true);
+                            }}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            title="Cancel booking"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </motion.tr>
                 ))}
@@ -544,8 +566,98 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     <span className="text-gray-600">Last Updated:</span>
                     <span>{new Date(selectedTurfBooking.updatedAt).toLocaleString()}</span>
                   </div>
+                  {selectedTurfBooking.cancelledAt && (
+                    <div className="flex justify-between text-red-600">
+                      <span>Cancelled:</span>
+                      <span>{new Date(selectedTurfBooking.cancelledAt).toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
               </Card>
+
+              {/* Cancellation Info (if cancelled) */}
+              {selectedTurfBooking.status === 'cancelled' && (
+                <Card className="p-4 bg-red-50 border-red-200">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center text-red-700">
+                    <Ban className="w-5 h-5 mr-2" />
+                    Cancellation Details
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {selectedTurfBooking.cancelledBy && (
+                      <div className="flex justify-between">
+                        <span className="text-red-600">Cancelled By:</span>
+                        <span className="font-medium text-red-800">{selectedTurfBooking.cancelledBy}</span>
+                      </div>
+                    )}
+                    {selectedTurfBooking.cancellationReason && (
+                      <div>
+                        <span className="text-red-600 block mb-1">Reason:</span>
+                        <p className="bg-white/60 rounded p-2 text-red-800">{selectedTurfBooking.cancellationReason}</p>
+                      </div>
+                    )}
+                    {selectedTurfBooking.refundStatus && selectedTurfBooking.refundStatus !== 'not_applicable' && (
+                      <div className="border-t border-red-200 pt-2 mt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-red-600">Refund Status:</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            selectedTurfBooking.refundStatus === 'processed'
+                              ? 'bg-green-100 text-green-700'
+                              : selectedTurfBooking.refundStatus === 'failed'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {selectedTurfBooking.refundStatus.charAt(0).toUpperCase() + selectedTurfBooking.refundStatus.slice(1)}
+                          </span>
+                        </div>
+                        {(selectedTurfBooking.refundAmount ?? 0) > 0 && (
+                          <div className="flex justify-between mt-1">
+                            <span className="text-red-600">Refund Amount:</span>
+                            <span className="font-medium">₹{selectedTurfBooking.refundAmount}</span>
+                          </div>
+                        )}
+                        {selectedTurfBooking.refundId && (
+                          <div className="flex justify-between mt-1">
+                            <span className="text-red-600">Refund ID:</span>
+                            <span className="font-mono text-xs">{selectedTurfBooking.refundId}</span>
+                          </div>
+                        )}
+                        {selectedTurfBooking.refundNotes && (
+                          <p className="text-xs text-red-500 mt-2">{selectedTurfBooking.refundNotes}</p>
+                        )}
+                        {(selectedTurfBooking.refundStatus === 'pending' || selectedTurfBooking.refundStatus === 'failed') && (
+                          <Button
+                            onClick={() => {
+                              setIsModalOpen(false);
+                              setCancelBooking(selectedTurfBooking);
+                              setIsCancelModalOpen(true);
+                            }}
+                            className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white"
+                            size="sm"
+                          >
+                            <RefreshCw className="w-4 h-4 mr-2" />
+                            {selectedTurfBooking.refundStatus === 'failed' ? 'Retry Refund' : 'Process Refund'}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+
+              {/* Cancel Action (only for active/confirmed bookings) */}
+              {selectedTurfBooking.status !== 'cancelled' && getCalculatedStatus(selectedTurfBooking) !== 'completed' && (
+                <Button
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setCancelBooking(selectedTurfBooking);
+                    setIsCancelModalOpen(true);
+                  }}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Ban className="w-4 h-4 mr-2" />
+                  Cancel This Booking
+                </Button>
+              )}
             </motion.div>
           )}
 
@@ -687,6 +799,19 @@ const AdminTable: React.FC<AdminTableProps> = ({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Booking Modal */}
+      <AdminBookingCancelModal
+        booking={cancelBooking}
+        isOpen={isCancelModalOpen}
+        onClose={() => {
+          setIsCancelModalOpen(false);
+          setCancelBooking(null);
+        }}
+        onCancelled={() => {
+          onBookingCancelled?.();
+        }}
+      />
     </>
   );
 };

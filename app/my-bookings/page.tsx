@@ -22,6 +22,10 @@ interface Booking {
   couponDiscount?: number;
   source?: 'online' | 'offline';
   status: 'confirmed' | 'cancelled' | 'completed';
+  cancelledAt?: string;
+  cancellationReason?: string;
+  refundStatus?: 'not_applicable' | 'pending' | 'processed' | 'failed';
+  refundAmount?: number;
   createdAt: string;
 }
 
@@ -333,6 +337,44 @@ export default function MyBookingsPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Cancellation Info (if cancelled) */}
+                    {booking.status === 'cancelled' && (
+                      <div className="pt-3 border-t border-red-100 bg-red-50 -mx-4 -mb-4 px-4 pb-4 rounded-b-xl">
+                        <div className="flex items-start gap-2">
+                          <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm space-y-1">
+                            <p className="font-medium text-red-700">Booking Cancelled</p>
+                            {booking.cancellationReason && (
+                              <p className="text-red-600 text-xs">Reason: {booking.cancellationReason}</p>
+                            )}
+                            {booking.cancelledAt && (
+                              <p className="text-red-500 text-xs">
+                                Cancelled on: {new Date(booking.cancelledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            )}
+                            {booking.refundStatus && booking.refundStatus !== 'not_applicable' && (
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className="text-xs text-gray-600">Refund:</span>
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                  booking.refundStatus === 'processed'
+                                    ? 'bg-green-100 text-green-700'
+                                    : booking.refundStatus === 'pending'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {booking.refundStatus === 'processed' 
+                                    ? `₹${booking.refundAmount || 0} Refunded` 
+                                    : booking.refundStatus === 'pending'
+                                    ? 'Refund Pending'
+                                    : 'Refund Failed'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

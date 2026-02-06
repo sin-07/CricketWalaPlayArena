@@ -84,6 +84,16 @@ export interface TurfBooking {
   remainingPayment?: number;
   source?: 'online' | 'offline';
   status: 'confirmed' | 'cancelled' | 'completed';
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+  paymentStatus?: 'pending' | 'success' | 'failed';
+  cancelledAt?: string;
+  cancelledBy?: string;
+  cancellationReason?: string;
+  refundStatus?: 'not_applicable' | 'pending' | 'processed' | 'failed';
+  refundAmount?: number;
+  refundId?: string;
+  refundNotes?: string;
   createdAt: string;
   updatedAt: string;
 }

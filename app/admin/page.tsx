@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings, Star } from 'lucide-react';
+import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings, Star, Ban } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
 import AdminTable from '@/components/AdminTable';
@@ -35,6 +35,7 @@ export default function AdminDashboard() {
     totalBookings: 0,
     activeBookings: 0,
     completedBookings: 0,
+    cancelledBookings: 0,
     totalRevenue: 0,
   });
 
@@ -170,14 +171,18 @@ export default function AdminDashboard() {
     console.log('📊 Booking statuses:', bookingsList.map(b => b.status));
     const active = bookingsList.filter((b) => b.status === 'confirmed').length;
     const completed = bookingsList.filter((b) => b.status === 'completed').length;
-    const revenue = bookingsList.reduce((sum, b) => sum + b.finalPrice, 0);
+    const cancelled = bookingsList.filter((b) => b.status === 'cancelled').length;
+    const revenue = bookingsList
+      .filter((b) => b.status !== 'cancelled')
+      .reduce((sum, b) => sum + b.finalPrice, 0);
 
-    console.log('📊 Stats calculated - Active:', active, 'Completed:', completed, 'Total:', bookingsList.length);
+    console.log('📊 Stats calculated - Active:', active, 'Completed:', completed, 'Cancelled:', cancelled, 'Total:', bookingsList.length);
 
     setStats({
       totalBookings: bookingsList.length,
       activeBookings: active,
       completedBookings: completed,
+      cancelledBookings: cancelled,
       totalRevenue: revenue,
     });
   };
@@ -307,7 +312,7 @@ export default function AdminDashboard() {
 
         {/* Stats Cards */}
         {hasPermission('canViewStats') && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -358,6 +363,24 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-green-800">{stats.completedBookings}</div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.35 }}
+          >
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 text-red-800 rounded-none sm:rounded-lg border-2 border-red-200 shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center text-red-700">
+                  <Ban className="w-4 h-4 mr-2" />
+                  Cancelled
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-red-800">{stats.cancelledBookings}</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -494,7 +517,7 @@ export default function AdminDashboard() {
           transition={{ duration: 0.3 }}
         >
           {activeTab === 'bookings' && hasPermission('canViewBookings') ? (
-            <AdminTable turfBookings={turfBookings} loading={loading} />
+            <AdminTable turfBookings={turfBookings} loading={loading} onBookingCancelled={fetchBookings} />
           ) : activeTab === 'create' && hasPermission('canCreateBooking') ? (
             <div className="max-w-3xl mx-auto px-4 sm:px-0">
               <AdminOfflineBookingForm

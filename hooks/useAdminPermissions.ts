@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface AdminPermissions {
   // Coupon Management
@@ -66,14 +66,20 @@ const defaultPermissions: AdminPermissions = {
   canViewStats: false,
 };
 
+// Cache permissions in memory to avoid refetching on re-renders
+let cachedPermissions: AdminPermissions | null = null;
+let cachedRole: 'admin' | 'superadmin' | null = null;
+let lastFetchTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
 export function useAdminPermissions(): UseAdminPermissionsReturn {
-  const [permissions, setPermissions] = useState<AdminPermissions>(defaultPermissions);
-  const [role, setRole] = useState<'admin' | 'superadmin' | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [permissions, setPermissions] = useState<AdminPermissions>(cachedPermissions || defaultPermissions);
+  const [role, setRole] = useState<'admin' | 'superadmin' | null>(cachedRole);
+  const [isLoading, setIsLoading] = useState(!cachedPermissions);
+  const fetchedRef = useRef(false);
 
   const fetchPermissions = useCallback(async () => {
     try {
-      console.log('[useAdminPermissions] Fetching permissions...');
       const response = await fetch('/api/admin/permissions', {
         method: 'GET',
         credentials: 'include',
@@ -81,15 +87,15 @@ export function useAdminPermissions(): UseAdminPermissionsReturn {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('[useAdminPermissions] Received data:', data);
         if (data.permissions) {
           setPermissions(data.permissions);
+          cachedPermissions = data.permissions;
         }
         if (data.role) {
           setRole(data.role);
+          cachedRole = data.role;
         }
-      } else {
-        console.log('[useAdminPermissions] Response not OK:', response.status);
+        lastFetchTime = Date.now();
       }
     } catch (error) {
       console.error('Error fetching permissions:', error);
@@ -99,20 +105,24 @@ export function useAdminPermissions(): UseAdminPermissionsReturn {
   }, []);
 
   useEffect(() => {
+    // Skip if already fetched in this mount or cache is fresh
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    const isCacheFresh = cachedPermissions && (Date.now() - lastFetchTime < CACHE_TTL);
+    
+    if (isCacheFresh) {
+      setPermissions(cachedPermissions!);
+      setRole(cachedRole);
+      setIsLoading(false);
+      return;
+    }
+
     fetchPermissions();
-    
-    // Poll for permission updates every 2 seconds for faster sync
-    const interval = setInterval(() => {
-      fetchPermissions();
-    }, 2000);
-    
-    return () => clearInterval(interval);
   }, [fetchPermissions]);
 
   const hasPermission = useCallback((permission: keyof AdminPermissions): boolean => {
-    // Still loading permissions, deny by default
     if (isLoading) return false;
-    // Super admin always has all permissions
     if (role === 'superadmin') return true;
     return permissions[permission];
   }, [permissions, role, isLoading]);

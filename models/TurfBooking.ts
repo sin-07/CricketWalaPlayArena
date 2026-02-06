@@ -23,6 +23,13 @@ export interface ITurfBooking extends Document {
   razorpayPaymentId?: string; // Razorpay payment ID
   razorpaySignature?: string; // Razorpay signature
   paymentStatus?: 'pending' | 'success' | 'failed'; // Payment status
+  cancelledAt?: Date; // When the booking was cancelled
+  cancelledBy?: string; // Admin username who cancelled
+  cancellationReason?: string; // Reason for cancellation
+  refundStatus?: 'not_applicable' | 'pending' | 'processed' | 'failed'; // Refund status
+  refundAmount?: number; // Amount refunded
+  refundId?: string; // Razorpay refund ID
+  refundNotes?: string; // Additional refund notes
   createdAt: Date;
   updatedAt: Date;
 }
@@ -141,6 +148,37 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
       type: String,
       enum: ['pending', 'success', 'failed'],
       default: 'pending',
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledBy: {
+      type: String,
+      default: null,
+    },
+    cancellationReason: {
+      type: String,
+      default: null,
+      maxlength: [500, 'Cancellation reason must not exceed 500 characters'],
+    },
+    refundStatus: {
+      type: String,
+      enum: ['not_applicable', 'pending', 'processed', 'failed'],
+      default: null,
+    },
+    refundAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    refundId: {
+      type: String,
+      default: null,
+    },
+    refundNotes: {
+      type: String,
+      default: null,
     },
   },
   {

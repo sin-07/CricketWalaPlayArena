@@ -416,7 +416,7 @@ export default function AdminSlotFreezeManager() {
 
               {/* Date */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                   <Calendar className="w-4 h-4" />
                   Date
                 </label>
@@ -439,7 +439,7 @@ export default function AdminSlotFreezeManager() {
 
               {/* Slots Multi-Select */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
                   <Clock className="w-4 h-4" />
                   Select Time Slots
                   {freezeForm.date === new Date().toISOString().split('T')[0] && (
@@ -568,7 +568,7 @@ export default function AdminSlotFreezeManager() {
 
             {/* Filter Date */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
                 <Calendar className="w-4 h-4" />
                 Date
               </label>
