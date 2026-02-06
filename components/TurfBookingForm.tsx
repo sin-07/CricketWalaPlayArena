@@ -510,7 +510,6 @@ export default function TurfBookingForm({
         }
       );
     } catch (error: any) {
-      console.error('Payment error:', error);
       setPaymentFailedMessage(error.message || 'An error occurred. Please fill the form again.');
       setShowPaymentFailedModal(true);
       // Reset form

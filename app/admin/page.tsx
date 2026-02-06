@@ -112,7 +112,6 @@ export default function AdminDashboard() {
           return () => clearTimeout(timeoutId);
         }
       } catch (error) {
-        console.error('Session check error:', error);
         router.push('/admin/login');
       }
     };
@@ -152,31 +151,24 @@ export default function AdminDashboard() {
   const fetchBookings = async () => {
     try {
       const response = await axios.get('/api/turf-bookings');
-      console.log('📊 Admin Dashboard - API Response:', response.data);
-      console.log('📊 Admin Dashboard - Bookings count:', response.data.data?.length);
-      console.log('📊 Admin Dashboard - First booking:', response.data.data?.[0]);
       if (response.data.success) {
         setTurfBookings(response.data.data);
         calculateStats(response.data.data);
       }
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      // Silently handle fetch errors
     } finally {
       setLoading(false);
     }
   };
 
   const calculateStats = (bookingsList: TurfBooking[]) => {
-    console.log('📊 Calculating stats for bookings:', bookingsList.length);
-    console.log('📊 Booking statuses:', bookingsList.map(b => b.status));
     const active = bookingsList.filter((b) => b.status === 'confirmed').length;
     const completed = bookingsList.filter((b) => b.status === 'completed').length;
     const cancelled = bookingsList.filter((b) => b.status === 'cancelled').length;
     const revenue = bookingsList
       .filter((b) => b.status !== 'cancelled')
       .reduce((sum, b) => sum + b.finalPrice, 0);
-
-    console.log('📊 Stats calculated - Active:', active, 'Completed:', completed, 'Cancelled:', cancelled, 'Total:', bookingsList.length);
 
     setStats({
       totalBookings: bookingsList.length,

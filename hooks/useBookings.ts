@@ -24,7 +24,6 @@ const useBookings = () => {
       }
     } catch (err: any) {
       setError(err.message);
-      console.error('Error fetching bookings:', err);
     } finally {
       setLoading(false);
       setIsInitialLoad(false);

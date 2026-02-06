@@ -80,7 +80,6 @@ export default function SlotSelector({
         }
       } catch (err: any) {
         setError('Failed to fetch available slots');
-        console.error('Error fetching slots:', err);
       } finally {
         setIsLoading(false);
       }

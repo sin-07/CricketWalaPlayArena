@@ -129,7 +129,7 @@ const AdminTable: React.FC<AdminTableProps> = ({
         setUserHistory(result.data.bookings);
       }
     } catch (error) {
-      console.error('Failed to fetch user history:', error);
+      // Failed to fetch user history
     }
   }, []);
 

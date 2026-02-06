@@ -75,11 +75,9 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
         if (result.success) {
           setSlotsData(result.data.slots);
         } else {
-          console.error('Failed to fetch slots:', result.message);
           setSlotsData([]);
         }
       } catch (error) {
-        console.error('Error fetching slots:', error);
         setSlotsData([]);
       } finally {
         setLoadingSlots(false);

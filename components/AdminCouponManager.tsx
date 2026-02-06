@@ -72,10 +72,10 @@ export default function AdminCouponManager() {
       if (response.ok) {
         setCoupons(data.coupons);
       } else {
-        console.error('Failed to fetch coupons:', data.error);
+        // Failed to fetch coupons
       }
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      // Error fetching coupons
     } finally {
       setLoading(false);
     }
@@ -141,7 +141,6 @@ export default function AdminCouponManager() {
       }
     } catch (error) {
       setMessage('Error saving coupon');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -169,7 +168,6 @@ export default function AdminCouponManager() {
         fetchCoupons();
       }
     } catch (error) {
-      console.error('Error deleting coupon:', error);
       setMessage('Failed to delete coupon');
     }
   };
@@ -194,7 +192,7 @@ export default function AdminCouponManager() {
         fetchCoupons();
       }
     } catch (error) {
-      console.error('Error toggling coupon:', error);
+      // Toggle failed silently
     }
   };
 

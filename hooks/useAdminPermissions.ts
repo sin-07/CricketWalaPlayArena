@@ -98,7 +98,7 @@ export function useAdminPermissions(): UseAdminPermissionsReturn {
         lastFetchTime = Date.now();
       }
     } catch (error) {
-      console.error('Error fetching permissions:', error);
+      // Permission fetch failed silently
     } finally {
       setIsLoading(false);
     }
