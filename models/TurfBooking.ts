@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ITurfBooking extends Document {
   bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football';
+  sport: 'Cricket' | 'Football' | 'Badminton';
   date: string; // YYYY-MM-DD format
   slot: string; // e.g., "06:00-07:00" or slot ID
   name: string;
@@ -43,7 +43,7 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
     },
     sport: {
       type: String,
-      enum: ['Cricket', 'Football'],
+      enum: ['Cricket', 'Football', 'Badminton'],
       required: [true, 'Sport is required'],
     },
     date: {

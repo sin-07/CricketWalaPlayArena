@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate sport
-    const validSports = ['Cricket', 'Football'];
+    const validSports = ['Cricket', 'Football', 'Badminton'];
     if (!validSports.includes(sport)) {
       return NextResponse.json(
         {
           success: false,
-          message: 'Invalid sport. Must be Cricket or Football',
+          message: 'Invalid sport. Must be Cricket, Football, or Badminton',
         },
         { status: 400 }
       );

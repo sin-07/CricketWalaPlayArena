@@ -29,7 +29,7 @@ interface Coupon {
   createdAt: string;
 }
 
-const SPORTS = ['Cricket', 'Football'];
+const SPORTS = ['Cricket', 'Football', 'Badminton'];
 const BOOKING_TYPES = [
   { label: 'Match', value: 'match' },
   { label: 'Practice', value: 'practice' },

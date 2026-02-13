@@ -94,7 +94,7 @@ export default function TurfBookingPage() {
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
             <h3 className="font-semibold text-blue-900 mb-2">Main Turf Booking</h3>
             <p className="text-blue-800 text-sm">
-              Book turf for competitive matches. Available sports: Cricket, Football
+              Book turf for competitive matches. Available sports: Cricket, Football, Badminton
             </p>
           </div>
           <div className="bg-purple-50 rounded-lg p-6 border border-purple-200">
