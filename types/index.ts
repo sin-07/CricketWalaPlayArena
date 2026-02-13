@@ -68,7 +68,7 @@ export interface Notification {
 export interface TurfBooking {
   _id: string;
   bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football' | 'Badminton';
+  sport: 'Cricket' | 'Football';
   date: string;
   slot: string;
   name: string;

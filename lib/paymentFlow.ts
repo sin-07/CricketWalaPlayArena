@@ -154,6 +154,9 @@ export function openRazorpayCheckout(
       color: '#22c55e',
     },
     handler: onSuccess,
+    retry: {
+      enabled: false, // Disable retry to prevent showing payment again after success/failure on mobile
+    },
     modal: {
       ondismiss: () => {
         onFailure('Payment was cancelled. Please fill the form again to book.');

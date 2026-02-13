@@ -15,7 +15,7 @@ interface AdminOfflineBookingFormProps {
   onBookingComplete: () => void;
 }
 
-const SPORTS = ['Cricket', 'Football', 'Badminton'];
+const SPORTS = ['Cricket', 'Football'];
 const BOOKING_TYPES = [
   { value: 'practice', label: 'Practice' },
   { value: 'match', label: 'Match' },

@@ -97,6 +97,89 @@ export default function TurfBookingForm({
     loadRazorpayScript().then(setRazorpayLoaded);
   }, []);
 
+  // Recover from mobile payment redirect (where JS state is lost)
+  React.useEffect(() => {
+    const recoverPendingPayment = async () => {
+      try {
+        const pendingDataStr = sessionStorage.getItem('cwpa_pending_payment');
+        if (!pendingDataStr) return;
+
+        const pendingData = JSON.parse(pendingDataStr);
+        // Only recover if recent (within 10 minutes)
+        if (Date.now() - pendingData.timestamp > 10 * 60 * 1000) {
+          sessionStorage.removeItem('cwpa_pending_payment');
+          return;
+        }
+
+        setLoading(true);
+
+        // Check order payment status with Razorpay
+        const checkRes = await fetch('/api/payment/check-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: pendingData.orderId }),
+        });
+        const checkData = await checkRes.json();
+
+        if (checkData.success && checkData.paid && checkData.paymentId) {
+          // Payment was successful! Create the booking now
+          const bookingResponse = await fetch('/api/turf-bookings/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...pendingData.formData,
+              razorpayOrderId: pendingData.orderId,
+              razorpayPaymentId: checkData.paymentId,
+              razorpaySignature: 'mobile_redirect_recovery',
+            }),
+          });
+
+          const bookingResult = await bookingResponse.json();
+
+          if (bookingResponse.ok && bookingResult.success) {
+            const bRef = bookingResult.data?.bookingRef || 'N/A';
+            setSuccessMessage('Payment successful! Booking confirmed.');
+            setBookingRef(bRef);
+            setBookingPrice({
+              basePrice: bookingResult.data?.basePrice || 0,
+              finalPrice: bookingResult.data?.finalPrice || 0,
+              bookingCharge: 0,
+              totalPrice: bookingResult.data?.totalPrice || 0,
+              discountPercentage: bookingResult.data?.discountPercentage || 0,
+              couponDiscount: bookingResult.data?.couponDiscount || 0,
+              couponCode: bookingResult.data?.couponCode || undefined,
+              advancePayment: bookingResult.data?.advancePayment || 0,
+              remainingPayment: bookingResult.data?.remainingPayment || 0,
+            });
+            setConfirmedBookingDetails({
+              sport: bookingResult.data?.sport || pendingData.formData.sport,
+              date: bookingResult.data?.date || pendingData.formData.date,
+              slot: bookingResult.data?.slot || '',
+              bookingType: bookingResult.data?.bookingType || pendingData.formData.bookingType,
+              email: pendingData.formData.email,
+            });
+            setShowSuccessModal(true);
+          } else if (bookingResult.message?.includes('already booked')) {
+            // Booking was already created (handler did fire after all)
+            setSuccessMessage('Booking already confirmed!');
+          }
+          // Clear pending data
+          sessionStorage.removeItem('cwpa_pending_payment');
+        } else {
+          // Payment not completed - clear pending data, user needs to try again
+          sessionStorage.removeItem('cwpa_pending_payment');
+        }
+      } catch (err) {
+        console.error('Payment recovery error:', err);
+        sessionStorage.removeItem('cwpa_pending_payment');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    recoverPendingPayment();
+  }, []);
+
   // Freeze background scrolling when modal is open
   React.useEffect(() => {
     if (showSuccessModal || showConfirmModal || showPaymentFailedModal) {
@@ -404,6 +487,23 @@ export default function TurfBookingForm({
       }
 
       // Step 2: Open Razorpay checkout
+      // Save pending payment data to sessionStorage for mobile recovery
+      // (On mobile, Razorpay may redirect to UPI app, losing JS state)
+      const pendingPaymentData = {
+        orderId: orderResponse.data.orderId,
+        formData: {
+          ...formData,
+          mobile: normalizeMobileNumber(formData.mobile),
+          couponCode: appliedCoupon?.code || null,
+        },
+        timestamp: Date.now(),
+      };
+      try {
+        sessionStorage.setItem('cwpa_pending_payment', JSON.stringify(pendingPaymentData));
+      } catch (e) {
+        // sessionStorage might not be available in some contexts
+      }
+
       openRazorpayCheckout(
         orderResponse.data.orderId,
         orderResponse.data.amount,
@@ -417,6 +517,9 @@ export default function TurfBookingForm({
         async (response: any) => {
           // Step 3: Payment successful - NOW create booking in database
           try {
+            // Clear pending payment data since handler fired successfully
+            try { sessionStorage.removeItem('cwpa_pending_payment'); } catch (e) {}
+
             const bookingResponse = await fetch('/api/turf-bookings/create', {
               method: 'POST',
               headers: {
@@ -488,6 +591,9 @@ export default function TurfBookingForm({
         },
         (error: string) => {
           // Payment cancelled or failed (wrong PIN, insufficient balance, etc.)
+          // Clear pending payment data
+          try { sessionStorage.removeItem('cwpa_pending_payment'); } catch (e) {}
+          
           // Show payment failed popup
           setPaymentFailedMessage(error);
           setShowPaymentFailedModal(true);
@@ -510,6 +616,8 @@ export default function TurfBookingForm({
         }
       );
     } catch (error: any) {
+      // Clear pending payment data on error
+      try { sessionStorage.removeItem('cwpa_pending_payment'); } catch (e) {}
       setPaymentFailedMessage(error.message || 'An error occurred. Please fill the form again.');
       setShowPaymentFailedModal(true);
       // Reset form

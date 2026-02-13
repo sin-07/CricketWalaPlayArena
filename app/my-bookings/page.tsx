@@ -8,7 +8,7 @@ import { GiCricketBat } from 'react-icons/gi';
 interface Booking {
   _id: string;
   bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football' | 'Badminton';
+  sport: 'Cricket' | 'Football';
   date: string;
   slot: string;
   name: string;

@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (sport) {
-      if (!['Cricket', 'Football', 'Badminton'].includes(sport)) {
+      if (!['Cricket', 'Football'].includes(sport)) {
         return NextResponse.json(
           { success: false, message: 'Invalid sport' },
           { status: 400 }

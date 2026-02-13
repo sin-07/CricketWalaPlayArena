@@ -25,7 +25,7 @@ import { GiCricketBat, GiSoccerBall, GiShuttlecock } from 'react-icons/gi';
 interface FrozenSlot {
   _id: string;
   bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football' | 'Badminton';
+  sport: 'Cricket' | 'Football';
   date: string;
   slot: string;
   isFrozen: boolean;
@@ -88,7 +88,7 @@ export default function AdminSlotFreezeManager() {
     '23:00-00:00',
   ];
 
-  const sports = ['Cricket', 'Football', 'Badminton'];
+  const sports = ['Cricket', 'Football'];
   const bookingTypes = ['match']; // Only match bookings can be frozen
 
   // Get current hour to filter past slots for today

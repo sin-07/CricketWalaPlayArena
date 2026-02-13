@@ -312,6 +312,158 @@ export const sendBookingConfirmation = async (
   return sendEmail(email, subject, html, attachments);
 };
 
+// Send admin notification email when a new booking is created
+export const sendAdminBookingNotification = async (
+  bookingDetails: {
+    bookingId: string;
+    name: string;
+    phone: string;
+    email: string;
+    bookingType: string;
+    sport: string;
+    date: string;
+    slot: string;
+    totalPrice: number;
+    advancePayment: number;
+    remainingPayment: number;
+    source: string;
+    couponCode?: string;
+    couponDiscount?: number;
+    discountPercentage?: number;
+    basePrice?: number;
+  }
+): Promise<{ success: boolean; error?: string }> => {
+  const adminEmail = process.env.EMAIL_USER; // Admin receives notifications on the same email
+  if (!adminEmail) {
+    console.warn('Admin email not configured. Skipping admin notification.');
+    return { success: false, error: 'Admin email not configured' };
+  }
+
+  const subject = `🏏 New Booking! ${bookingDetails.bookingId} - ${bookingDetails.name} | ${bookingDetails.sport}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%); padding: 30px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px;">📋 New Booking Alert</h1>
+          <p style="color: #bfdbfe; margin: 8px 0 0 0; font-size: 14px;">Cricket Wala Play Arena - Admin Notification</p>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 30px;">
+          <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <p style="margin: 0; color: #1e40af; font-weight: bold; font-size: 16px;">
+              A new ${bookingDetails.source === 'offline' ? 'offline (walk-in)' : 'online'} booking has been received!
+            </p>
+          </div>
+
+          <!-- Customer Info -->
+          <h3 style="color: #374151; margin: 20px 0 10px 0; font-size: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">👤 Customer Information</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280; width: 40%;">Name:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${bookingDetails.name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Phone:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${bookingDetails.phone}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Email:</td>
+              <td style="padding: 8px 0; color: #111827;">${bookingDetails.email}</td>
+            </tr>
+          </table>
+
+          <!-- Booking Details -->
+          <h3 style="color: #374151; margin: 20px 0 10px 0; font-size: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">📅 Booking Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280; width: 40%;">Booking ID:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: bold; font-family: monospace;">${bookingDetails.bookingId}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Type:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${bookingDetails.bookingType === 'match' ? '⚾ Main Turf (Match)' : '🏏 Practice Turf'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Sport:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${bookingDetails.sport}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Date:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${bookingDetails.date}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Time Slot:</td>
+              <td style="padding: 8px 0; color: #111827; font-weight: 600;">${bookingDetails.slot}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; color: #6b7280;">Source:</td>
+              <td style="padding: 8px 0;">
+                <span style="background-color: ${bookingDetails.source === 'offline' ? '#fff7ed' : '#f0fdf4'}; color: ${bookingDetails.source === 'offline' ? '#c2410c' : '#15803d'}; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">
+                  ${bookingDetails.source === 'offline' ? 'Offline (Walk-in)' : 'Online'}
+                </span>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Payment Details -->
+          <h3 style="color: #374151; margin: 20px 0 10px 0; font-size: 16px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">💰 Payment Details</h3>
+          <div style="background-color: #f0fdf4; border: 2px solid #16a34a; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              ${bookingDetails.basePrice ? `
+              <tr>
+                <td style="padding: 6px 0; color: #6b7280;">Base Price:</td>
+                <td style="padding: 6px 0; color: #111827; text-align: right;">₹${bookingDetails.basePrice}</td>
+              </tr>` : ''}
+              ${bookingDetails.discountPercentage && bookingDetails.discountPercentage > 0 ? `
+              <tr>
+                <td style="padding: 6px 0; color: #16a34a;">Weekly Discount (${bookingDetails.discountPercentage}%):</td>
+                <td style="padding: 6px 0; color: #16a34a; text-align: right;">-₹${(bookingDetails.basePrice || 0) - bookingDetails.totalPrice + (bookingDetails.couponDiscount || 0)}</td>
+              </tr>` : ''}
+              ${bookingDetails.couponCode ? `
+              <tr>
+                <td style="padding: 6px 0; color: #7c3aed;">Coupon (${bookingDetails.couponCode}):</td>
+                <td style="padding: 6px 0; color: #7c3aed; text-align: right;">-₹${bookingDetails.couponDiscount || 0}</td>
+              </tr>` : ''}
+              <tr style="border-top: 2px solid #86efac;">
+                <td style="padding: 10px 0 6px 0; color: #065f46; font-weight: bold; font-size: 16px;">Total Amount:</td>
+                <td style="padding: 10px 0 6px 0; color: #065f46; text-align: right; font-weight: bold; font-size: 18px;">₹${bookingDetails.totalPrice}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #15803d; font-weight: 600;">✅ Paid Online:</td>
+                <td style="padding: 6px 0; color: #15803d; text-align: right; font-weight: bold; font-size: 16px;">₹${bookingDetails.advancePayment}</td>
+              </tr>
+              ${bookingDetails.remainingPayment > 0 ? `
+              <tr>
+                <td style="padding: 6px 0; color: #ea580c; font-weight: 600;">⏳ Remaining (At Turf):</td>
+                <td style="padding: 6px 0; color: #ea580c; text-align: right; font-weight: bold; font-size: 16px;">₹${bookingDetails.remainingPayment}</td>
+              </tr>` : ''}
+            </table>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            This is an automated admin notification from Cricket Wala Play Arena.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail(adminEmail, subject, html);
+};
+
 // Send newsletter to multiple subscribers
 export const sendNewsletterToSubscribers = async (
   subscribers: Array<{ email: string; unsubscribeToken: string }>,
@@ -354,6 +506,7 @@ export default {
   sendEmail,
   sendWelcomeEmail,
   sendBookingConfirmation,
+  sendAdminBookingNotification,
   sendNewsletterToSubscribers,
   emailTemplates,
 };

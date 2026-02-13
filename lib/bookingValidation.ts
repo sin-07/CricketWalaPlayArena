@@ -26,8 +26,8 @@ export const AVAILABLE_SLOTS = [
   '23:00-00:00',
 ];
 
-export const MATCH_SPORTS = ['Cricket', 'Football', 'Badminton'];
-export const PRACTICE_SPORTS = ['Cricket', 'Badminton'];
+export const MATCH_SPORTS = ['Cricket', 'Football'];
+export const PRACTICE_SPORTS = ['Cricket'];
 
 export interface BookingFormData {
   bookingType: 'match' | 'practice';

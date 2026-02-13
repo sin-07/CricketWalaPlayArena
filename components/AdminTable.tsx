@@ -303,6 +303,12 @@ const AdminTable: React.FC<AdminTableProps> = ({
                     </TableCell>
                     <TableCell className="font-semibold text-primary-600 text-xs sm:text-sm">
                       <div>₹{booking.totalPrice || booking.finalPrice || 'N/A'}</div>
+                      {booking.advancePayment != null && booking.advancePayment > 0 && (
+                        <div className="text-[10px] text-green-600 font-medium">Paid: ₹{booking.advancePayment}</div>
+                      )}
+                      {booking.remainingPayment != null && booking.remainingPayment > 0 && (
+                        <div className="text-[10px] text-orange-600">Due: ₹{booking.remainingPayment}</div>
+                      )}
                       {booking.discountPercentage > 0 && booking.basePrice && (
                         <div className="text-[10px] text-gray-400 line-through">₹{booking.basePrice}</div>
                       )}
@@ -539,6 +545,30 @@ const AdminTable: React.FC<AdminTableProps> = ({
                             <span className="text-lg font-semibold">Final Amount:</span>
                             <span className="text-2xl font-bold text-primary-600">₹{selectedTurfBooking.totalPrice || selectedTurfBooking.finalPrice || 'N/A'}</span>
                           </div>
+                          {selectedTurfBooking.advancePayment != null && selectedTurfBooking.advancePayment > 0 && (
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t border-dashed">
+                              <span className="text-sm font-medium text-green-700">✅ Paid Online (Advance):</span>
+                              <span className="text-lg font-bold text-green-600">₹{selectedTurfBooking.advancePayment}</span>
+                            </div>
+                          )}
+                          {selectedTurfBooking.remainingPayment != null && selectedTurfBooking.remainingPayment > 0 && (
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-sm font-medium text-orange-700">⏳ Remaining (Pay at Turf):</span>
+                              <span className="text-lg font-bold text-orange-600">₹{selectedTurfBooking.remainingPayment}</span>
+                            </div>
+                          )}
+                          {selectedTurfBooking.paymentStatus && (
+                            <div className="flex justify-between items-center mt-1">
+                              <span className="text-sm font-medium text-gray-600">Payment Status:</span>
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                selectedTurfBooking.paymentStatus === 'success' ? 'bg-green-100 text-green-700' :
+                                selectedTurfBooking.paymentStatus === 'failed' ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {selectedTurfBooking.paymentStatus === 'success' ? '✅ Paid' : selectedTurfBooking.paymentStatus === 'failed' ? '❌ Failed' : '⏳ Pending'}
+                              </span>
+                            </div>
+                          )}
                         </>
                       ) : (
                         <div className="flex justify-between items-center">

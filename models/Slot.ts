@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ISlot extends Document {
   bookingType: 'match' | 'practice';
-  sport: 'Cricket' | 'Football' | 'Badminton';
+  sport: 'Cricket' | 'Football';
   date: string; // YYYY-MM-DD format
   slot: string; // e.g., "06:00-07:00"
   isFrozen: boolean;
@@ -21,7 +21,7 @@ const SlotSchema = new Schema<ISlot>(
     },
     sport: {
       type: String,
-      enum: ['Cricket', 'Football', 'Badminton'],
+      enum: ['Cricket', 'Football'],
       required: [true, 'Sport is required'],
     },
     date: {

@@ -8,7 +8,7 @@ export interface ICoupon extends Document {
     date: string; // YYYY-MM-DD
     slot: string; // e.g., "06:00-07:00"
   }>;
-  sport: string[]; // ['Cricket', 'Football', 'Badminton'] - empty means all
+  sport: string[]; // ['Cricket', 'Football'] - empty means all
   bookingType: 'match' | 'practice' | 'both'; // Applicable booking type
   assignedUsers: string[]; // Array of emails - empty means all users
   minAmount: number; // Minimum booking amount for coupon to apply
@@ -68,7 +68,7 @@ const CouponSchema = new Schema<ICoupon>(
       default: [],
       validate: {
         validator: function(v: string[]) {
-          const validSports = ['Cricket', 'Football', 'Badminton'];
+          const validSports = ['Cricket', 'Football'];
           return v.every((sport) => validSports.includes(sport));
         },
         message: 'Invalid sport',

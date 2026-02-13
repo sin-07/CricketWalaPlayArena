@@ -7,7 +7,7 @@ import { validateSlotNotFrozen } from '@/lib/frozenSlotValidation';
 import { calculateFinalPrice } from '@/lib/pricingUtils';
 import { validateCoupon, incrementCouponUsage } from '@/lib/couponValidation';
 import { generateBookingPDF } from '@/lib/pdfGenerator';
-import { sendBookingConfirmation } from '@/lib/emailService';
+import { sendBookingConfirmation, sendAdminBookingNotification } from '@/lib/emailService';
 
 /**
  * POST /api/turf-bookings/create
@@ -236,6 +236,31 @@ export async function POST(request: NextRequest) {
     } catch (emailError) {
       console.error('Failed to send booking confirmation email:', emailError);
       // Don't fail the booking if email fails
+    }
+
+    // Send admin notification email
+    try {
+      await sendAdminBookingNotification({
+        bookingId: bookingRef,
+        name: newBooking.name,
+        phone: newBooking.mobile,
+        email: newBooking.email,
+        bookingType: newBooking.bookingType,
+        sport: newBooking.sport,
+        date: newBooking.date,
+        slot: newBooking.slot,
+        totalPrice: newBooking.totalPrice || newBooking.finalPrice,
+        advancePayment: newBooking.advancePayment || 0,
+        remainingPayment: newBooking.remainingPayment || 0,
+        source: newBooking.source || 'online',
+        couponCode: newBooking.couponCode,
+        couponDiscount: newBooking.couponDiscount,
+        discountPercentage: newBooking.discountPercentage,
+        basePrice: newBooking.basePrice,
+      });
+    } catch (adminEmailError) {
+      console.error('Failed to send admin notification email:', adminEmailError);
+      // Don't fail the booking if admin email fails
     }
 
     // Return confirmation

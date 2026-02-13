@@ -94,7 +94,8 @@ export function calculateFinalPrice(
 } {
   const basePricePerSlot = BASE_PRICES[bookingType];
   const basePrice = basePricePerSlot * numSlots;
-  const discountPercentage = getDiscountPercentage(dateStr);
+  // No discount for practice turf bookings
+  const discountPercentage = bookingType === 'practice' ? 0 : getDiscountPercentage(dateStr);
   const discountAmount = (basePrice * discountPercentage) / 100;
   const finalPrice = basePrice - discountAmount;
   
