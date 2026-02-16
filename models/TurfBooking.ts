@@ -186,10 +186,17 @@ const TurfBookingSchema = new Schema<ITurfBooking>(
   }
 );
 
-// Compound index to prevent double booking
-TurfBookingSchema.index({ date: 1, slot: 1, sport: 1, status: 1 });
+// Compound index for efficient cross-sport queries on the same ground
+TurfBookingSchema.index({ date: 1, bookingType: 1, status: 1 });
 
-// Create a unique index for date, slot, and sport combination for confirmed bookings
+// Query performance index for slot lookups
+TurfBookingSchema.index({ date: 1, slot: 1, bookingType: 1, status: 1 });
+
+// Unique index per sport (safety net for same-sport duplicate prevention).
+// Note: Cross-sport blocking is enforced at the application level via
+// atomic transactions in crossSportValidation.ts because the slot field
+// stores comma-separated values that can't be reliably deduplicated by
+// a simple unique index alone.
 TurfBookingSchema.index(
   { date: 1, slot: 1, sport: 1 },
   {

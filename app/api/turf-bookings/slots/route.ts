@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import TurfBooking from '@/models/TurfBooking';
-import Slot from '@/models/Slot';
 import { AVAILABLE_SLOTS } from '@/lib/bookingValidation';
 import { cleanupExpiredFrozenSlots } from '@/lib/frozenSlotValidation';
+import {
+  getAllBookedSlotsForGround,
+  getAllFrozenSlotsForGround,
+} from '@/lib/crossSportValidation';
 
 /**
  * GET /api/turf-bookings/slots
- * Fetch available slots for a specific date and sport
- * Returns all slots with booking status
+ * Fetch available slots for a specific date and ground type
+ * Returns all slots with booking status across ALL sports (shared ground)
+ * A slot booked for any sport blocks it for all other sports
  * Filters out frozen and booked slots
  * Auto-cleans expired frozen slots before fetching
  */
@@ -36,43 +39,62 @@ export async function GET(request: NextRequest) {
 
     console.log(`Fetching slots for: ${sport} - ${bookingType} on ${date}`);
 
-    // Fetch booked slots for the given date and sport
-    // Include both 'confirmed' and 'completed' status as slots are still occupied
-    // Only 'cancelled' bookings should free up slots
-    const bookedSlots = await TurfBooking.find({
-      date,
-      sport,
-      bookingType,
-      status: { $in: ['confirmed', 'completed'] },
-    }).select('slot -_id');
+    // ── Cross-sport slot blocking ────────────────────────────────────────────
+    // Fetch booked slots across ALL sports for this ground type.
+    // Since the ground is shared, a slot booked for Cricket blocks
+    // Football and Badminton on the same turf.
+    const bookedSlotsData = await getAllBookedSlotsForGround(
+      bookingType as 'match' | 'practice',
+      date
+    );
 
-    // Handle both single slots and comma-separated multi-slot bookings
-    const bookedSlotsList: string[] = [];
-    bookedSlots.forEach((booking) => {
-      // Split comma-separated slots and trim whitespace
-      const slots = booking.slot.split(',').map((s: string) => s.trim());
-      bookedSlotsList.push(...slots);
-    });
+    // Unique booked slot times (regardless of which sport booked them)
+    const bookedSlotsList = [...new Set(bookedSlotsData.map((b) => b.slot))];
 
-    console.log(`Found ${bookedSlots.length} bookings with ${bookedSlotsList.length} total slots booked:`, bookedSlotsList);
+    // Build a map of slot → booking sport for informational purposes
+    const bookedByMap = new Map<string, string>();
+    for (const b of bookedSlotsData) {
+      if (!bookedByMap.has(b.slot)) {
+        bookedByMap.set(b.slot, b.sport);
+      }
+    }
 
-    // Fetch frozen slots for the given date and sport
-    const frozenSlots = await Slot.find({
-      date,
-      sport,
-      bookingType,
-      isFrozen: true,
-    }).select('slot -_id');
+    console.log(
+      `Found ${bookedSlotsList.length} slots booked across all sports:`,
+      bookedSlotsList
+    );
 
-    const frozenSlotsList = frozenSlots.map((slot) => slot.slot);
+    // ── Cross-sport frozen slot blocking ─────────────────────────────────────
+    // Fetch frozen slots across ALL sports for this ground type.
+    const frozenSlotsData = await getAllFrozenSlotsForGround(
+      bookingType as 'match' | 'practice',
+      date
+    );
+
+    const frozenSlotsList = [...new Set(frozenSlotsData.map((f) => f.slot))];
+
+    // Build a map of slot → frozen sport for informational purposes
+    const frozenByMap = new Map<string, string>();
+    for (const f of frozenSlotsData) {
+      if (!frozenByMap.has(f.slot)) {
+        frozenByMap.set(f.slot, f.sport);
+      }
+    }
 
     // Calculate available slots - exclude both booked and frozen slots
-    const availableSlots = AVAILABLE_SLOTS.map((slot) => ({
-      slot,
-      available: !bookedSlotsList.includes(slot) && !frozenSlotsList.includes(slot),
-      isBooked: bookedSlotsList.includes(slot),
-      isFrozen: frozenSlotsList.includes(slot),
-    }));
+    const availableSlots = AVAILABLE_SLOTS.map((slot) => {
+      const isBooked = bookedSlotsList.includes(slot);
+      const isFrozen = frozenSlotsList.includes(slot);
+      return {
+        slot,
+        available: !isBooked && !isFrozen,
+        isBooked,
+        isFrozen,
+        // Include which sport caused the block for display purposes
+        bookedBy: isBooked ? bookedByMap.get(slot) || null : null,
+        frozenBy: isFrozen ? frozenByMap.get(slot) || null : null,
+      };
+    });
 
     return NextResponse.json(
       {

@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import TurfBooking from '@/models/TurfBooking';
-import Slot from '@/models/Slot';
 import { validateBookingForm } from '@/lib/bookingValidation';
-import { validateSlotNotFrozen } from '@/lib/frozenSlotValidation';
 import { calculateFinalPrice } from '@/lib/pricingUtils';
 import { validateCoupon, incrementCouponUsage } from '@/lib/couponValidation';
 import { generateBookingPDF } from '@/lib/pdfGenerator';
 import { sendBookingConfirmation, sendAdminBookingNotification } from '@/lib/emailService';
+import { createBookingAtomically } from '@/lib/crossSportValidation';
 
 /**
  * POST /api/turf-bookings/create
@@ -49,58 +48,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if any slot is frozen
-    for (const singleSlot of slotsArray) {
-      const frozenSlotCheck = await Slot.findOne({
-        bookingType,
-        sport,
-        date,
-        slot: singleSlot,
-        isFrozen: true,
-      });
-
-      if (frozenSlotCheck) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Slot ${singleSlot} for ${sport} on ${date} is frozen and unavailable.`,
-            field: 'slot',
-          },
-          { status: 403 }
-        );
-      }
-    }
-
-    // Check for existing bookings on any of the selected slots
-    for (const singleSlot of slotsArray) {
-      // Check if this exact slot is already booked
-      // Handle both single slot format and comma-separated format
-      console.log(`Checking slot: ${singleSlot} for ${sport} on ${date} (${bookingType})`);
-      
-      const existingBooking = await TurfBooking.findOne({
-        date,
-        $or: [
-          { slot: singleSlot }, // Exact match for single slot bookings
-          { slot: { $regex: new RegExp(`(^|,\\s*)${singleSlot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*,|$)`) } } // Match in comma-separated list
-        ],
-        sport,
-        bookingType,
-        status: 'confirmed',
-      });
-
-      if (existingBooking) {
-        console.log(`Found existing booking:`, existingBooking.slot, existingBooking._id);
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Slot ${singleSlot} is already booked for ${sport} on ${date}`,
-            field: 'slot',
-          },
-          { status: 409 }
-        );
-      }
-    }
-
+    // ── Coupon & pricing (computed before atomic creation) ──────────────
     // Create new booking with coupon support
     const numSlots = slotsArray.length;
     const pricing = calculateFinalPrice(bookingType, date, numSlots);
@@ -152,7 +100,10 @@ export async function POST(request: NextRequest) {
       ? Math.max(0, totalPrice - advancePayment)
       : 0; // Practice has no remaining payment
 
-    const newBooking = new TurfBooking({
+    // ── Atomic booking creation with cross-sport validation ─────────────
+    // Uses MongoDB transactions to prevent double-booking across all sports
+    // on the same shared ground (match = Main Turf, practice = Practice Turf)
+    const bookingDocument = {
       bookingType,
       sport,
       date,
@@ -176,9 +127,22 @@ export async function POST(request: NextRequest) {
       razorpayPaymentId: razorpayPaymentId || null,
       razorpaySignature: razorpaySignature || null,
       paymentStatus: razorpayPaymentId ? 'success' : 'pending',
-    });
+    };
 
-    await newBooking.save();
+    const atomicResult = await createBookingAtomically(bookingDocument, slotsArray);
+
+    if (!atomicResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: atomicResult.error || 'Booking failed due to a conflict.',
+          field: 'slot',
+        },
+        { status: atomicResult.statusCode || 409 }
+      );
+    }
+
+    const newBooking = atomicResult.booking;
 
     // Generate booking reference in CWPAXXXX format
     const bookingIdStr = newBooking._id.toString();
