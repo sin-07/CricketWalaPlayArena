@@ -88,6 +88,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate date format and prevent past-date bookings
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid date format. Must be YYYY-MM-DD' },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    if (date < todayStr) {
+      return NextResponse.json(
+        { success: false, message: 'Cannot create bookings for past dates.' },
+        { status: 400 }
+      );
+    }
+
+    // For today's date, reject slots whose start time has already passed
+    if (date === todayStr) {
+      const currentHour = now.getHours();
+      const pastSlots = slots.filter((slot: string) => {
+        const slotStartHour = parseInt(slot.split(':')[0], 10);
+        return slotStartHour <= currentHour;
+      });
+      if (pastSlots.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Cannot book past time slots for today: ${pastSlots.join(', ')}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Calculate pricing
     const numSlots = slots.length;
     const pricing = calculateFinalPrice(bookingType, date, numSlots);

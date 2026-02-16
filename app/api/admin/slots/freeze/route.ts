@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Slot from '@/models/Slot';
+import TurfBooking from '@/models/TurfBooking';
 import { checkPermission } from '@/lib/permissionUtils';
 
 /**
  * POST /api/admin/slots/freeze
- * Admin endpoint to freeze a slot
- * Only authenticated admins can freeze slots
+ * Admin endpoint to freeze a slot on a shared ground.
+ * Since the ground is shared, freezing a slot for any sport
+ * automatically blocks it for ALL sports on the same turf.
+ * Only authenticated admins can freeze slots.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -59,6 +62,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if this slot already has a confirmed booking on the same ground (any sport)
+    const existingBooking = await TurfBooking.findOne({
+      date,
+      bookingType,
+      status: 'confirmed',
+      $or: [
+        { slot },
+        { slot: { $regex: new RegExp(`(^|,\\s*)${slot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s*,|$)`) } },
+      ],
+    });
+
+    if (existingBooking) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Cannot freeze: Slot ${slot} already has a confirmed ${existingBooking.sport} booking on ${date}. Cancel the booking first.`,
+        },
+        { status: 409 }
+      );
+    }
+
     // Find or create the slot
     let frozenSlot = await Slot.findOne({
       bookingType,
@@ -92,7 +116,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: `Slot ${slot} for ${sport} on ${date} has been frozen`,
+        message: `Slot ${slot} on ${date} has been frozen. This blocks all sports (${sport} and others) on this ground.`,
         data: frozenSlot,
       },
       { status: 200 }

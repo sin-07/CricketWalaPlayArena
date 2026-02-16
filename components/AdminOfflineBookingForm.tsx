@@ -9,6 +9,8 @@ interface SlotInfo {
   available: boolean;
   isBooked: boolean;
   isFrozen: boolean;
+  bookedBy?: string | null; // Which sport booked this slot (cross-sport blocking)
+  frozenBy?: string | null; // Which sport froze this slot
 }
 
 interface AdminOfflineBookingFormProps {
@@ -39,6 +41,7 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0); // Triggers slot re-fetch after booking
 
   // Get today's date in YYYY-MM-DD format
   const getMinDate = () => {
@@ -85,7 +88,7 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
     };
 
     fetchSlots();
-  }, [formData.date, formData.sport, formData.bookingType]);
+  }, [formData.date, formData.sport, formData.bookingType, refreshKey]);
 
   const handleSlotToggle = (slot: string) => {
     setSelectedSlots((prev) =>
@@ -159,6 +162,8 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
           paymentCollected: 0,
         });
         setSelectedSlots([]);
+        // Force re-fetch slots to reflect the new booking across all sports
+        setRefreshKey(prev => prev + 1);
         onBookingComplete();
         
         setTimeout(() => setSuccess(""), 5000);
@@ -218,7 +223,7 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
           Create Offline Booking
         </h2>
         <p className="text-emerald-100 text-sm mt-1">
-          Book slots for walk-in customers. These slots will be blocked for online users.
+          Book slots for walk-in customers. Shared ground — a booked slot blocks all sports.
         </p>
       </div>
 
@@ -402,16 +407,20 @@ const AdminOfflineBookingForm: React.FC<AdminOfflineBookingFormProps> = ({
                     `}
                     title={
                       slotInfo.isBooked 
-                        ? 'Already booked' 
+                        ? `Booked${slotInfo.bookedBy ? ` by ${slotInfo.bookedBy}` : ''} (blocked for all sports)` 
                         : slotInfo.isFrozen 
-                          ? 'Slot frozen' 
+                          ? `Frozen${slotInfo.frozenBy ? ` (${slotInfo.frozenBy})` : ''} — blocked for all sports` 
                           : 'Click to select'
                     }
                   >
                     <div className="flex flex-col items-center">
                       <span>{slotInfo.slot}</span>
                       {slotInfo.isBooked && (
-                        <span className="text-[9px] sm:text-[10px] font-semibold mt-0.5">BOOKED</span>
+                        <span className="text-[9px] sm:text-[10px] font-semibold mt-0.5">
+                          {slotInfo.bookedBy && slotInfo.bookedBy !== formData.sport
+                            ? `${slotInfo.bookedBy.substring(0, 5)}..`
+                            : 'BOOKED'}
+                        </span>
                       )}
                       {slotInfo.isFrozen && (
                         <span className="text-[9px] sm:text-[10px] font-semibold mt-0.5">FROZEN</span>
