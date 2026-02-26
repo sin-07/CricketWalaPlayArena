@@ -46,7 +46,7 @@ export default function Home() {
               href="/turf-booking"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 py-4 sm:py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-xl shadow-green-500/30 text-base sm:text-lg transition-colors"
             >
-              Click Me to Prove Your Skill at ₹200
+              Click Me to Prove Your Skill at ₹300
               <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </Link>
           </div>
@@ -310,13 +310,6 @@ export default function Home() {
               </div>
               <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1.5 sm:mb-2">Practice Turf</h3>
               <p className="text-gray-300 text-xs sm:text-sm">Durable practice nets and training facilities for skill development</p>
-            </div>
-          </div>
-          
-          <div className="inline-flex items-center gap-2 sm:gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 px-5 sm:px-6 md:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-white rounded-full animate-pulse"></div>
-              <span className="text-lg sm:text-xl md:text-2xl font-bold text-white">Coming Soon</span>
             </div>
           </div>
           
