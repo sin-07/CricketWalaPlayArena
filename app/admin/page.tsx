@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import gsap from 'gsap';
 import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings, Star, Ban } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import AdminOfflineBookingForm from '@/components/AdminOfflineBookingForm';
@@ -11,6 +12,7 @@ import AdminCouponManager from '@/components/AdminCouponManager';
 import AdminNewsletterManager from '@/components/AdminNewsletterManager';
 import AdminPaymentToggle from '@/components/AdminPaymentToggle';
 import AdminReviewManager from '@/components/AdminReviewManager';
+import AdminSlotOverview from '@/components/AdminSlotOverview';
 import NotificationSystem from '@/components/NotificationSystem';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +40,14 @@ export default function AdminDashboard() {
     cancelledBookings: 0,
     totalRevenue: 0,
   });
+
+  // GSAP refs
+  const dashRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const slotOverviewRef = useRef<HTMLDivElement>(null);
+  const tabNavRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Set default active tab based on permissions
   useEffect(() => {
@@ -133,6 +143,76 @@ export default function AdminDashboard() {
     setShowSessionExpired(false);
     router.push('/admin/login');
   };
+
+  // GSAP entrance animations
+  useEffect(() => {
+    if (!isAuthenticated || permissionsLoading || !dashRef.current) return;
+
+    const ctx = gsap.context(() => {
+      // Dashboard container fade in
+      gsap.fromTo(dashRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5, ease: 'power2.out' }
+      );
+
+      // Header slide down
+      if (headerRef.current) {
+        gsap.fromTo(headerRef.current,
+          { y: -30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', delay: 0.1 }
+        );
+      }
+
+      // Stats cards stagger
+      if (statsRef.current) {
+        const cards = statsRef.current.querySelectorAll('[data-stat-card]');
+        if (cards.length) {
+          gsap.fromTo(cards,
+            { scale: 0.85, opacity: 0, y: 20 },
+            { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'back.out(1.4)', delay: 0.2, force3D: true }
+          );
+        }
+      }
+
+      // Slot overview slide up
+      if (slotOverviewRef.current) {
+        gsap.fromTo(slotOverviewRef.current,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out', delay: 0.5, force3D: true }
+        );
+      }
+
+      // Tab navigation
+      if (tabNavRef.current) {
+        const buttons = tabNavRef.current.querySelectorAll('button');
+        if (buttons.length) {
+          gsap.fromTo(buttons,
+            { y: 15, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out', delay: 0.6, force3D: true }
+          );
+        }
+      }
+
+      // Content area
+      if (contentRef.current) {
+        gsap.fromTo(contentRef.current,
+          { opacity: 0, x: 20 },
+          { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out', delay: 0.7, force3D: true }
+        );
+      }
+    }, dashRef);
+
+    return () => ctx.revert();
+  }, [isAuthenticated, permissionsLoading]);
+
+  // GSAP tab switch animation
+  useEffect(() => {
+    if (!contentRef.current || !isAuthenticated) return;
+    gsap.fromTo(contentRef.current,
+      { opacity: 0, x: 20 },
+      { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out', force3D: true }
+    );
+  }, [activeTab, isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -272,15 +352,13 @@ export default function AdminDashboard() {
         onRemove={removeNotification}
       />
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+      <div
+        ref={dashRef}
         className="container mx-auto px-0 sm:px-4 py-4 sm:py-8"
       >
         {/* Header */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+        <div
+          ref={headerRef}
           className="mb-6 sm:mb-8 px-4 sm:px-0"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -300,16 +378,12 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Stats Cards */}
         {hasPermission('canViewStats') && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
+        <div ref={statsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <div data-stat-card>
             <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center text-green-700">
@@ -321,13 +395,9 @@ export default function AdminDashboard() {
                 <div className="text-3xl font-bold text-green-800">{stats.totalBookings}</div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div data-stat-card>
             <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center text-green-700">
@@ -339,13 +409,9 @@ export default function AdminDashboard() {
                 <div className="text-3xl font-bold text-green-800">{stats.activeBookings}</div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
+          <div data-stat-card>
             <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center text-green-700">
@@ -357,13 +423,9 @@ export default function AdminDashboard() {
                 <div className="text-3xl font-bold text-green-800">{stats.completedBookings}</div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.35 }}
-          >
+          <div data-stat-card>
             <Card className="bg-gradient-to-br from-red-50 to-red-100 text-red-800 rounded-none sm:rounded-lg border-2 border-red-200 shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center text-red-700">
@@ -375,13 +437,9 @@ export default function AdminDashboard() {
                 <div className="text-3xl font-bold text-red-800">{stats.cancelledBookings}</div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          <div data-stat-card>
             <Card className="bg-gradient-to-br from-green-50 to-emerald-100 text-green-800 rounded-none sm:rounded-lg border-2 border-green-200 shadow-md">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center text-green-700">
@@ -393,15 +451,23 @@ export default function AdminDashboard() {
                 <div className="text-3xl font-bold text-green-800">₹{stats.totalRevenue.toLocaleString()}</div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         </div>
         )}
 
+        {/* Slot Overview */}
+        {hasPermission('canViewStats') && (
+          <div
+            ref={slotOverviewRef}
+            className="mb-4 sm:mb-6 md:mb-8"
+          >
+            <AdminSlotOverview />
+          </div>
+        )}
+
         {/* Tab Navigation */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
+        <div
+          ref={tabNavRef}
           className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mb-4 sm:mb-6 px-4 sm:px-0"
         >
           {hasPermission('canViewBookings') && (
@@ -498,15 +564,12 @@ export default function AdminDashboard() {
               Settings
             </Button>
           )}
-        </motion.div>
+        </div>
 
         {/* Content Area */}
-        <motion.div
+        <div
+          ref={contentRef}
           key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3 }}
         >
           {activeTab === 'bookings' && hasPermission('canViewBookings') ? (
             <AdminTable turfBookings={turfBookings} loading={loading} onBookingCancelled={fetchBookings} />
@@ -546,8 +609,8 @@ export default function AdminDashboard() {
               <p className="text-gray-500 text-sm mt-2">Please contact your Super Admin to request access.</p>
             </div>
           )}
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }

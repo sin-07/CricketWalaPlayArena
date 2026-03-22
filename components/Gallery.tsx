@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import axios from 'axios';
 import { FaChevronLeft, FaChevronRight, FaCamera, FaTimes } from 'react-icons/fa';
 import Image from 'next/image';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface GalleryImage {
   _id: string;
@@ -19,6 +23,33 @@ export default function Gallery() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const thumbnailRef = useRef<HTMLDivElement>(null);
+
+  // GSAP entrance animation for gallery
+  useEffect(() => {
+    if (loading || images.length === 0) return;
+    const ctx = gsap.context(() => {
+      if (carouselRef.current) {
+        gsap.fromTo(carouselRef.current,
+          { scale: 0.95, opacity: 0 },
+          {
+            scale: 1, opacity: 1, duration: 0.6, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: carouselRef.current, start: 'top 88%', once: true },
+          }
+        );
+      }
+      if (thumbnailRef.current) {
+        const buttons = thumbnailRef.current.querySelectorAll('button');
+        gsap.set(buttons, { y: 15, opacity: 0 });
+        gsap.to(buttons, {
+          y: 0, opacity: 1, duration: 0.35, stagger: 0.04, ease: 'power2.out', force3D: true,
+          scrollTrigger: { trigger: thumbnailRef.current, start: 'top 92%', once: true },
+        });
+      }
+    });
+    return () => ctx.revert();
+  }, [loading, images.length]);
 
   useEffect(() => {
     fetchImages();
@@ -84,6 +115,7 @@ export default function Gallery() {
     <>
       {/* Main Carousel */}
       <div 
+        ref={carouselRef}
         className="relative max-w-6xl mx-auto px-4"
         onMouseEnter={() => setIsAutoPlaying(false)}
         onMouseLeave={() => setIsAutoPlaying(true)}
@@ -159,7 +191,7 @@ export default function Gallery() {
 
         {/* Thumbnail Strip */}
         {images.length > 1 && (
-          <div className="flex justify-center gap-3 mt-6 px-4 overflow-x-auto pb-2">
+          <div ref={thumbnailRef} className="flex justify-center gap-3 mt-6 px-4 overflow-x-auto pb-2">
             {images.map((image, index) => (
               <button
                 key={image._id}

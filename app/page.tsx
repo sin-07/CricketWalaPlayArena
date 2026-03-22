@@ -1,21 +1,190 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { GiCricketBat } from 'react-icons/gi';
 import { ArrowRight, Zap, Trophy, Users, Calendar, Clock, Shield, MapPin, ChevronRight, CalendarDays, MousePointerClick, CheckCircle2, Sparkles, Star, Images, Hammer, Target } from 'lucide-react';
 import OfferMarquee from '@/components/OfferMarquee';
 import Gallery from '@/components/Gallery';
 import ReviewsSection from '@/components/ReviewsSection';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { splitTextIntoRiseWords, restoreSplitText } from '@/hooks/useGsapAnimations';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function Home() {
+  const heroRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const howItWorksRef = useRef<HTMLElement>(null);
+  const pricingRef = useRef<HTMLElement>(null);
+  const galleryRef = useRef<HTMLElement>(null);
+  const turfRef = useRef<HTMLElement>(null);
+
+  // ─── Hero: staggered timeline on mount ───
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el) return;
+    const splitElements: HTMLElement[] = [];
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out', force3D: true } });
+      
+      // Badge drops down
+      tl.fromTo('[data-gsap="hero-badge"]',
+        { y: -30, opacity: 0, scale: 0.8 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.5 }
+      );
+      
+      // Heading text-rising word-by-word reveal
+      const heroHeading = el.querySelector('[data-gsap="hero-heading"]') as HTMLElement;
+      if (heroHeading) {
+        const heroWords = splitTextIntoRiseWords(heroHeading);
+        splitElements.push(heroHeading);
+        tl.fromTo(heroWords,
+          { y: '100%', opacity: 0 },
+          { y: '0%', opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power3.out' },
+          '-=0.2'
+        );
+      }
+      
+      // Subtitle slides up
+      tl.fromTo('[data-gsap="hero-subtitle"]',
+        { y: 25, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5 },
+        '-=0.3'
+      );
+      
+      // CTA scales up with a bounce
+      tl.fromTo('[data-gsap="hero-cta"]',
+        { y: 20, opacity: 0, scale: 0.85 },
+        { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.4)' },
+        '-=0.2'
+      );
+    }, el);
+
+    return () => {
+      ctx.revert();
+      splitElements.forEach(restoreSplitText);
+    };
+  }, []);
+
+  // ─── Scroll sections: single context for all scroll animations ───
+  useEffect(() => {
+    const splitElements: HTMLElement[] = [];
+
+    const ctx = gsap.context(() => {
+      // Helper: animate section header + grid children
+      const animateSection = (sectionEl: HTMLElement | null) => {
+        if (!sectionEl) return;
+
+        // Header container fade
+        const header = sectionEl.querySelector('[data-anim="header"]');
+        if (header) {
+          gsap.fromTo(header,
+            { y: 25, opacity: 0 },
+            {
+              y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', force3D: true,
+              scrollTrigger: { trigger: header, start: 'top 90%', once: true },
+            }
+          );
+        }
+
+        // Heading text-rising word-by-word reveal
+        const heading = sectionEl.querySelector('[data-anim="heading"]') as HTMLElement;
+        if (heading) {
+          const words = splitTextIntoRiseWords(heading);
+          splitElements.push(heading);
+          gsap.fromTo(words,
+            { y: '100%', opacity: 0 },
+            {
+              y: '0%', opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power3.out',
+              scrollTrigger: { trigger: heading, start: 'top 90%', once: true },
+            }
+          );
+        }
+
+        // Grid cards stagger
+        const grid = sectionEl.querySelector('[data-anim="grid"]');
+        if (grid) {
+          const cards = grid.querySelectorAll(':scope > *');
+          gsap.set(cards, { y: 30, opacity: 0 });
+          gsap.to(cards, {
+            y: 0, opacity: 1, duration: 0.45, stagger: 0.07, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: grid, start: 'top 88%', once: true },
+          });
+        }
+      };
+
+      animateSection(featuresRef.current);
+      animateSection(howItWorksRef.current);
+      animateSection(pricingRef.current);
+      animateSection(galleryRef.current);
+
+      // Turf construction section
+      if (turfRef.current) {
+        const turfHeader = turfRef.current.querySelector('[data-anim="header"]');
+        if (turfHeader) {
+          gsap.fromTo(turfHeader,
+            { y: 40, opacity: 0 },
+            {
+              y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', force3D: true,
+              scrollTrigger: { trigger: turfHeader, start: 'top 88%', once: true },
+            }
+          );
+        }
+
+        // Turf heading text-rising reveal
+        const turfHeading = turfRef.current.querySelector('[data-anim="heading"]') as HTMLElement;
+        if (turfHeading) {
+          const turfWords = splitTextIntoRiseWords(turfHeading);
+          splitElements.push(turfHeading);
+          gsap.fromTo(turfWords,
+            { y: '100%', opacity: 0 },
+            {
+              y: '0%', opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power3.out',
+              scrollTrigger: { trigger: turfHeading, start: 'top 90%', once: true },
+            }
+          );
+        }
+
+        const turfCards = turfRef.current.querySelector('[data-anim="grid"]');
+        if (turfCards) {
+          const cards = turfCards.querySelectorAll(':scope > *');
+          gsap.set(cards, { scale: 0.9, opacity: 0 });
+          gsap.to(cards, {
+            scale: 1, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: turfCards, start: 'top 88%', once: true },
+          });
+        }
+
+        const turfBottom = turfRef.current.querySelector('[data-anim="bottom"]');
+        if (turfBottom) {
+          const items = turfBottom.querySelectorAll(':scope > *');
+          gsap.set(items, { y: 20, opacity: 0 });
+          gsap.to(items, {
+            y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: turfBottom, start: 'top 90%', once: true },
+          });
+        }
+      }
+    });
+
+    return () => {
+      ctx.revert();
+      splitElements.forEach(restoreSplitText);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Offer Marquee Banner */}
       <OfferMarquee />
       
       {/* Hero Section */}
-      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-50 via-emerald-100 to-green-200 text-gray-900 overflow-hidden">
+      <section ref={heroRef} className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-50 via-emerald-100 to-green-200 text-gray-900 overflow-hidden">
         {/* Grass Texture Background */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0" style={{
@@ -28,20 +197,20 @@ export default function Home() {
         </div>
 
         <div className="relative max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-green-600/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-green-600/30 mb-4 sm:mb-6">
+          <div data-gsap="hero-badge" className="inline-flex items-center gap-1.5 sm:gap-2 bg-green-600/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-green-600/30 mb-4 sm:mb-6">
             <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-700" />
             <span className="text-xs sm:text-sm font-semibold text-green-900">Book your cricket slots instantly</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2 text-gray-900">
+          <h1 data-gsap="hero-heading" className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight px-2 text-gray-900">
             Premium Cricket <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">Turf Booking</span>
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mb-6 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
+          <p data-gsap="hero-subtitle" className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 mb-6 sm:mb-10 max-w-3xl mx-auto leading-relaxed px-2">
             Reserve your perfect cricket turf in <strong className="text-green-700">Kanti Factory, Patna, Bihar</strong>. Real-time availability, instant confirmation, and seamless booking experience for matches and practice sessions.
           </p>
 
-          <div className="flex justify-center mb-8 sm:mb-12">
+          <div data-gsap="hero-cta" className="flex justify-center mb-8 sm:mb-12">
             <Link
               href="/turf-booking"
               className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 md:px-10 py-4 sm:py-5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-xl shadow-green-500/30 text-base sm:text-lg transition-colors"
@@ -54,14 +223,14 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section ref={featuresRef} className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">Why Choose Us?</h2>
+          <div data-anim="header" className="text-center mb-10 sm:mb-16">
+            <h2 data-anim="heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">Why Choose Us?</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-2xl mx-auto px-2">Experience the best cricket facilities with modern amenities and professional service</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          <div data-anim="grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {[
               { icon: Zap, title: "Instant Booking", desc: "Book your slot in seconds with real-time availability" },
               { icon: Shield, title: "Secure Payment", desc: "Safe and secure payment methods for peace of mind" },
@@ -81,18 +250,18 @@ export default function Home() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50">
+      <section ref={howItWorksRef} className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 sm:mb-16">
+          <div data-anim="header" className="text-center mb-10 sm:mb-16">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-green-100 text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
               <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Easy Process
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">How It Works</h2>
+            <h2 data-anim="heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">How It Works</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600">Simple 3-step process to book your perfect slot</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          <div data-anim="grid" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {[
               { num: "01", icon: CalendarDays, title: "Select Date & Sport", desc: "Choose your preferred date and sport type - Match or Practice", color: "from-blue-500 to-blue-600" },
               { num: "02", icon: MousePointerClick, title: "Pick Your Slot", desc: "Browse available time slots and select the one that suits you", color: "from-purple-500 to-purple-600" },
@@ -129,18 +298,18 @@ export default function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 via-white to-gray-50">
+      <section ref={pricingRef} className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 via-white to-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 sm:mb-16">
+          <div data-anim="header" className="text-center mb-10 sm:mb-16">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-green-100 text-green-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
               <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Best Value
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">Affordable Pricing</h2>
+            <h2 data-anim="heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">Affordable Pricing</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600">Competitive rates for all types of bookings</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto items-stretch">
+          <div data-anim="grid" className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto items-stretch">
             {/* Match Booking Card */}
             <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col relative overflow-hidden group">
               {/* Decorative background */}
@@ -254,14 +423,14 @@ export default function Home() {
       </section>
 
       {/* Gallery Section */}
-      <section id="gallery" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
+      <section ref={galleryRef} id="gallery" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
+          <div data-anim="header" className="text-center mb-8 sm:mb-12">
             <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-purple-100 text-purple-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold mb-3 sm:mb-4">
               <Images className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               Our Facilities
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">Gallery</h2>
+            <h2 data-anim="heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">Gallery</h2>
             <p className="text-base sm:text-lg md:text-xl text-gray-600">Take a look at our premium cricket facilities</p>
           </div>
           
@@ -273,20 +442,20 @@ export default function Home() {
       <ReviewsSection />
 
       {/* Turf Construction - Coming Soon */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 text-white relative overflow-hidden">
+      <section ref={turfRef} className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-slate-900 via-slate-800 to-green-900 text-white relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-1/4 left-1/4 w-48 sm:w-72 h-48 sm:h-72 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
           <div className="absolute bottom-1/4 right-1/4 w-48 sm:w-72 h-48 sm:h-72 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse delay-1000"></div>
         </div>
         
-        <div className="max-w-5xl mx-auto text-center relative">
+        <div className="max-w-5xl mx-auto text-center relative" data-anim="header">
           <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-yellow-500/20 backdrop-blur-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-yellow-400/30 mb-4 sm:mb-6">
             <Hammer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
             <span className="text-xs sm:text-sm font-semibold text-yellow-300">New Service</span>
           </div>
           
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 px-2">
+          <h2 data-anim="heading" className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 px-2">
             Turf <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Construction</span>
           </h2>
           
@@ -295,7 +464,7 @@ export default function Home() {
           </p>
           
           {/* Match & Practice Turf Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto mb-6 sm:mb-10">
+          <div data-anim="grid" className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-3xl mx-auto mb-6 sm:mb-10">
             <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-400/30 hover:border-green-400/50 transition-all hover:scale-105">
               <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-green-500/20 rounded-lg sm:rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <Trophy className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-green-400" />
@@ -313,7 +482,7 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
+          <div data-anim="bottom" className="mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto">
             {[
               { title: "Professional Setup", desc: "Expert installation team" },
               { title: "Quality Materials", desc: "Premium grade turf & equipment" },

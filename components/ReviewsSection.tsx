@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Quote, ChevronLeft, ChevronRight, Loader2, MessageSquare } from 'lucide-react';
 import ReviewForm from './ReviewForm';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface Review {
   _id: string;
@@ -24,6 +28,46 @@ export default function ReviewsSection() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const writeReviewRef = useRef<HTMLDivElement>(null);
+
+  // GSAP scroll-triggered section animation
+  useEffect(() => {
+    if (loading) return;
+    const ctx = gsap.context(() => {
+      if (sectionRef.current) {
+        gsap.fromTo(sectionRef.current,
+          { y: 30, opacity: 0 },
+          {
+            y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: sectionRef.current, start: 'top 88%', once: true },
+          }
+        );
+
+        // Heading clip-path wipe
+        const heading = sectionRef.current.querySelector('.gsap-heading');
+        if (heading) {
+          gsap.fromTo(heading,
+            { clipPath: 'inset(0 100% 0 0)' },
+            {
+              clipPath: 'inset(0 0% 0 0)', duration: 0.7, ease: 'power3.inOut',
+              scrollTrigger: { trigger: heading, start: 'top 90%', once: true },
+            }
+          );
+        }
+      }
+      if (writeReviewRef.current) {
+        gsap.fromTo(writeReviewRef.current,
+          { scale: 0.9, opacity: 0 },
+          {
+            scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: writeReviewRef.current, start: 'top 92%', once: true },
+          }
+        );
+      }
+    });
+    return () => ctx.revert();
+  }, [loading]);
 
   useEffect(() => {
     fetchReviews();
@@ -99,7 +143,7 @@ export default function ReviewsSection() {
 
   return (
     <>
-      <section id="reviews" className="py-12 sm:py-16 bg-gradient-to-br from-green-50 to-emerald-50">
+      <section ref={sectionRef} id="reviews" className="py-12 sm:py-16 bg-gradient-to-br from-green-50 to-emerald-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <motion.div
@@ -108,7 +152,7 @@ export default function ReviewsSection() {
             viewport={{ once: true }}
             className="text-center mb-10 sm:mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3 gsap-heading">
               What Our Players Say
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -220,7 +264,7 @@ export default function ReviewsSection() {
           )}
 
           {/* Write Review Button */}
-          <div className="text-center mt-8">
+          <div ref={writeReviewRef} className="text-center mt-8">
             <button
               onClick={() => setShowReviewForm(true)}
               className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105"

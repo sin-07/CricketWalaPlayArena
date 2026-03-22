@@ -159,6 +159,7 @@ export default function AdminLoginPage() {
                     src="/cwpa.jpg"
                     alt="Cricket Wala Play Arena"
                     fill
+                    sizes="64px"
                     className="object-contain"
                     priority
                   />

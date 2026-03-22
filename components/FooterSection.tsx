@@ -1,16 +1,45 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { GiCricketBat } from 'react-icons/gi';
 import { Phone, MessageCircle, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import NewsletterSubscribe from './NewsletterSubscribe';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function FooterSection() {
+  const footerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+
+    const ctx = gsap.context(() => {
+      // Animate all data-anim sections within footer
+      const sections = el.querySelectorAll('[data-foot]');
+      sections.forEach((section) => {
+        gsap.fromTo(section,
+          { y: 25, opacity: 0 },
+          {
+            y: 0, opacity: 1, duration: 0.5, ease: 'power2.out', force3D: true,
+            scrollTrigger: { trigger: section, start: 'top 95%', once: true },
+          }
+        );
+      });
+    }, el);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <footer className="w-full bg-black text-gray-400 mt-auto border-t border-gray-800">
+    <footer ref={footerRef} className="w-full bg-black text-gray-400 mt-auto border-t border-gray-800">
       {/* Newsletter Section */}
-      <div className="w-full py-8 sm:py-12 bg-gradient-to-r from-gray-900 via-gray-900 to-gray-900 border-b border-gray-800">
+      <div data-foot className="w-full py-8 sm:py-12 bg-gradient-to-r from-gray-900 via-gray-900 to-gray-900 border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-6">
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Stay Updated! 📬</h3>
@@ -27,7 +56,7 @@ export default function FooterSection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
             {/* Brand Section */}
-            <div className="lg:col-span-2 text-center sm:text-left">
+            <div data-foot className="lg:col-span-2 text-center sm:text-left">
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 justify-center sm:justify-start">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center overflow-hidden">
                   <img
@@ -83,7 +112,7 @@ export default function FooterSection() {
             </div>
 
             {/* Quick Links */}
-            <div className="text-center sm:text-left">
+            <div data-foot className="text-center sm:text-left">
               <h3 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 relative inline-block">
                 Quick Links
                 <span className="absolute bottom-0 left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 w-12 h-0.5 bg-green-500"></span>
@@ -125,7 +154,7 @@ export default function FooterSection() {
             </div>
 
             {/* Contact Section */}
-            <div className="text-center sm:text-left">
+            <div data-foot className="text-center sm:text-left">
               <h3 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 relative inline-block">
                 Contact Us
                 <span className="absolute bottom-0 left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 w-12 h-0.5 bg-green-500"></span>
@@ -202,7 +231,7 @@ export default function FooterSection() {
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
 
       {/* Bottom Footer */}
-      <div className="w-full py-4 sm:py-6">
+      <div data-foot className="w-full py-4 sm:py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
             <p className="text-xs sm:text-sm text-gray-500 text-center sm:text-left">

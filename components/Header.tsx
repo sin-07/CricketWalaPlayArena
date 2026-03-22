@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Calendar, Search, LayoutDashboard, Images, LogOut, Lock, LucideIcon, Phone, MessageCircle, MapPin } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
+import gsap from 'gsap';
 
 interface NavItem {
   path: string;
@@ -20,6 +22,38 @@ const Header: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const navLinksRef = useRef<HTMLElement>(null);
+
+  // GSAP header entrance animation
+  useEffect(() => {
+    if (!headerRef.current) return;
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power2.out', force3D: true } });
+
+      tl.fromTo(headerRef.current!, 
+        { y: -80, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out', force3D: true }
+      );
+
+      const textTargets = headerRef.current!.querySelectorAll('[data-header-text]');
+      if (textTargets.length > 0) {
+        gsap.set(textTargets, { y: 16, opacity: 0, willChange: 'transform, opacity' });
+        tl.to(textTargets, {
+          y: 0,
+          opacity: 1,
+          duration: 0.42,
+          stagger: 0.035,
+          clearProps: 'willChange',
+        }, '-=0.28');
+      }
+    });
+
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     // Don't check auth on login page
@@ -101,12 +135,13 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
+    <header ref={headerRef} className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
       {/* Mobile Quick Contact Bar */}
       <div className="md:hidden bg-gradient-to-r from-green-700 via-green-600 to-emerald-600">
         <div className="flex items-center justify-center gap-5 py-2">
           <a 
             href="tel:+918340296635" 
+            data-header-text
             className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
             aria-label="Call Us"
           >
@@ -116,6 +151,7 @@ const Header: React.FC = () => {
           <span className="text-white/40">|</span>
           <a 
             href="https://wa.me/918340296635" 
+            data-header-text
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
@@ -127,6 +163,7 @@ const Header: React.FC = () => {
           <span className="text-white/40">|</span>
           <a 
             href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" 
+            data-header-text
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-white/90 hover:text-white text-xs font-medium transition-colors"
@@ -138,51 +175,54 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Logging Out Modal */}
-      <AnimatePresence>
-        {isLoggingOut && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
-          >
+      {/* Logging Out Modal — portaled to body to avoid header transform breaking fixed positioning */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isLoggingOut && (
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             >
-              <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <LogOut className="w-10 h-10 text-red-500 animate-pulse" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">Logging Out...</h2>
-              <p className="text-gray-600">
-                Please wait while we securely log you out.
-              </p>
-              <div className="mt-6">
-                <div className="w-12 h-12 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto"></div>
-              </div>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center"
+              >
+                <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <LogOut className="w-10 h-10 text-red-500 animate-pulse" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">Logging Out...</h2>
+                <p className="text-gray-600">
+                  Please wait while we securely log you out.
+                </p>
+                <div className="mt-6">
+                  <div className="w-12 h-12 border-4 border-red-200 border-t-red-500 rounded-full animate-spin mx-auto"></div>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Top Contact Bar */}
       <div className="hidden md:block bg-gradient-to-r from-green-700 via-green-600 to-emerald-600 text-white py-1.5">
         <div className="container mx-auto px-4 flex items-center justify-between text-sm">
           <div className="flex items-center gap-6">
-            <a href="tel:+918340296635" className="flex items-center gap-2 hover:text-green-100 transition-colors font-medium">
+            <a href="tel:+918340296635" className="flex items-center gap-2 hover:text-green-100 transition-colors font-medium" data-header-text>
               <Phone className="w-4 h-4" />
               +91-8340296635
             </a>
-            <a href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-green-100 transition-colors">
+            <a href="https://maps.google.com/?q=Cricket+wala+play+arena,+H5V9+V8F,+Mahatma+Gandhi+nagar,+Kanti+Factory+Rd,+Kankarbagh,+Patna,+Bihar+800026" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-green-100 transition-colors" data-header-text>
               <MapPin className="w-4 h-4" />
               Click for Cricket Wala location
             </a>
           </div>
           <div className="flex items-center gap-4">
-            <a href="https://wa.me/918340296635" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white/15 hover:bg-white/25 px-4 py-1.5 transition-colors font-medium">
+            <a href="https://wa.me/918340296635" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white/15 hover:bg-white/25 px-4 py-1.5 transition-colors font-medium" data-header-text>
               <MessageCircle className="w-4 h-4" />
               WhatsApp Us
             </a>
@@ -198,17 +238,20 @@ const Header: React.FC = () => {
                 src="/cwpa.jpg"
                 alt="Cricket Wala Play Arena"
                 fill
+                sizes="40px"
                 className="object-contain"
                 priority
               />
             </div>
             <span className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 whitespace-nowrap">
+              <span data-header-text>
               Cricket Wala <span className="text-green-600">Play Arena</span>
+              </span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-6 lg:space-x-8">
+          <nav ref={navLinksRef} className="hidden md:flex space-x-6 lg:space-x-8">
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -218,6 +261,7 @@ const Header: React.FC = () => {
                     ? 'text-green-600 border-b-2 border-green-600 font-semibold'
                     : 'text-gray-700 hover:text-green-600'
                 } font-medium transition-colors pb-1`}
+                data-header-text
               >
                 {item.label}
               </Link>
@@ -231,6 +275,7 @@ const Header: React.FC = () => {
                     ? 'text-green-600 border-b-2 border-green-600 font-semibold'
                     : 'text-gray-700 hover:text-green-600'
                 } font-medium transition-colors pb-1`}
+                data-header-text
               >
                 {item.label}
               </Link>
@@ -245,6 +290,7 @@ const Header: React.FC = () => {
                 {isAdmin ? (
                   <button
                     onClick={handleLogout}
+                    data-header-text
                     className="bg-red-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors shadow-sm"
                   >
                     Logout
@@ -252,6 +298,7 @@ const Header: React.FC = () => {
                 ) : (
                   <Link
                     href="/admin/login"
+                    data-header-text
                     className="bg-green-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-green-700 transition-colors shadow-sm"
                   >
                     Admin Login

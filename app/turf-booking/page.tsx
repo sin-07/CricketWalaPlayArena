@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import TurfBookingForm from '@/components/TurfBookingForm';
 import { GiCricketBat } from 'react-icons/gi';
 import { AnimatePresence, motion } from 'framer-motion';
+import gsap from 'gsap';
+import { useFadeUp, useScaleIn, useStaggerChildren, splitTextIntoRiseWords, restoreSplitText } from '@/hooks/useGsapAnimations';
 
 export default function TurfBookingPage() {
   const searchParams = useSearchParams();
@@ -13,6 +15,29 @@ export default function TurfBookingPage() {
   
   const [activeTab, setActiveTab] = useState<'match' | 'practice'>(initialTab);
   const [formKey, setFormKey] = useState(0); // Key to force form reset
+  const headerRef = useFadeUp<HTMLDivElement>({ y: 30 });
+  const formCardRef = useScaleIn<HTMLDivElement>({ delay: 0.2, scale: 0.95 });
+  const infoRef = useStaggerChildren<HTMLDivElement>({ stagger: 0.15 });
+
+  // Heading rising word-by-word animation
+  useEffect(() => {
+    const heading = document.querySelector('.gsap-heading') as HTMLElement | null;
+    if (!heading) return;
+
+    const words = splitTextIntoRiseWords(heading);
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(words,
+        { y: '100%', opacity: 0 },
+        { y: '0%', opacity: 1, duration: 0.55, stagger: 0.045, ease: 'power3.out', delay: 0.1 }
+      );
+    });
+
+    return () => {
+      ctx.revert();
+      restoreSplitText(heading);
+    };
+  }, []);
   
   // Update tab when query param changes
   useEffect(() => {
@@ -35,10 +60,10 @@ export default function TurfBookingPage() {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
+        <div ref={headerRef} className="text-center mb-10">
           <div className="flex items-center justify-center gap-3 mb-4">
             <GiCricketBat className="w-10 h-10 text-green-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Turf Booking</h1>
+            <h1 className="text-4xl font-bold text-gray-900 gsap-heading">Turf Booking</h1>
           </div>
           <p className="text-gray-600 text-lg">
             Book your cricket turf for Main Turf or Practice Turf sessions
@@ -70,7 +95,7 @@ export default function TurfBookingPage() {
         </div>
 
         {/* Form Card with Slide Animation */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 overflow-hidden">
+        <div ref={formCardRef} className="bg-white rounded-2xl shadow-xl p-8 md:p-10 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -90,7 +115,7 @@ export default function TurfBookingPage() {
         </div>
 
         {/* Info Section */}
-        <div className="mt-8 grid md:grid-cols-2 gap-6">
+        <div ref={infoRef} className="mt-8 grid md:grid-cols-2 gap-6">
           <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
             <h3 className="font-semibold text-blue-900 mb-2">Main Turf Booking</h3>
             <p className="text-blue-800 text-sm">

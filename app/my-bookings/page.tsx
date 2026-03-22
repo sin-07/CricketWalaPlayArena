@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Phone, Hash, Calendar, Clock, User, Mail, MapPin, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
+import gsap from 'gsap';
+import { splitTextIntoRiseWords, restoreSplitText } from '@/hooks/useGsapAnimations';
 
 interface Booking {
   _id: string;
@@ -36,6 +38,41 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Animate heading with rising word-by-word reveal on mount
+  useEffect(() => {
+    const heading = document.querySelector('.gsap-heading') as HTMLElement | null;
+    if (!heading) return;
+
+    const words = splitTextIntoRiseWords(heading);
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(words,
+        { y: '100%', opacity: 0 },
+        { y: '0%', opacity: 1, duration: 0.55, stagger: 0.045, ease: 'power3.out', delay: 0.12 }
+      );
+    });
+
+    return () => {
+      ctx.revert();
+      restoreSplitText(heading);
+    };
+  }, []);
+
+  // Animate booking results when they appear
+  useEffect(() => {
+    if (bookings.length > 0 && resultsRef.current) {
+      const children = resultsRef.current.querySelectorAll(':scope > div');
+      gsap.set(children, { y: 25, opacity: 0 });
+      const ctx = gsap.context(() => {
+        gsap.to(children, {
+          y: 0, opacity: 1, duration: 0.4, stagger: 0.07, ease: 'power2.out', force3D: true,
+        });
+      });
+      return () => ctx.revert();
+    }
+  }, [bookings]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,7 +171,7 @@ export default function MyBookingsPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg mb-4">
             <GiCricketBat className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2">My Bookings</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-2 gsap-heading">My Bookings</h1>
           <p className="text-gray-600">Search your bookings by phone number or booking reference</p>
         </motion.div>
 
@@ -265,6 +302,7 @@ export default function MyBookingsPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="space-y-4"
+              ref={resultsRef}
             >
               <p className="text-gray-600 mb-4">
                 Found <span className="font-semibold text-green-700">{bookings.length}</span> booking{bookings.length !== 1 ? 's' : ''}
