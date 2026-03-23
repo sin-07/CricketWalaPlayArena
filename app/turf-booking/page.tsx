@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TurfBookingForm from '@/components/TurfBookingForm';
 import { GiCricketBat } from 'react-icons/gi';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from '@/lib/motion';
 import gsap from 'gsap';
 import { useFadeUp, useScaleIn, useStaggerChildren, splitTextIntoRiseWords, restoreSplitText } from '@/hooks/useGsapAnimations';
 
@@ -21,6 +21,8 @@ export default function TurfBookingPage() {
 
   // Heading rising word-by-word animation
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     const heading = document.querySelector('.gsap-heading') as HTMLElement | null;
     if (!heading) return;
 

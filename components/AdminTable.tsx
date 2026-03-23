@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Eye, Calendar, Clock, User, Mail, Phone, MapPin, Hash, Search, X, Ban, AlertTriangle, RefreshCw, IndianRupee } from 'lucide-react';
 import {
   Table,

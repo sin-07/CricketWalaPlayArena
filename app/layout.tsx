@@ -4,6 +4,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import FooterSection from '@/components/FooterSection'
 import PageLoaderWrapper from '@/components/PageLoaderWrapper'
+import NoMotionProvider from '@/components/NoMotionProvider'
 
 const sora = Sora({ 
   subsets: ['latin'],
@@ -94,7 +95,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-gsap-only="true">
       <head>
         {/* Structured Data - LocalBusiness */}
         <script
@@ -141,14 +142,16 @@ export default function RootLayout({
         />
       </head>
       <body className={sora.className}>
-        <PageLoaderWrapper />
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1 pt-24 md:pt-28">
-            {children}
-          </main>
-          <FooterSection />
-        </div>
+        <NoMotionProvider>
+          <PageLoaderWrapper />
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-1 pt-24 md:pt-28">
+              {children}
+            </main>
+            <FooterSection />
+          </div>
+        </NoMotionProvider>
       </body>
     </html>
   )

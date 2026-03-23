@@ -16,6 +16,8 @@ export default function FooterSection() {
   const footerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     const el = footerRef.current;
     if (!el) return;
 

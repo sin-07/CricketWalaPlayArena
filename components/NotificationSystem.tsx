@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { X, CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info';

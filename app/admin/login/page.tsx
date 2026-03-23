@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Shield, User, Lock, LogIn, Eye, EyeOff, KeyRound } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 

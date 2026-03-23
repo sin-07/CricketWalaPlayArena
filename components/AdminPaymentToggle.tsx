@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Power, PowerOff, AlertTriangle, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 
 interface PaymentSettingsData {
   paymentsEnabled: boolean;

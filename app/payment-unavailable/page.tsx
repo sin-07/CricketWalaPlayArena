@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { AlertTriangle, RefreshCw, Home, Phone, Mail, Clock, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from '@/lib/motion';
 
 export default function PaymentUnavailablePage() {
   const handleRefresh = () => {

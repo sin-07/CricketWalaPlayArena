@@ -5,8 +5,8 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Calendar, Search, LayoutDashboard, Images, LogOut, Lock, LucideIcon, Phone, MessageCircle, MapPin } from 'lucide-react';
+import { motion, AnimatePresence } from '@/lib/motion';
+import { Home, Calendar, Search, LayoutDashboard, Images, LogOut, Lock, LucideIcon, Phone, MessageCircle, MapPin, Menu, X } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import gsap from 'gsap';
 
@@ -21,13 +21,22 @@ const Header: React.FC = () => {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuMounted, setIsMobileMenuMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [mobileMenuTop, setMobileMenuTop] = useState(0);
   const headerRef = useRef<HTMLElement>(null);
   const navLinksRef = useRef<HTMLElement>(null);
+  const mobileBackdropRef = useRef<HTMLDivElement>(null);
+  const mobileSidebarRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const menuIconRef = useRef<SVGSVGElement>(null);
+  const closeIconRef = useRef<SVGSVGElement>(null);
 
   // GSAP header entrance animation
   useEffect(() => {
     if (!headerRef.current) return;
+
+    if (document.documentElement.dataset.noMotion === 'true') return;
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -87,6 +96,115 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const menuIcon = menuIconRef.current;
+    const closeIcon = closeIconRef.current;
+
+    if (!menuIcon || !closeIcon) return;
+
+    const noMotion = document.documentElement.dataset.noMotion === 'true'
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (noMotion) {
+      gsap.set(menuIcon, {
+        autoAlpha: isMobileMenuOpen ? 0 : 1,
+        rotate: isMobileMenuOpen ? -70 : 0,
+        scale: isMobileMenuOpen ? 0.72 : 1,
+      });
+      gsap.set(closeIcon, {
+        autoAlpha: isMobileMenuOpen ? 1 : 0,
+        rotate: isMobileMenuOpen ? 0 : 70,
+        scale: isMobileMenuOpen ? 1 : 0.72,
+      });
+      return;
+    }
+
+    const tl = gsap.timeline({ defaults: { duration: 0.22, ease: 'power2.out' } });
+
+    if (isMobileMenuOpen) {
+      tl.to(menuIcon, { autoAlpha: 0, rotate: -70, scale: 0.72 }, 0)
+        .to(closeIcon, { autoAlpha: 1, rotate: 0, scale: 1 }, 0.02);
+    } else {
+      tl.to(closeIcon, { autoAlpha: 0, rotate: 70, scale: 0.72 }, 0)
+        .to(menuIcon, { autoAlpha: 1, rotate: 0, scale: 1 }, 0.02);
+    }
+
+    return () => {
+      tl.kill();
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      setIsMobileMenuMounted(true);
+    }
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    if (!isMobileMenuMounted) return;
+
+    const backdrop = mobileBackdropRef.current;
+    const sidebar = mobileSidebarRef.current;
+    const navItems = mobileNavRef.current?.querySelectorAll('[data-mobile-item]');
+
+    if (!backdrop || !sidebar) return;
+
+    const noMotion = document.documentElement.dataset.noMotion === 'true'
+      || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (noMotion) {
+      if (isMobileMenuOpen) {
+        gsap.set(backdrop, { opacity: 1 });
+        gsap.set(sidebar, { xPercent: 0 });
+      } else {
+        gsap.set(backdrop, { opacity: 0 });
+        gsap.set(sidebar, { xPercent: 100 });
+        setIsMobileMenuMounted(false);
+      }
+      return;
+    }
+
+    if (isMobileMenuOpen) {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out', force3D: true } });
+      gsap.set(backdrop, { opacity: 0 });
+      gsap.set(sidebar, { xPercent: 100, willChange: 'transform' });
+      if (navItems && navItems.length > 0) {
+        gsap.set(navItems, { x: 20, opacity: 0, willChange: 'transform,opacity' });
+      }
+
+      tl.to(backdrop, { opacity: 1, duration: 0.2 })
+        .to(sidebar, { xPercent: 0, duration: 0.34, clearProps: 'willChange' }, '-=0.12');
+
+      if (navItems && navItems.length > 0) {
+        tl.to(navItems, {
+          x: 0,
+          opacity: 1,
+          duration: 0.22,
+          stagger: 0.04,
+          clearProps: 'willChange',
+        }, '-=0.18');
+      }
+
+      return () => {
+        tl.kill();
+      };
+    }
+
+    const closeTl = gsap.timeline({
+      defaults: { ease: 'power2.inOut', force3D: true },
+      onComplete: () => {
+        setIsMobileMenuMounted(false);
+      },
+    });
+
+    closeTl.to(sidebar, { xPercent: 100, duration: 0.28 })
+      .to(backdrop, { opacity: 0, duration: 0.2 }, '-=0.18');
+
+    return () => {
+      closeTl.kill();
+    };
+  }, [isMobileMenuOpen, isMobileMenuMounted]);
+
   // Freeze body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -98,6 +216,21 @@ const Header: React.FC = () => {
       document.body.style.overflow = 'unset';
     };
   }, [isMobileMenuOpen]);
+
+  // Keep mobile overlay/sidebar aligned below the full header height
+  useEffect(() => {
+    const updateMobileMenuTop = () => {
+      if (!headerRef.current) return;
+      setMobileMenuTop(headerRef.current.getBoundingClientRect().height);
+    };
+
+    updateMobileMenuTop();
+    window.addEventListener('resize', updateMobileMenuTop);
+
+    return () => {
+      window.removeEventListener('resize', updateMobileMenuTop);
+    };
+  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -310,74 +443,54 @@ const Header: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className={`md:hidden relative w-10 h-10 flex items-center justify-center focus:outline-none group z-[80] transition-colors ${
               isMobileMenuOpen ? 'bg-green-600' : ''
             }`}
             aria-label="Toggle menu"
+            aria-expanded={isMobileMenuOpen}
           >
-            <div className="relative w-6 h-5 flex flex-col justify-center items-center">
-              {/* Top line */}
-              <span
-                className={`absolute w-6 h-0.5 rounded-full transform transition-all duration-300 ease-in-out ${
-                  isMobileMenuOpen 
-                    ? 'rotate-45 translate-y-0 bg-white' 
-                    : '-translate-y-2 bg-gray-700 group-hover:bg-green-600'
-                }`}
-              />
-              {/* Middle line */}
-              <span
-                className={`absolute w-6 h-0.5 rounded-full transition-all duration-300 ease-in-out ${
-                  isMobileMenuOpen 
-                    ? 'opacity-0 scale-0 bg-white' 
-                    : 'opacity-100 scale-100 bg-gray-700 group-hover:bg-green-600'
-                }`}
-              />
-              {/* Bottom line */}
-              <span
-                className={`absolute w-6 h-0.5 rounded-full transform transition-all duration-300 ease-in-out ${
-                  isMobileMenuOpen 
-                    ? '-rotate-45 translate-y-0 bg-white' 
-                    : 'translate-y-2 bg-gray-700 group-hover:bg-green-600'
-                }`}
-              />
-            </div>
+            <Menu
+              ref={menuIconRef}
+              className="w-6 h-6 text-gray-700 group-hover:text-green-600 absolute"
+            />
+            <X
+              ref={closeIconRef}
+              className="w-6 h-6 text-white absolute"
+              style={{ opacity: 0, visibility: 'hidden' }}
+            />
           </button>
         </div>
       </div>
 
       {/* Mobile Sidebar */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed top-[calc(2.25rem+4rem)] left-0 right-0 bottom-0 bg-black/50 z-[60] md:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isMobileMenuMounted && (
+            <>
+              {/* Backdrop */}
+              <div
+                ref={mobileBackdropRef}
+                className="fixed left-0 right-0 bottom-0 bg-black/50 z-[60] md:hidden"
+                style={{ top: mobileMenuTop }}
+                onClick={() => setIsMobileMenuOpen(false)}
+              />
 
-            {/* Sidebar */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-[calc(2.25rem+4rem)] right-0 bottom-0 w-80 bg-white shadow-2xl z-[70] md:hidden overflow-y-auto"
-            >
+              {/* Sidebar */}
+              <div
+                ref={mobileSidebarRef}
+                className="fixed right-0 bottom-0 w-80 max-w-[92vw] bg-white shadow-2xl z-[70] md:hidden overflow-y-auto"
+                style={{ top: mobileMenuTop }}
+              >
               {/* Navigation Links */}
-              <nav className="p-6 space-y-2">
+              <nav ref={mobileNavRef} className="p-6 space-y-2">
                 {navItems.map((item, index) => {
                   const IconComponent = item.icon;
                   return (
-                    <motion.div
+                    <div
                       key={item.path}
-                      initial={{ x: 50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1 }}
+                      data-mobile-item
                     >
                       <Link
                         href={item.path}
@@ -391,7 +504,7 @@ const Header: React.FC = () => {
                         <IconComponent className="w-5 h-5" />
                         <span className="font-medium">{item.label}</span>
                       </Link>
-                    </motion.div>
+                    </div>
                   );
                 })}
 
@@ -405,11 +518,9 @@ const Header: React.FC = () => {
                     {adminNavItems.map((item, index) => {
                       const IconComponent = item.icon;
                       return (
-                        <motion.div
+                        <div
                           key={item.path}
-                          initial={{ x: 50, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: (navItems.length + index) * 0.1 }}
+                          data-mobile-item
                         >
                           <Link
                             href={item.path}
@@ -423,7 +534,7 @@ const Header: React.FC = () => {
                             <IconComponent className="w-5 h-5" />
                             <span className="font-medium">{item.label}</span>
                           </Link>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </>
@@ -436,17 +547,18 @@ const Header: React.FC = () => {
                 {pathname !== '/admin/login' && (
                   <>
                     {isAdmin ? (
-                      <motion.button
+                      <button
                         onClick={handleLogout}
+                        data-mobile-item
                         className="w-full flex items-center justify-center space-x-2 bg-red-600 text-white px-6 py-3 font-semibold hover:bg-red-700 transition-colors shadow-md"
-                        whileTap={{ scale: 0.95 }}
                       >
                         <LogOut className="w-5 h-5" />
                         <span>Logout</span>
-                      </motion.button>
+                      </button>
                     ) : (
                       <Link
                         href="/admin/login"
+                        data-mobile-item
                         className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white px-6 py-3 font-semibold hover:bg-green-700 transition-colors shadow-md"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -457,10 +569,12 @@ const Header: React.FC = () => {
                   </>
                 )}
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+              </div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </header>
   );
 };

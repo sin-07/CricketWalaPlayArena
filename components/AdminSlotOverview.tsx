@@ -77,6 +77,8 @@ export default function AdminSlotOverview() {
   const dateTextRef = useRef<HTMLDivElement>(null);
 
   const handleSlotEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     const card = e.currentTarget;
     const detail = card.querySelector('[data-hover-detail]') as HTMLElement | null;
     if (!detail) return;
@@ -87,6 +89,8 @@ export default function AdminSlotOverview() {
   }, []);
 
   const handleSlotLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     const card = e.currentTarget;
     const detail = card.querySelector('[data-hover-detail]') as HTMLElement | null;
     if (!detail) return;
@@ -99,6 +103,12 @@ export default function AdminSlotOverview() {
   // Animate date change: date text slides, grid exits then enters on data load
   const changeDate = useCallback((newDate: string) => {
     if (newDate === date) return;
+
+    if (document.documentElement.dataset.noMotion === 'true') {
+      setDate(newDate);
+      return;
+    }
+
     const direction = newDate > date ? 1 : -1;
 
     // Animate date text with vertical slide
@@ -139,6 +149,8 @@ export default function AdminSlotOverview() {
 
   // GSAP: animate grid wrapper + slot cards when data loads or type changes
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (loading || !gridRef.current) return;
 
     // Reset wrapper position (it may have been animated out)
@@ -159,6 +171,8 @@ export default function AdminSlotOverview() {
 
   // GSAP: header bar entrance
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (!headerBarRef.current) return;
     gsap.fromTo(headerBarRef.current,
       { opacity: 0, y: -10 },

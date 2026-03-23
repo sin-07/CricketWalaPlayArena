@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Search, Phone, Hash, Calendar, Clock, User, Mail, MapPin, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
 import gsap from 'gsap';
@@ -42,6 +42,8 @@ export default function MyBookingsPage() {
 
   // Animate heading with rising word-by-word reveal on mount
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     const heading = document.querySelector('.gsap-heading') as HTMLElement | null;
     if (!heading) return;
 
@@ -62,6 +64,8 @@ export default function MyBookingsPage() {
 
   // Animate booking results when they appear
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (bookings.length > 0 && resultsRef.current) {
       const children = resultsRef.current.querySelectorAll(':scope > div');
       gsap.set(children, { y: 25, opacity: 0 });

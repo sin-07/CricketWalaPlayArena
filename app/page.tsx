@@ -9,7 +9,6 @@ import Gallery from '@/components/Gallery';
 import ReviewsSection from '@/components/ReviewsSection';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { splitTextIntoRiseWords, restoreSplitText } from '@/hooks/useGsapAnimations';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -25,9 +24,10 @@ export default function Home() {
 
   // ─── Hero: staggered timeline on mount ───
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     const el = heroRef.current;
     if (!el) return;
-    const splitElements: HTMLElement[] = [];
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out', force3D: true } });
@@ -41,11 +41,9 @@ export default function Home() {
       // Heading text-rising word-by-word reveal
       const heroHeading = el.querySelector('[data-gsap="hero-heading"]') as HTMLElement;
       if (heroHeading) {
-        const heroWords = splitTextIntoRiseWords(heroHeading);
-        splitElements.push(heroHeading);
-        tl.fromTo(heroWords,
-          { y: '100%', opacity: 0 },
-          { y: '0%', opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power3.out' },
+        tl.fromTo(heroHeading,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' },
           '-=0.2'
         );
       }
@@ -65,15 +63,12 @@ export default function Home() {
       );
     }, el);
 
-    return () => {
-      ctx.revert();
-      splitElements.forEach(restoreSplitText);
-    };
+    return () => ctx.revert();
   }, []);
 
   // ─── Scroll sections: single context for all scroll animations ───
   useEffect(() => {
-    const splitElements: HTMLElement[] = [];
+    if (document.documentElement.dataset.noMotion === 'true') return;
 
     const ctx = gsap.context(() => {
       // Helper: animate section header + grid children
@@ -95,12 +90,10 @@ export default function Home() {
         // Heading text-rising word-by-word reveal
         const heading = sectionEl.querySelector('[data-anim="heading"]') as HTMLElement;
         if (heading) {
-          const words = splitTextIntoRiseWords(heading);
-          splitElements.push(heading);
-          gsap.fromTo(words,
-            { y: '100%', opacity: 0 },
+          gsap.fromTo(heading,
+            { y: 30, opacity: 0 },
             {
-              y: '0%', opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power3.out',
+              y: 0, opacity: 1, duration: 0.6, ease: 'power3.out',
               scrollTrigger: { trigger: heading, start: 'top 90%', once: true },
             }
           );
@@ -139,12 +132,10 @@ export default function Home() {
         // Turf heading text-rising reveal
         const turfHeading = turfRef.current.querySelector('[data-anim="heading"]') as HTMLElement;
         if (turfHeading) {
-          const turfWords = splitTextIntoRiseWords(turfHeading);
-          splitElements.push(turfHeading);
-          gsap.fromTo(turfWords,
-            { y: '100%', opacity: 0 },
+          gsap.fromTo(turfHeading,
+            { y: 30, opacity: 0 },
             {
-              y: '0%', opacity: 1, duration: 0.6, stagger: 0.04, ease: 'power3.out',
+              y: 0, opacity: 1, duration: 0.6, ease: 'power3.out',
               scrollTrigger: { trigger: turfHeading, start: 'top 90%', once: true },
             }
           );
@@ -172,10 +163,7 @@ export default function Home() {
       }
     });
 
-    return () => {
-      ctx.revert();
-      splitElements.forEach(restoreSplitText);
-    };
+    return () => ctx.revert();
   }, []);
 
   return (

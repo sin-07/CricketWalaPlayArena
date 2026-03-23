@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from '@/lib/motion';
 import SportSelector from '@/components/SportSelector';
 import TurfDatePicker from '@/components/TurfDatePicker';
 import SlotSelector from '@/components/SlotSelectorComponent';

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion } from "@/lib/motion";
 import { UserPlus, Save, Calendar, Clock, User, Phone, Mail, IndianRupee, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 interface SlotInfo {

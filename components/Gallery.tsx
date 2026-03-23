@@ -28,6 +28,8 @@ export default function Gallery() {
 
   // GSAP entrance animation for gallery
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (loading || images.length === 0) return;
     const ctx = gsap.context(() => {
       if (carouselRef.current) {

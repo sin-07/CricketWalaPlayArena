@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Star, Send, Loader2, CheckCircle, AlertCircle, X } from 'lucide-react';
 
 interface ReviewFormProps {

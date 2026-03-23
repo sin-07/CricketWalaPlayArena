@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from '@/lib/motion';
 import gsap from 'gsap';
 import { Users, DollarSign, Calendar, TrendingUp, Plus, Table as TableIcon, Clock, LogOut, Snowflake, Tag, Mail, Shield, Settings, Star, Ban } from 'lucide-react';
 import { GiCricketBat } from 'react-icons/gi';
@@ -146,6 +146,8 @@ export default function AdminDashboard() {
 
   // GSAP entrance animations
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (!isAuthenticated || permissionsLoading || !dashRef.current) return;
 
     const ctx = gsap.context(() => {
@@ -207,6 +209,8 @@ export default function AdminDashboard() {
 
   // GSAP tab switch animation
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (!contentRef.current || !isAuthenticated) return;
     gsap.fromTo(contentRef.current,
       { opacity: 0, x: 20 },

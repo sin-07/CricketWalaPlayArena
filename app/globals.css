@@ -27,6 +27,14 @@ body {
   overflow-x: hidden;
 }
 
+html[data-gsap-only='true'] *,
+html[data-gsap-only='true'] *::before,
+html[data-gsap-only='true'] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
 @keyframes slide-in {
   from {
     transform: translateX(100%);

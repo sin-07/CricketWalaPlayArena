@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { XCircle, AlertTriangle, RefreshCw, CheckCircle, Ban, IndianRupee, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -228,7 +228,7 @@ const AdminBookingCancelModal: React.FC<AdminBookingCancelModalProps> = ({
                     animate={{ opacity: 1, height: 'auto' }}
                     placeholder="Enter cancellation reason..."
                     value={customReason}
-                    onChange={(e) => setCustomReason(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setCustomReason(e.target.value)}
                     maxLength={500}
                     className="w-full mt-2 border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-all resize-none"
                     rows={3}

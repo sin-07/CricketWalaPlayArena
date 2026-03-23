@@ -4,6 +4,10 @@ import { useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+function isNoMotionMode() {
+  return typeof document !== 'undefined' && document.documentElement.dataset.noMotion === 'true';
+}
+
 // Register once at module level
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -120,6 +124,7 @@ export function useFadeUp<T extends HTMLElement>(options?: {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       gsap.fromTo(el,
@@ -158,6 +163,7 @@ export function useStaggerChildren<T extends HTMLElement>(options?: {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const children = el.querySelectorAll(options?.childSelector ?? ':scope > *');
     if (children.length === 0) return;
@@ -198,6 +204,7 @@ export function useScaleIn<T extends HTMLElement>(options?: {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       gsap.fromTo(el,
@@ -231,6 +238,7 @@ export function useSlideInLeft<T extends HTMLElement>(options?: {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       gsap.fromTo(el,
@@ -264,6 +272,7 @@ export function useSlideInRight<T extends HTMLElement>(options?: {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       gsap.fromTo(el,
@@ -293,6 +302,7 @@ export function useHeroReveal<T extends HTMLElement>() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out', force3D: true } });
@@ -325,6 +335,7 @@ export function useMagneticHover<T extends HTMLElement>() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     // Skip on touch devices — avoids mobile jank
     if (window.matchMedia('(pointer: coarse)').matches) return;
@@ -367,6 +378,7 @@ export function useTextReveal<T extends HTMLElement>() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const wordSpans = splitTextIntoRiseWords(el);
     gsap.set(wordSpans, { opacity: 0, y: 20 });
@@ -399,6 +411,7 @@ export function useClipReveal<T extends HTMLElement>(direction: 'left' | 'right'
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const clips = {
       up:    { from: 'inset(100% 0% 0% 0%)', to: 'inset(0% 0% 0% 0%)' },
@@ -432,6 +445,7 @@ export function useFloat<T extends HTMLElement>(options?: { y?: number; duration
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       gsap.to(el, {
@@ -457,6 +471,7 @@ export function useCountUp(endValue: number, options?: { duration?: number; suff
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (isNoMotionMode()) return;
 
     const ctx = gsap.context(() => {
       const obj = { value: 0 };

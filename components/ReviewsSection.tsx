@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { Star, Quote, ChevronLeft, ChevronRight, Loader2, MessageSquare } from 'lucide-react';
 import ReviewForm from './ReviewForm';
 import gsap from 'gsap';
@@ -33,6 +33,8 @@ export default function ReviewsSection() {
 
   // GSAP scroll-triggered section animation
   useEffect(() => {
+    if (document.documentElement.dataset.noMotion === 'true') return;
+
     if (loading) return;
     const ctx = gsap.context(() => {
       if (sectionRef.current) {

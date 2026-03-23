@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import { MATCH_SPORTS, PRACTICE_SPORTS } from '@/lib/bookingValidation';
 import { ChevronDown, Check } from 'lucide-react';
 
